@@ -10,5 +10,5 @@ Bài tập lớn môn **Khoa học Dịch vụ**. Hệ thống dùng mô hình *
 | Tài liệu | Nội dung |
 |---|---|
 | [docs/scope.md](docs/scope.md) | Phạm vi đề tài, giả định, ràng buộc, KPI |
-| `docs/model_spec.md` | Đặc tả mô hình toán *(đang viết)* |
+| [docs/model_spec.md](docs/model_spec.md) | Đặc tả mô hình toán (bài toán A; bài toán B sẽ bổ sung) |
 | `docs/data_schema.md` | Định dạng dữ liệu đầu vào/đầu ra *(đang viết)* |
