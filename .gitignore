@@ -1,0 +1,19 @@
+# Môi trường Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Kết quả chạy: chỉ giữ file tham chiếu output/toy/schedule.json
+output/*
+!output/toy/
+output/toy/*
+!output/toy/schedule.json
+
+# Trình soạn thảo, hệ điều hành
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+~$*

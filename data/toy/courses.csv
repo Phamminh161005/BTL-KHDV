@@ -1,0 +1,6 @@
+course_id,course_name,exam_type,duration_min,max_sittings
+INT2204,Lập trình hướng đối tượng,written,90,
+MAT1099,Toán rời rạc,written,180,
+INT2211,Cơ sở dữ liệu,computer,60,
+INT3306,Phát triển ứng dụng Web,computer,150,2
+INT3505,Khoa học dịch vụ,written,60,2

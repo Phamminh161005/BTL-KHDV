@@ -1,0 +1,8 @@
+# Thống nhất kiểu xuống dòng LF trên mọi máy (Windows, macOS, Linux)
+* text=auto eol=lf
+*.docx binary
+*.xlsx binary
+*.pptx binary
+*.png binary
+*.jpg binary
+*.pdf binary

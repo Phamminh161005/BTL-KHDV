@@ -1,0 +1,421 @@
+{
+  "meta": {
+    "problem": "A",
+    "dataset": "toy",
+    "created_at": "2026-10-23T01:28:09+07:00",
+    "solver": "OR-Tools CP-SAT 9.15.6755 (bản cài đặt thử của spec)",
+    "strategy": "single",
+    "config": {
+      "strategy": "single",
+      "time_limit_sec": 300,
+      "num_workers": 8,
+      "random_seed": 0,
+      "proctors_per_room": 2,
+      "forbid_own_course": false,
+      "written_capacity_ratio": 0.5,
+      "default_max_sittings_computer": 3,
+      "weights": {
+        "A-S1": 100,
+        "A-S2": 30,
+        "A-S3": 50,
+        "A-S4": 1,
+        "A-S5": 20,
+        "A-S6": 200
+      }
+    }
+  },
+  "status": "OPTIMAL",
+  "objective": 2391,
+  "best_bound": 2391,
+  "solve_time_sec": 13.78,
+  "penalties": {
+    "A-S1": 2,
+    "A-S2": 50,
+    "A-S3": 1,
+    "A-S4": 41,
+    "A-S5": 0,
+    "A-S6": 3
+  },
+  "kpi": {
+    "hard_violations": 0,
+    "students_multi_exam_day": 2,
+    "avg_gap_days": 1.8,
+    "min_gap_days": 0,
+    "proctor_load_min": 4,
+    "proctor_load_max": 4,
+    "proctor_load_range": 0,
+    "num_sittings": 8,
+    "room_utilization_normal": 0.1724,
+    "room_utilization_lab": 0.5,
+    "seat_fill_rate": 0.7887,
+    "solve_time_sec": 13.78
+  },
+  "sittings": [
+    {
+      "sitting_id": "INT2204@2026-12-14_4",
+      "course_id": "INT2204",
+      "course_name": "Lập trình hướng đối tượng",
+      "exam_type": "written",
+      "date": "2026-12-14",
+      "start_period": 4,
+      "periods": [
+        4
+      ],
+      "start_time": "15:40",
+      "end_time": "18:10",
+      "duration_min": 90,
+      "num_students": 40,
+      "rooms": [
+        {
+          "room_id": "G2-101",
+          "exam_capacity": 30,
+          "num_students": 30,
+          "students": [
+            "22020001",
+            "22020002",
+            "22020003",
+            "22020004",
+            "22020005",
+            "22020006",
+            "22020007",
+            "22020008",
+            "22020009",
+            "22020010",
+            "22020011",
+            "22020012",
+            "22020013",
+            "22020014",
+            "22020015",
+            "22020016",
+            "22020017",
+            "22020018",
+            "22020019",
+            "22020020",
+            "22020021",
+            "22020022",
+            "22020023",
+            "22020024",
+            "22020025",
+            "22020026",
+            "22020027",
+            "22020028",
+            "22020029",
+            "22020030"
+          ],
+          "proctors": [
+            "GV03",
+            "GV05"
+          ]
+        },
+        {
+          "room_id": "G2-102",
+          "exam_capacity": 20,
+          "num_students": 10,
+          "students": [
+            "22020031",
+            "22020032",
+            "22020033",
+            "22020034",
+            "22020035",
+            "22020036",
+            "22020037",
+            "22020038",
+            "22020039",
+            "22020040"
+          ],
+          "proctors": [
+            "GV02",
+            "GV04"
+          ]
+        }
+      ]
+    },
+    {
+      "sitting_id": "INT2211@2026-12-15_1",
+      "course_id": "INT2211",
+      "course_name": "Cơ sở dữ liệu",
+      "exam_type": "computer",
+      "date": "2026-12-15",
+      "start_period": 1,
+      "periods": [
+        1
+      ],
+      "start_time": "07:00",
+      "end_time": "09:30",
+      "duration_min": 60,
+      "num_students": 6,
+      "rooms": [
+        {
+          "room_id": "G2-LAB1",
+          "exam_capacity": 12,
+          "num_students": 6,
+          "students": [
+            "22020013",
+            "22020017",
+            "22020021",
+            "22020025",
+            "22020029",
+            "22020040"
+          ],
+          "proctors": [
+            "GV02",
+            "GV05"
+          ]
+        }
+      ]
+    },
+    {
+      "sitting_id": "INT3306@2026-12-15_3",
+      "course_id": "INT3306",
+      "course_name": "Phát triển ứng dụng Web",
+      "exam_type": "computer",
+      "date": "2026-12-15",
+      "start_period": 3,
+      "periods": [
+        3,
+        4
+      ],
+      "start_time": "13:00",
+      "end_time": "18:10",
+      "duration_min": 150,
+      "num_students": 11,
+      "rooms": [
+        {
+          "room_id": "G2-LAB1",
+          "exam_capacity": 12,
+          "num_students": 11,
+          "students": [
+            "22020031",
+            "22020032",
+            "22020033",
+            "22020034",
+            "22020035",
+            "22020036",
+            "22020037",
+            "22020038",
+            "22020039",
+            "22020041",
+            "22020045"
+          ],
+          "proctors": [
+            "GV01",
+            "GV06"
+          ]
+        }
+      ]
+    },
+    {
+      "sitting_id": "MAT1099@2026-12-16_1",
+      "course_id": "MAT1099",
+      "course_name": "Toán rời rạc",
+      "exam_type": "written",
+      "date": "2026-12-16",
+      "start_period": 1,
+      "periods": [
+        1,
+        2
+      ],
+      "start_time": "07:00",
+      "end_time": "12:10",
+      "duration_min": 180,
+      "num_students": 20,
+      "rooms": [
+        {
+          "room_id": "G2-102",
+          "exam_capacity": 20,
+          "num_students": 20,
+          "students": [
+            "22020021",
+            "22020022",
+            "22020023",
+            "22020024",
+            "22020025",
+            "22020026",
+            "22020027",
+            "22020028",
+            "22020029",
+            "22020030",
+            "22020031",
+            "22020032",
+            "22020033",
+            "22020034",
+            "22020035",
+            "22020036",
+            "22020037",
+            "22020038",
+            "22020039",
+            "22020040"
+          ],
+          "proctors": [
+            "GV04",
+            "GV05"
+          ]
+        }
+      ]
+    },
+    {
+      "sitting_id": "INT2211@2026-12-17_1",
+      "course_id": "INT2211",
+      "course_name": "Cơ sở dữ liệu",
+      "exam_type": "computer",
+      "date": "2026-12-17",
+      "start_period": 1,
+      "periods": [
+        1
+      ],
+      "start_time": "07:00",
+      "end_time": "09:30",
+      "duration_min": 60,
+      "num_students": 12,
+      "rooms": [
+        {
+          "room_id": "G2-LAB1",
+          "exam_capacity": 12,
+          "num_students": 12,
+          "students": [
+            "22020014",
+            "22020019",
+            "22020020",
+            "22020022",
+            "22020026",
+            "22020027",
+            "22020028",
+            "22020030",
+            "22020033",
+            "22020034",
+            "22020036",
+            "22020037"
+          ],
+          "proctors": [
+            "GV04",
+            "GV06"
+          ]
+        }
+      ]
+    },
+    {
+      "sitting_id": "INT2211@2026-12-17_2",
+      "course_id": "INT2211",
+      "course_name": "Cơ sở dữ liệu",
+      "exam_type": "computer",
+      "date": "2026-12-17",
+      "start_period": 2,
+      "periods": [
+        2
+      ],
+      "start_time": "09:40",
+      "end_time": "12:10",
+      "duration_min": 60,
+      "num_students": 12,
+      "rooms": [
+        {
+          "room_id": "G2-LAB1",
+          "exam_capacity": 12,
+          "num_students": 12,
+          "students": [
+            "22020011",
+            "22020012",
+            "22020015",
+            "22020016",
+            "22020018",
+            "22020023",
+            "22020024",
+            "22020031",
+            "22020032",
+            "22020035",
+            "22020038",
+            "22020039"
+          ],
+          "proctors": [
+            "GV02",
+            "GV03"
+          ]
+        }
+      ]
+    },
+    {
+      "sitting_id": "INT3306@2026-12-17_3",
+      "course_id": "INT3306",
+      "course_name": "Phát triển ứng dụng Web",
+      "exam_type": "computer",
+      "date": "2026-12-17",
+      "start_period": 3,
+      "periods": [
+        3,
+        4
+      ],
+      "start_time": "13:00",
+      "end_time": "18:10",
+      "duration_min": 150,
+      "num_students": 4,
+      "rooms": [
+        {
+          "room_id": "G2-LAB1",
+          "exam_capacity": 12,
+          "num_students": 4,
+          "students": [
+            "22020040",
+            "22020042",
+            "22020043",
+            "22020044"
+          ],
+          "proctors": [
+            "GV01",
+            "GV03"
+          ]
+        }
+      ]
+    },
+    {
+      "sitting_id": "INT3505@2026-12-17_4",
+      "course_id": "INT3505",
+      "course_name": "Khoa học dịch vụ",
+      "exam_type": "written",
+      "date": "2026-12-17",
+      "start_period": 4,
+      "periods": [
+        4
+      ],
+      "start_time": "15:40",
+      "end_time": "18:10",
+      "duration_min": 60,
+      "num_students": 13,
+      "rooms": [
+        {
+          "room_id": "G2-102",
+          "exam_capacity": 20,
+          "num_students": 13,
+          "students": [
+            "22020001",
+            "22020005",
+            "22020009",
+            "22020013",
+            "22020017",
+            "22020021",
+            "22020025",
+            "22020029",
+            "22020033",
+            "22020037",
+            "22020041",
+            "22020045",
+            "22020049"
+          ],
+          "proctors": [
+            "GV02",
+            "GV06"
+          ]
+        }
+      ]
+    }
+  ],
+  "messages": [
+    {
+      "code": "P7",
+      "level": "info",
+      "file": "courses.csv",
+      "line": 6,
+      "message": "Môn thi viết INT3505 được phép chia tối đa 2 lượt"
+    }
+  ],
+  "violations": []
+}

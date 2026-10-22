@@ -1,0 +1,3 @@
+ortools==9.15.6755
+streamlit==1.66.1
+pytest==9.1.1

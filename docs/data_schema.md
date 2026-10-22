@@ -476,7 +476,7 @@ Hệ quả là phòng cuối cùng có thể ít sinh viên. Phòng có 0 sinh v
 |---|---|
 | `hard_violations` | Số phần tử trong `violations` |
 | `students_multi_exam_day` | Số sinh viên có ít nhất một ngày bắt đầu từ 2 lượt thi trở lên |
-| `avg_gap_days` | Trung bình, trên các sinh viên thi từ 2 lượt trở lên, của khoảng cách (số ngày theo lịch) giữa hai lượt liên tiếp của sinh viên đó. Hai lượt cùng ngày có khoảng cách 0. `null` nếu không có sinh viên nào thi từ 2 lượt |
+| `avg_gap_days` | Với mỗi sinh viên thi từ 2 lượt trở lên, tính trung bình khoảng cách (số ngày theo lịch) giữa các cặp lượt liên tiếp của sinh viên đó; sau đó lấy trung bình trên các sinh viên này, mỗi sinh viên có trọng số như nhau. Hai lượt cùng ngày có khoảng cách 0. `null` nếu không có sinh viên nào thi từ 2 lượt |
 | `min_gap_days` | Khoảng cách nhỏ nhất theo cùng cách tính. `null` trong cùng trường hợp |
 | `proctor_load_min`, `proctor_load_max` | Số ca coi thi ít nhất và nhiều nhất trong $G$ (lượt 2 ca tính là 2 ca) |
 | `proctor_load_range` | `proctor_load_max − proctor_load_min` |
@@ -498,6 +498,8 @@ Validator kiểm tra lời giải độc lập với solver (spec A.10) và ghi 
 ```
 
 `code` là mã ràng buộc cứng trong scope. `refs` chứa các mã liên quan để giao diện có thể làm nổi bật.
+
+Ngoài việc soát lịch trong file kết quả, validator còn soát phần giám thị trong lời giải gốc của solver trước khi gộp. Lý do: file kết quả chỉ ghi một danh sách giám thị cho mỗi phòng của một lượt, nên không thể hiện được hai lỗi "lượt 2 ca đổi giám thị giữa hai ca" và "giám thị được xếp vào phòng không có ai thi". Hai lỗi này được báo với mã A-H7.
 
 ## 8. Những điều cố ý không quy định
 

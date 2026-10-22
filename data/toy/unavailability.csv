@@ -1,0 +1,6 @@
+resource_type,resource_id,date,period,note
+room,G2-101,2026-12-14,1,Hội nghị khoa
+room,G2-LAB1,2026-12-16,3,Bảo trì máy
+lecturer,GV01,2026-12-14,,Đi công tác
+lecturer,GV03,2026-12-15,3,
+lecturer,GV05,2026-12-17,1,

@@ -1,0 +1,4 @@
+room_id,room_name,building,room_type,seats,num_computers,exam_capacity
+G2-101,"Phòng 101, tầng 1",G2,normal,60,,
+G2-102,Phòng 102,G2,normal,40,,
+G2-LAB1,Phòng máy 1,G2,lab,,15,12
