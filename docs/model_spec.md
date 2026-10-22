@@ -45,7 +45,7 @@ Một lượt thi được xác định bằng cặp (môn, ca bắt đầu). N�
 | $I_c$ | Sinh viên đăng ký môn $c$ |
 | $C_i$ | Các môn sinh viên $i$ đăng ký |
 | $G$ | Tập giảng viên tham gia coi thi, chỉ số $g$ |
-| $Q$ | Tập cặp ngày thi liên tiếp $(d, d')$ trong cùng một tuần (Thứ 2–Thứ 3, ..., Thứ 6–Thứ 7). Thứ 7 và Thứ 2 tuần sau không tính là liên tiếp vì có Chủ nhật nghỉ ở giữa |
+| $Q$ | Tập cặp ngày thi $(d, d')$ với $d'$ là ngày ngay sau $d$ theo lịch, ví dụ Thứ 2–Thứ 3. Thứ 7 và Thứ 2 tuần sau không phải cặp vì có Chủ nhật ở giữa; tương tự nếu Thứ 4 nghỉ lễ thì Thứ 3 và Thứ 5 không phải cặp, vì sinh viên có ngày nghỉ ở giữa để ôn |
 
 ### A.3. Tham số (dữ liệu biết trước)
 
