@@ -1,6 +1,6 @@
 """Solver bài toán A (lịch thi) bằng OR-Tools CP-SAT.
 
-Người phụ trách: TV2 (task T2: strategy "single"; task T3: strategy "two_phase").
+Người phụ trách: Khỏe. Làm strategy "single" trước, "two_phase" sau.
 
 Việc cần làm: cài đặt đúng mô hình trong docs/model_spec.md.
 - Biến quyết định: mục A.4. Chỉ tạo biến trên đúng miền chỉ số (ví dụ u chỉ với r thuộc R_c).
@@ -40,4 +40,4 @@ def solve(instance: Instance, config: dict) -> SolveResult:
         solver_name: ví dụ "OR-Tools CP-SAT 9.15.6755".
         messages: thông báo thêm nếu có (ví dụ gợi ý nguyên nhân khi INFEASIBLE, A.8).
     """
-    raise NotImplementedError("T2: cài đặt solver theo docs/model_spec.md")
+    raise NotImplementedError("solver bài toán A chưa được cài đặt (xem docs/model_spec.md)")

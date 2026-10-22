@@ -2,13 +2,13 @@
 
 ## 1. Quy trình cho mỗi task
 
-1. Nhận task trên Coreach. Mỗi task có một mã, ví dụ `T2`.
+1. Nhận task trên CoReach. Mỗi task có một mã gồm tên người phụ trách viết hoa không dấu và số thứ tự task của người đó: `MINH-1`, `KHOE-2`, `MANH-3`...
 2. Cập nhật nhánh `main` mới nhất rồi tạo nhánh riêng cho task:
 
    ```powershell
    git checkout main
    git pull
-   git checkout -b T2-exam-solver
+   git checkout -b KHOE-2-exam-solver
    ```
 
    Tên nhánh bắt đầu bằng mã task, sau đó là vài chữ mô tả không dấu, nối bằng dấu gạch ngang.
@@ -16,12 +16,12 @@
 4. Đẩy nhánh lên GitHub và tạo Pull Request vào `main`:
 
    ```powershell
-   git push -u origin T2-exam-solver
+   git push -u origin KHOE-2-exam-solver
    ```
 
-   Tiêu đề Pull Request bắt đầu bằng mã task, ví dụ `T2: Solver bài toán A, chiến lược single`. Phần mô tả ghi: đã làm gì, chạy thử thế nào, còn gì chưa làm.
+   Tiêu đề Pull Request bắt đầu bằng mã task, ví dụ `KHOE-2: Solver bài toán A, chiến lược single`. Phần mô tả ghi: đã làm gì, chạy thử thế nào, còn gì chưa làm.
 5. Ít nhất một thành viên khác duyệt (Approve) thì mới gộp (Merge) vào `main`.
-6. Chuyển task trên Coreach sang Done sau khi đã gộp.
+6. Chuyển task trên CoReach sang Done sau khi đã gộp.
 
 Không commit thẳng vào `main`.
 

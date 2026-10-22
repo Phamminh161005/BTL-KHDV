@@ -1,6 +1,6 @@
 """Giao diện xem lịch thi (Streamlit).
 
-Người phụ trách: TV3 (task D2, D3, D4). Đây mới là khung tối thiểu: đọc schedule.json và hiển thị bảng lượt thi.
+Người phụ trách: Mạnh. Đây mới là khung tối thiểu: đọc schedule.json và hiển thị bảng lượt thi.
 Định dạng file kết quả: docs/data_schema.md mục 7.
 
 Cách chạy:
@@ -42,4 +42,4 @@ st.dataframe([
     for s in schedule["sittings"]
 ], width="stretch")
 
-# TODO (D2): xem theo phòng, theo sinh viên, theo giám thị; hiển thị KPI và thông báo
+# TODO: xem theo phòng, theo sinh viên, theo giám thị; hiển thị KPI và thông báo

@@ -1,11 +1,11 @@
 """Sinh dữ liệu giả lập cho bài toán A theo docs/data_schema.md.
 
-Người phụ trách: TV2 (task T1).
+Người phụ trách: Khỏe (task KHOE-1).
 
 Cách chạy dự kiến:
     py -3.12 -m src.generator --size medium --seed 1 --out data/medium
 
-Yêu cầu (chi tiết trong mô tả task T1 trên Coreach):
+Yêu cầu (chi tiết trong mô tả task KHOE-1 trên CoReach):
 - Quy mô theo docs/scope.md mục 3: toy (5 môn, 3 phòng, ~50 SV), medium (30 môn, 10 phòng, ~500 SV),
   large (60 môn, 15 phòng, ~1.000 SV).
 - Dữ liệu giống thực tế: mỗi SV học 4–6 môn; SV chia theo khóa/ngành, SV cùng khóa học nhiều môn giống nhau;
@@ -24,7 +24,7 @@ import argparse
 
 def generate(size: str, seed: int, out_dir: str) -> None:
     """Sinh một bộ dữ liệu cỡ size ("toy", "medium", "large") vào thư mục out_dir."""
-    raise NotImplementedError("T1: cài đặt script sinh dữ liệu")
+    raise NotImplementedError("KHOE-1: cài đặt script sinh dữ liệu")
 
 
 def main() -> None:

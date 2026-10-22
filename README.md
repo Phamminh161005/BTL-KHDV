@@ -80,7 +80,17 @@ pytest
 |---|---|
 | `data_loader.py`, `config.py`, `instance.py` | Hoàn chỉnh, có kiểm thử |
 | `validator.py`, `kpi.py`, `schedule.py`, `run.py` | Hoàn chỉnh, có kiểm thử |
-| `exam_solver.py` | Chưa cài đặt (task T2, T3) |
-| `generator.py` | Chưa cài đặt (task T1) |
-| `room_solver.py` | Chờ spec bài toán B (task L2, T4) |
-| `app/app.py` | Khung tối thiểu (task D2) |
+| `generator.py` | Chưa cài đặt (Khỏe, task KHOE-1) |
+| `exam_solver.py` | Chưa cài đặt (Khỏe) |
+| `room_solver.py` | Chờ spec bài toán B (Minh viết spec, Khỏe cài đặt) |
+| `app/app.py` | Khung tối thiểu (Mạnh) |
+
+## Phân công
+
+| Thành viên | Mảng việc | Mã task |
+|---|---|---|
+| Phạm Văn Minh (trưởng nhóm) | Điều phối, đặc tả mô hình, validator, duyệt code, ghép báo cáo | `MINH-n` |
+| Tôn Thiện Khỏe | Sinh dữ liệu, solver, thực nghiệm | `KHOE-n` |
+| Vũ Văn Mạnh | Phân tích dịch vụ, giao diện, slide | `MANH-n` |
+
+Task cụ thể được giao và theo dõi trên CoReach.
