@@ -50,6 +50,27 @@ streamlit run app/app.py
 pytest
 ```
 
+### Xem và xuất lịch thi
+
+Giao diện mặc định mở `output/toy/schedule.json`. Có thể tải lên file JSON khác
+hoặc nhập đường dẫn file kết quả; file tải lên được ưu tiên. Giao diện không tải CSV
+và không chạy solver.
+
+- Tổng quan có trạng thái, mục tiêu, cận dưới, thời gian giải, điểm phạt A-S1 đến A-S6
+  chưa nhân trọng số và toàn bộ KPI (kèm giải thích tiếng Việt). Giá trị `null` không được coi là 0.
+- Thông báo chia theo lỗi/cảnh báo/thông tin; vi phạm ràng buộc cứng được tô nổi bật.
+- Lịch ngày × 4 ca hiển thị môn và phòng; lượt thi hai ca xuất hiện ở cả hai ô.
+- Các tab cho phép chọn phòng, nhập mã sinh viên hoặc chọn mã giảng viên để tra cứu.
+  Giờ là khung giữ phòng; file kết quả không chứa tên giảng viên.
+- Nút **Xuất Excel** tạo hai sheet: **Lịch tổng** (mỗi phòng/lượt một dòng) và
+  **Sinh viên theo phòng** (mỗi sinh viên/phòng/lượt một dòng).
+- `INPUT_ERROR`, `INFEASIBLE`, `UNKNOWN` chỉ hiển thị tổng quan và thông báo,
+  không vẽ lịch hoặc cho xuất lịch.
+
+Kiểm thử giao diện: `pytest tests/test_app.py`. Test tạo bản sao dữ liệu toy trong
+thư mục tạm, sửa sức chứa phòng thành số âm, chạy `python -m src.run --data ... --out ...`
+và mở file `INPUT_ERROR` sinh ra bằng AppTest; không sửa dữ liệu toy gốc.
+
 ## Cấu trúc thư mục
 
 ```
@@ -83,7 +104,7 @@ pytest
 | `generator.py` | Chưa cài đặt (Khỏe, task KHOE-1) |
 | `exam_solver.py` | Chưa cài đặt (Khỏe) |
 | `room_solver.py` | Chờ spec bài toán B (Minh viết spec, Khỏe cài đặt) |
-| `app/app.py` | Khung tối thiểu (Mạnh) |
+| `app/app.py` | Xem lịch, KPI, tra cứu phòng/sinh viên/giám thị, xuất Excel; có AppTest |
 
 ## Phân công
 
