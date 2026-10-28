@@ -43,6 +43,9 @@ Các lệnh bên dưới đều chạy trong môi trường `.venv` đã kích h
 # Xếp lịch thi cho một bộ dữ liệu, ghi kết quả vào output/<tên bộ dữ liệu>/schedule.json
 python -m src.run --data data/toy
 
+# Dùng solver đối chứng PuLP + CBC thay cho CP-SAT
+python -m src.run --data data/toy --solver pulp
+
 # Mở giao diện xem lịch
 streamlit run app/app.py
 
@@ -82,7 +85,8 @@ và mở file `INPUT_ERROR` sinh ra bằng AppTest; không sửa dữ liệu toy
 │   ├── instance.py        Cấu trúc dữ liệu dùng chung, giao diện SolveResult của solver
 │   ├── config.py          Đọc cấu hình
 │   ├── data_loader.py     Đọc và kiểm tra dữ liệu (mã D, P)
-│   ├── exam_solver.py     Solver bài toán A
+│   ├── exam_solver.py     Solver bài toán A (CP-SAT)
+│   ├── exam_solver_pulp.py  Solver đối chứng bài toán A (PuLP + CBC)
 │   ├── room_solver.py     Solver bài toán B
 │   ├── schedule.py        Hậu xử lý, dựng schedule.json
 │   ├── validator.py       Kiểm tra lời giải độc lập với solver
@@ -103,6 +107,7 @@ và mở file `INPUT_ERROR` sinh ra bằng AppTest; không sửa dữ liệu toy
 | `validator.py`, `kpi.py`, `schedule.py`, `run.py` | Hoàn chỉnh, có kiểm thử |
 | `generator.py` | Hoàn chỉnh, có kiểm thử; dữ liệu sinh sẵn (seed 1) trong `data/toy_gen`, `data/medium`, `data/large` |
 | `exam_solver.py` | Chưa cài đặt (Khỏe) |
+| `exam_solver_pulp.py` | Hoàn chỉnh, có kiểm thử. Trên `toy` tìm được lời giải tối ưu 2391 nhưng không chứng minh được tối ưu trong vài phút (model_spec A.13) |
 | `room_solver.py` | Chờ spec bài toán B (Minh viết spec, Khỏe cài đặt) |
 | `app/app.py` | Xem lịch, KPI, tra cứu phòng/sinh viên/giám thị, xuất Excel; có AppTest |
 

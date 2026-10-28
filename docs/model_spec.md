@@ -476,6 +476,26 @@ Dữ liệu thử: 4 ngày, 15 ca (một ca nghỉ giữa buổi sáng), 3 phòn
 
 Thời gian chứng minh tối ưu trên dữ liệu thử: 20 đến 56 giây tùy biến thể; bỏ mục tiêu A-S5 nhanh hơn. Đây là cơ sở cho khuyến nghị dùng hai pha ở A.7.
 
+#### Solver đối chứng PuLP + CBC
+
+Mô hình được cài đặt lần thứ hai bằng PuLP 3.3.2 với bộ giải CBC 2.10.3 (`src/exam_solver_pulp.py`), độc lập với CP-SAT. Kết quả với `configs/default.json`, CBC chạy một luồng:
+
+| Bộ dữ liệu | Giới hạn | Kết quả CBC | Ghi chú |
+|---|---|---|---|
+| `toy` | 60 giây | `FEASIBLE`, mục tiêu 2391, không vi phạm | Tìm ra lời giải đạt giá trị tối ưu ở khoảng giây thứ 9, trùng với CP-SAT |
+| `toy` | 300 giây | `FEASIBLE`, mục tiêu 2391 | Cận dưới chỉ đạt 2285, còn cách tối ưu khoảng 4%; không chứng minh được tối ưu |
+| `toy`, bỏ A-S5 | 300 giây | `FEASIBLE`, mục tiêu 2391 | Cận dưới 2229; khác CP-SAT, phần giám thị không phải nguyên nhân chính |
+| Dữ liệu chỉ có 2 ca (vô nghiệm) | 60 giây | `INFEASIBLE` sau 0,2 giây | |
+| `medium` (64 nghìn biến, 88 nghìn ràng buộc) | 300 giây | `UNKNOWN` | Chưa xong tiền xử lý và nút gốc; bị dừng ở hạn cứng 360 giây (thông báo S01) |
+
+Nhận xét: CP-SAT chứng minh tối ưu bộ `toy` trong 20–56 giây và tìm được lời giải hợp lệ cho `medium` trong 300 giây, còn CBC không chứng minh được tối ưu `toy` và không tìm được lời giải nào cho `medium`. Nguyên nhân là nới lỏng tuyến tính của mô hình xếp lịch cho cận dưới yếu (nhiều biến nhị phân gắn với nhau qua các ràng buộc phủ ca), nên phương pháp nhánh và cận phải duyệt rất nhiều nút; CP-SAT kết hợp lan truyền ràng buộc và học mệnh đề nên xử lý loại bài toán này tốt hơn.
+
+Ba vấn đề kỹ thuật của CBC phát hiện khi cài đặt, đã xử lý trong code:
+
+1. Bản CBC đóng gói trong PuLP cho Windows bị treo ngay khi bắt đầu nhánh và cận nếu truyền tham số `-threads`, kể cả `threads=1`. Vì vậy không truyền tham số này; CBC chạy một luồng.
+2. Khi CBC dừng do hết giờ mà đã có lời giải, `prob.status` của PuLP vẫn là "Optimal". Trạng thái được đọc từ `prob.sol_status`, nơi phân biệt được tối ưu (1) và chỉ khả thi (2).
+3. Với mô hình lớn, CBC không dừng đúng giới hạn thời gian vì chỉ kiểm tra giới hạn giữa các bước. Solver đặt thêm hạn cứng (giới hạn cộng 30 giây hoặc 20%, lấy số lớn hơn) và dừng CBC khi vượt quá.
+
 ---
 
 ## B. Bài toán lịch phòng học/phòng máy
