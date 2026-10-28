@@ -1,0 +1,6 @@
+﻿course_id,course_name,exam_type,duration_min,max_sittings
+MAT1001,Giải tích 1,written,120,
+PHY1002,Đại số tuyến tính,written,150,
+INT2001,Lập trình hướng đối tượng,written,90,
+ELE2002,Cơ sở dữ liệu,computer,120,
+ITS2003,Cấu trúc dữ liệu và giải thuật,written,150,

@@ -80,7 +80,7 @@ pytest
 |---|---|
 | `data_loader.py`, `config.py`, `instance.py` | Hoàn chỉnh, có kiểm thử |
 | `validator.py`, `kpi.py`, `schedule.py`, `run.py` | Hoàn chỉnh, có kiểm thử |
-| `generator.py` | Chưa cài đặt (Khỏe, task KHOE-1) |
+| `generator.py` | Hoàn chỉnh, có kiểm thử; dữ liệu sinh sẵn (seed 1) trong `data/toy_gen`, `data/medium`, `data/large` |
 | `exam_solver.py` | Chưa cài đặt (Khỏe) |
 | `room_solver.py` | Chờ spec bài toán B (Minh viết spec, Khỏe cài đặt) |
 | `app/app.py` | Khung tối thiểu (Mạnh) |

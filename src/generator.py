@@ -12,7 +12,7 @@ Quy mô theo docs/scope.md mục 3:
     large  60 môn, 15 phòng (4 phòng máy), ~1.000 sinh viên
 
 Cách sinh (tóm tắt, chi tiết ở các hàm bên dưới):
-    1. Lịch: toy 3 ngày, medium/large 2 tuần (Thứ 2 – Thứ 7), mỗi ngày 4 ca, bỏ đi 1 ca nghỉ lễ.
+    1. Lịch: toy 6 ngày (1 tuần), medium/large 2 tuần (Thứ 2 – Thứ 7), mỗi ngày 4 ca, bỏ đi 1 ca nghỉ lễ.
     2. Phòng: sinh trước để biết tổng sức chứa.
     3. Môn: khoảng 1/3 thi máy; thời lượng chủ yếu 60/90/120, vài môn 150–180 phút.
     4. Sinh viên chia theo khóa/ngành (cohort). Mỗi cohort có một "rổ" môn; sinh viên cùng cohort
@@ -78,7 +78,7 @@ SIZES: dict[str, Spec] = {
         cohorts=2,
         general=2,
         lecturers=8,
-        days=3,
+        days=6,  # 4–6 môn/SV cần đủ ngày để A-S1 (thi 2 môn/ngày) còn ý nghĩa
         normal_rooms=2,
         lab_rooms=1,
         seat_choices=(),
