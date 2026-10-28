@@ -1,0 +1,31 @@
+﻿course_id,course_name,exam_type,duration_min,max_sittings
+MAT1001,Giải tích 1,written,90,
+PHY1002,Đại số tuyến tính,written,120,
+POL1003,Xác suất thống kê,written,180,2
+ENG1004,Vật lý đại cương,written,120,
+MAT1005,Triết học Mác-Lênin,written,90,
+PHY1006,Tiếng Anh học thuật,written,150,
+INT2001,Lập trình hướng đối tượng,written,120,
+ELE2002,Cơ sở dữ liệu,written,90,
+ITS2003,Cấu trúc dữ liệu và giải thuật,computer,60,
+INT2004,Mạng máy tính,computer,120,2
+ELE2005,Hệ điều hành,computer,60,
+ITS2006,Phát triển ứng dụng Web,written,90,
+INT2007,Công nghệ phần mềm,computer,60,4
+ELE2008,Trí tuệ nhân tạo,computer,120,3
+ITS2009,Kiến trúc máy tính,computer,60,4
+INT2010,Phân tích thiết kế hệ thống,written,180,
+ELE2011,Học máy,written,90,
+ITS2012,An toàn thông tin,written,60,
+INT2013,Xử lý ảnh,written,120,
+ELE2014,Điện toán đám mây,written,120,
+ITS2015,Khoa học dữ liệu,written,120,
+INT2016,Lập trình di động,written,90,
+ELE2017,Kiểm thử phần mềm,written,60,
+ITS2018,Hệ thống nhúng,written,60,
+INT2019,Truyền thông số,computer,90,2
+ELE2020,Điện tử số,computer,90,4
+ITS2021,Xử lý tín hiệu số,computer,60,3
+INT2022,Khai phá dữ liệu,computer,90,3
+ELE2023,Lập trình mạng,written,90,
+ITS2024,Thiết kế giao diện,written,90,

@@ -1,0 +1,61 @@
+﻿course_id,course_name,exam_type,duration_min,max_sittings
+MAT1001,Giải tích 1,written,90,
+PHY1002,Đại số tuyến tính,written,60,
+POL1003,Xác suất thống kê,written,90,
+ENG1004,Vật lý đại cương,written,120,2
+MAT1005,Triết học Mác-Lênin,written,90,
+PHY1006,Tiếng Anh học thuật,written,90,
+POL1007,Toán rời rạc,written,120,
+ENG1008,Kinh tế chính trị,written,150,
+MAT1009,Giải tích 2,written,180,
+PHY1010,Vật lý 2,written,120,
+POL1011,Pháp luật đại cương,written,60,
+ENG1012,Tư tưởng Hồ Chí Minh,written,120,
+INT2001,Lập trình hướng đối tượng,computer,120,3
+ELE2002,Cơ sở dữ liệu,computer,120,
+ITS2003,Cấu trúc dữ liệu và giải thuật,written,120,
+INT2004,Mạng máy tính,written,180,2
+ELE2005,Hệ điều hành,written,120,
+ITS2006,Phát triển ứng dụng Web,written,60,
+INT2007,Công nghệ phần mềm,computer,180,3
+ELE2008,Trí tuệ nhân tạo,computer,60,4
+ITS2009,Kiến trúc máy tính,computer,90,3
+INT2010,Phân tích thiết kế hệ thống,computer,60,
+ELE2011,Học máy,computer,90,2
+ITS2012,An toàn thông tin,computer,90,4
+INT2013,Xử lý ảnh,written,60,
+ELE2014,Điện toán đám mây,written,60,
+ITS2015,Khoa học dữ liệu,written,60,
+INT2016,Lập trình di động,computer,90,2
+ELE2017,Kiểm thử phần mềm,computer,180,2
+ITS2018,Hệ thống nhúng,written,90,
+INT2019,Truyền thông số,written,60,
+ELE2020,Điện tử số,written,120,
+ITS2021,Xử lý tín hiệu số,computer,180,2
+INT2022,Khai phá dữ liệu,written,90,
+ELE2023,Lập trình mạng,written,60,
+ITS2024,Thiết kế giao diện,written,180,
+INT2025,Quản lý dự án phần mềm,computer,150,3
+ELE2026,Hệ quản trị cơ sở dữ liệu,computer,60,
+ITS2027,Đồ họa máy tính,written,60,
+INT2028,Khoa học dịch vụ,written,60,
+ELE2029,Thương mại điện tử,written,120,
+ITS2030,Internet vạn vật,written,150,
+INT2031,Lập trình hướng đối tượng nâng cao,computer,90,
+ELE2032,Cơ sở dữ liệu nâng cao,written,90,
+ITS2033,Cấu trúc dữ liệu và giải thuật nâng cao,computer,60,2
+INT2034,Mạng máy tính nâng cao,written,120,2
+ELE2035,Hệ điều hành nâng cao,written,90,2
+ITS2036,Phát triển ứng dụng Web nâng cao,written,120,
+INT2037,Công nghệ phần mềm nâng cao,written,90,
+ELE2038,Trí tuệ nhân tạo nâng cao,written,90,
+ITS2039,Kiến trúc máy tính nâng cao,written,90,
+INT2040,Phân tích thiết kế hệ thống nâng cao,written,180,
+ELE2041,Học máy nâng cao,computer,120,
+ITS2042,An toàn thông tin nâng cao,computer,90,3
+INT2043,Xử lý ảnh nâng cao,written,120,
+ELE2044,Điện toán đám mây nâng cao,computer,60,3
+ITS2045,Khoa học dữ liệu nâng cao,computer,90,3
+INT2046,Lập trình di động nâng cao,written,180,
+ELE2047,Kiểm thử phần mềm nâng cao,computer,60,4
+ITS2048,Hệ thống nhúng nâng cao,written,120,

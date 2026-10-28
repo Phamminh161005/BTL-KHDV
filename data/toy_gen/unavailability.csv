@@ -1,0 +1,17 @@
+﻿resource_type,resource_id,date,period,note
+room,G2-101,2026-12-16,3,Sửa chữa
+room,G3-101,2026-12-15,,
+room,G2-LAB1,2026-12-18,3,Sự kiện của khoa
+lecturer,GV01,2026-12-19,1,Họp hội đồng
+lecturer,GV02,2026-12-14,1,Đi công tác
+lecturer,GV02,2026-12-14,2,Việc cá nhân
+lecturer,GV03,2026-12-15,1,Đi công tác
+lecturer,GV03,2026-12-17,4,Đi công tác
+lecturer,GV03,2026-12-18,1,Đi công tác
+lecturer,GV03,2026-12-18,4,Đi công tác
+lecturer,GV04,2026-12-15,2,Việc cá nhân
+lecturer,GV05,2026-12-18,,Việc cá nhân
+lecturer,GV06,2026-12-14,4,
+lecturer,GV07,2026-12-15,,Việc cá nhân
+lecturer,GV08,2026-12-16,4,Họp hội đồng
+lecturer,GV08,2026-12-18,4,Họp hội đồng

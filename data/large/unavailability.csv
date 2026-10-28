@@ -1,0 +1,228 @@
+﻿resource_type,resource_id,date,period,note
+room,G2-101,2026-12-16,1,Sửa chữa
+room,G2-101,2026-12-16,3,
+room,G3-101,2026-12-14,3,Sửa chữa
+room,G3-101,2026-12-14,4,Sửa chữa
+room,G3-101,2026-12-17,1,
+room,G3-101,2026-12-21,4,Sửa chữa
+room,G3-101,2026-12-26,2,Sửa chữa
+room,G2-102,2026-12-15,,Bảo trì
+room,G3-102,2026-12-14,1,Bảo trì
+room,G3-102,2026-12-15,4,Sự kiện của khoa
+room,G3-102,2026-12-17,3,Sửa chữa
+room,G3-102,2026-12-26,3,
+room,G2-103,2026-12-15,1,Sửa chữa
+room,G2-103,2026-12-19,3,Sửa chữa
+room,G2-103,2026-12-21,3,Sự kiện của khoa
+room,G2-103,2026-12-22,1,Bảo trì
+room,G3-103,2026-12-14,2,Sửa chữa
+room,G3-103,2026-12-15,2,Sự kiện của khoa
+room,G3-103,2026-12-15,3,Sự kiện của khoa
+room,G3-103,2026-12-16,1,Sửa chữa
+room,G3-103,2026-12-22,1,
+room,G3-103,2026-12-22,3,Sự kiện của khoa
+room,G3-103,2026-12-22,4,Sự kiện của khoa
+room,G3-103,2026-12-25,2,Sửa chữa
+room,G2-104,2026-12-14,1,Bảo trì
+room,G2-104,2026-12-16,4,Sự kiện của khoa
+room,G2-104,2026-12-18,1,Sự kiện của khoa
+room,G2-104,2026-12-19,2,
+room,G2-104,2026-12-24,4,Bảo trì
+room,G2-104,2026-12-25,3,Sửa chữa
+room,G2-104,2026-12-25,4,Sự kiện của khoa
+room,G3-104,2026-12-15,,Sửa chữa
+room,G3-104,2026-12-21,1,Sửa chữa
+room,G2-105,2026-12-18,3,Sự kiện của khoa
+room,G2-105,2026-12-19,1,Sửa chữa
+room,G2-105,2026-12-19,3,
+room,G2-105,2026-12-21,3,
+room,G2-105,2026-12-22,2,Bảo trì
+room,G3-105,2026-12-21,1,Sự kiện của khoa
+room,G3-105,2026-12-22,1,
+room,G3-105,2026-12-22,4,Sửa chữa
+room,G3-105,2026-12-24,1,Sự kiện của khoa
+room,G3-105,2026-12-25,4,
+room,G2-106,2026-12-14,1,Sửa chữa
+room,G2-106,2026-12-16,1,
+room,G2-106,2026-12-22,3,Sự kiện của khoa
+room,G2-106,2026-12-24,1,Sự kiện của khoa
+room,G2-106,2026-12-25,3,Sự kiện của khoa
+room,G2-LAB1,2026-12-21,1,Sửa chữa
+room,E3-LAB2,2026-12-16,,Bảo trì
+room,G2-LAB3,2026-12-16,4,Sự kiện của khoa
+room,G2-LAB3,2026-12-19,4,Sự kiện của khoa
+room,G2-LAB3,2026-12-25,1,Bảo trì
+room,G2-LAB3,2026-12-25,3,
+room,G2-LAB3,2026-12-25,4,Sửa chữa
+room,E3-LAB4,2026-12-15,3,
+room,E3-LAB4,2026-12-18,2,Bảo trì
+room,E3-LAB4,2026-12-22,2,Sửa chữa
+room,E3-LAB4,2026-12-25,1,
+room,E3-LAB4,2026-12-26,4,Bảo trì
+lecturer,GV01,2026-12-14,4,Họp hội đồng
+lecturer,GV01,2026-12-17,2,Việc cá nhân
+lecturer,GV01,2026-12-19,4,Việc cá nhân
+lecturer,GV01,2026-12-23,3,Việc cá nhân
+lecturer,GV01,2026-12-24,2,Họp hội đồng
+lecturer,GV01,2026-12-24,3,Đi công tác
+lecturer,GV01,2026-12-25,4,
+lecturer,GV02,2026-12-14,1,Việc cá nhân
+lecturer,GV02,2026-12-21,,Đi công tác
+lecturer,GV03,2026-12-14,3,Đi công tác
+lecturer,GV03,2026-12-15,1,
+lecturer,GV03,2026-12-15,2,Đi công tác
+lecturer,GV03,2026-12-16,3,Họp hội đồng
+lecturer,GV03,2026-12-18,1,Đi công tác
+lecturer,GV03,2026-12-18,3,Việc cá nhân
+lecturer,GV03,2026-12-21,1,Đi công tác
+lecturer,GV04,2026-12-16,3,Đi công tác
+lecturer,GV04,2026-12-19,1,Việc cá nhân
+lecturer,GV04,2026-12-21,4,
+lecturer,GV04,2026-12-26,1,Việc cá nhân
+lecturer,GV05,2026-12-16,,
+lecturer,GV05,2026-12-23,3,Họp hội đồng
+lecturer,GV06,2026-12-18,1,
+lecturer,GV06,2026-12-24,2,Việc cá nhân
+lecturer,GV06,2026-12-25,4,Họp hội đồng
+lecturer,GV06,2026-12-26,1,
+lecturer,GV06,2026-12-26,4,Đi công tác
+lecturer,GV07,2026-12-26,1,
+lecturer,GV08,2026-12-19,2,
+lecturer,GV08,2026-12-23,1,Việc cá nhân
+lecturer,GV08,2026-12-24,1,Việc cá nhân
+lecturer,GV08,2026-12-25,1,Họp hội đồng
+lecturer,GV08,2026-12-26,3,
+lecturer,GV09,2026-12-14,4,Việc cá nhân
+lecturer,GV09,2026-12-19,1,Đi công tác
+lecturer,GV09,2026-12-19,4,Họp hội đồng
+lecturer,GV09,2026-12-21,1,Họp hội đồng
+lecturer,GV09,2026-12-25,4,Đi công tác
+lecturer,GV09,2026-12-26,1,Họp hội đồng
+lecturer,GV10,2026-12-16,1,
+lecturer,GV10,2026-12-19,1,
+lecturer,GV10,2026-12-22,1,Đi công tác
+lecturer,GV10,2026-12-22,2,
+lecturer,GV10,2026-12-26,2,Đi công tác
+lecturer,GV11,2026-12-15,4,
+lecturer,GV11,2026-12-16,,
+lecturer,GV12,2026-12-15,1,Đi công tác
+lecturer,GV12,2026-12-15,3,Việc cá nhân
+lecturer,GV12,2026-12-21,1,
+lecturer,GV12,2026-12-22,4,Họp hội đồng
+lecturer,GV12,2026-12-23,3,Họp hội đồng
+lecturer,GV12,2026-12-24,3,Việc cá nhân
+lecturer,GV12,2026-12-24,4,Đi công tác
+lecturer,GV12,2026-12-25,3,Đi công tác
+lecturer,GV13,2026-12-14,2,Đi công tác
+lecturer,GV13,2026-12-25,,Họp hội đồng
+lecturer,GV14,2026-12-15,1,Việc cá nhân
+lecturer,GV14,2026-12-22,2,
+lecturer,GV14,2026-12-23,4,
+lecturer,GV14,2026-12-24,2,Họp hội đồng
+lecturer,GV15,2026-12-14,3,Họp hội đồng
+lecturer,GV15,2026-12-15,1,Đi công tác
+lecturer,GV15,2026-12-18,1,
+lecturer,GV15,2026-12-19,3,Họp hội đồng
+lecturer,GV15,2026-12-22,1,Đi công tác
+lecturer,GV16,2026-12-14,3,
+lecturer,GV16,2026-12-15,2,
+lecturer,GV16,2026-12-19,2,Việc cá nhân
+lecturer,GV17,2026-12-16,4,Đi công tác
+lecturer,GV17,2026-12-22,3,Đi công tác
+lecturer,GV17,2026-12-23,1,Việc cá nhân
+lecturer,GV17,2026-12-23,3,Việc cá nhân
+lecturer,GV17,2026-12-24,1,Họp hội đồng
+lecturer,GV17,2026-12-25,4,Đi công tác
+lecturer,GV18,2026-12-16,1,Họp hội đồng
+lecturer,GV18,2026-12-22,4,Việc cá nhân
+lecturer,GV18,2026-12-23,3,Việc cá nhân
+lecturer,GV18,2026-12-23,4,Họp hội đồng
+lecturer,GV18,2026-12-24,1,Họp hội đồng
+lecturer,GV18,2026-12-26,4,Đi công tác
+lecturer,GV19,2026-12-19,,
+lecturer,GV20,2026-12-15,2,
+lecturer,GV21,2026-12-15,2,Đi công tác
+lecturer,GV21,2026-12-18,4,Họp hội đồng
+lecturer,GV21,2026-12-19,3,Việc cá nhân
+lecturer,GV21,2026-12-22,4,Việc cá nhân
+lecturer,GV21,2026-12-25,2,Họp hội đồng
+lecturer,GV21,2026-12-26,1,Họp hội đồng
+lecturer,GV22,2026-12-18,2,Việc cá nhân
+lecturer,GV22,2026-12-18,3,
+lecturer,GV22,2026-12-21,1,Việc cá nhân
+lecturer,GV22,2026-12-22,2,Đi công tác
+lecturer,GV22,2026-12-24,3,Việc cá nhân
+lecturer,GV23,2026-12-22,4,Đi công tác
+lecturer,GV23,2026-12-23,3,
+lecturer,GV24,2026-12-14,2,Họp hội đồng
+lecturer,GV24,2026-12-16,1,Họp hội đồng
+lecturer,GV24,2026-12-18,1,Họp hội đồng
+lecturer,GV24,2026-12-19,4,
+lecturer,GV24,2026-12-21,4,Việc cá nhân
+lecturer,GV24,2026-12-23,4,Đi công tác
+lecturer,GV25,2026-12-14,1,Đi công tác
+lecturer,GV25,2026-12-15,1,Đi công tác
+lecturer,GV25,2026-12-15,4,Họp hội đồng
+lecturer,GV25,2026-12-21,1,Việc cá nhân
+lecturer,GV25,2026-12-23,3,Họp hội đồng
+lecturer,GV25,2026-12-24,4,Họp hội đồng
+lecturer,GV26,2026-12-14,2,Đi công tác
+lecturer,GV26,2026-12-16,1,
+lecturer,GV26,2026-12-16,4,Việc cá nhân
+lecturer,GV26,2026-12-18,1,Đi công tác
+lecturer,GV26,2026-12-19,2,
+lecturer,GV26,2026-12-25,2,Đi công tác
+lecturer,GV27,2026-12-15,4,Đi công tác
+lecturer,GV27,2026-12-18,3,Họp hội đồng
+lecturer,GV27,2026-12-19,1,Đi công tác
+lecturer,GV27,2026-12-22,2,
+lecturer,GV27,2026-12-24,2,Việc cá nhân
+lecturer,GV27,2026-12-26,3,Đi công tác
+lecturer,GV28,2026-12-14,4,Việc cá nhân
+lecturer,GV28,2026-12-16,3,
+lecturer,GV28,2026-12-21,1,Họp hội đồng
+lecturer,GV28,2026-12-26,3,
+lecturer,GV29,2026-12-15,3,Việc cá nhân
+lecturer,GV29,2026-12-19,3,
+lecturer,GV30,2026-12-14,4,
+lecturer,GV30,2026-12-17,3,
+lecturer,GV30,2026-12-22,3,
+lecturer,GV30,2026-12-23,4,Việc cá nhân
+lecturer,GV30,2026-12-25,4,
+lecturer,GV31,2026-12-16,3,Đi công tác
+lecturer,GV31,2026-12-23,2,
+lecturer,GV31,2026-12-24,1,
+lecturer,GV31,2026-12-24,2,Họp hội đồng
+lecturer,GV32,2026-12-14,4,Họp hội đồng
+lecturer,GV32,2026-12-22,2,
+lecturer,GV32,2026-12-25,3,Họp hội đồng
+lecturer,GV33,2026-12-18,2,Đi công tác
+lecturer,GV33,2026-12-18,4,Họp hội đồng
+lecturer,GV33,2026-12-21,,Việc cá nhân
+lecturer,GV33,2026-12-25,1,
+lecturer,GV34,2026-12-14,3,Việc cá nhân
+lecturer,GV34,2026-12-24,3,Đi công tác
+lecturer,GV34,2026-12-25,,Đi công tác
+lecturer,GV35,2026-12-16,1,Họp hội đồng
+lecturer,GV35,2026-12-21,3,Đi công tác
+lecturer,GV35,2026-12-24,3,Họp hội đồng
+lecturer,GV35,2026-12-25,2,
+lecturer,GV35,2026-12-26,3,Họp hội đồng
+lecturer,GV36,2026-12-14,2,Đi công tác
+lecturer,GV36,2026-12-15,4,Đi công tác
+lecturer,GV36,2026-12-19,3,Việc cá nhân
+lecturer,GV36,2026-12-22,4,Việc cá nhân
+lecturer,GV36,2026-12-25,3,Việc cá nhân
+lecturer,GV37,2026-12-19,,Đi công tác
+lecturer,GV37,2026-12-26,2,Đi công tác
+lecturer,GV38,2026-12-14,4,Đi công tác
+lecturer,GV38,2026-12-16,1,
+lecturer,GV38,2026-12-17,2,Đi công tác
+lecturer,GV38,2026-12-22,1,Đi công tác
+lecturer,GV38,2026-12-24,2,
+lecturer,GV38,2026-12-25,1,Việc cá nhân
+lecturer,GV38,2026-12-26,1,Đi công tác
+lecturer,GV39,2026-12-15,2,
+lecturer,GV39,2026-12-19,1,Họp hội đồng
+lecturer,GV39,2026-12-26,1,Việc cá nhân
+lecturer,GV40,2026-12-24,,Đi công tác
