@@ -1,4 +1,6 @@
 ortools==9.15.6755
 streamlit==1.66.1
 openpyxl==3.1.5
+# Giữ PuLP 3.x: từ PuLP 4, bộ giải CBC không còn được đóng gói sẵn (xem src/exam_solver_pulp.py)
+pulp==3.3.2
 pytest==9.1.1

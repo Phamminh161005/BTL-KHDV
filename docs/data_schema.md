@@ -291,7 +291,7 @@ Bộ đọc dữ liệu không dừng ở lỗi đầu tiên mà kiểm tra hế
 - `warning`: tự xử lý theo quy tắc (bỏ dòng, bỏ phòng...) rồi chạy tiếp.
 - `info`: chỉ để biết.
 
-Mã D là lỗi định dạng dữ liệu (tài liệu này). Mã P là kiểm tra trước khi giải (spec A.8). Mã R là thông báo của bước hậu xử lý sau khi giải.
+Mã D là lỗi định dạng dữ liệu (tài liệu này). Mã P là kiểm tra trước khi giải (spec A.8). Mã R là thông báo của bước hậu xử lý sau khi giải. Mã S là thông báo của solver.
 
 | Mã | Mức | Nội dung |
 |---|---|---|
@@ -313,6 +313,8 @@ Mã D là lỗi định dạng dữ liệu (tài liệu này). Mã P là kiểm 
 | D16 | warning | File dùng dấu chấm phẩy làm dấu phân cách |
 | P1–P9 | theo spec A.8 | Kiểm tra trước khi giải |
 | R01 | info | Hậu xử lý: một phòng của lượt thi không có sinh viên nào (mục 7.3) |
+| S01 | warning | Solver không tự dừng ở giới hạn thời gian nên bị dừng cưỡng bức; trạng thái `UNKNOWN` |
+| S02 | error | Bộ giải bên ngoài (CBC) thoát bất thường; trạng thái `UNKNOWN` |
 
 Mỗi thông báo có dạng (cũng là dạng xuất hiện trong file kết quả, mục 7):
 
@@ -335,8 +337,8 @@ Mọi khóa đều có giá trị mặc định. File cấu hình có thể ch�
 | Khóa | Kiểu | Mặc định | Mô tả |
 |---|---|---|---|
 | `strategy` | `"single"` hoặc `"two_phase"` | `"single"` | Giải một lần hay hai pha (spec A.7) |
-| `time_limit_sec` | Số dương | `300` | Giới hạn thời gian. Với `two_phase` là tổng thời gian cả hai pha |
-| `num_workers` | Số nguyên ≥ 1 | `8` | Số luồng CP-SAT |
+| `time_limit_sec` | Số dương | `300` | Giới hạn thời gian. Với `two_phase` là tổng thời gian cả hai pha. Solver PuLP + CBC có thể chạy quá giới hạn này một chút; nếu vượt hạn cứng (giới hạn cộng thêm 30 giây hoặc 20%, lấy số lớn hơn) thì bị dừng với thông báo S01 |
+| `num_workers` | Số nguyên ≥ 1 | `8` | Số luồng CP-SAT. Không áp dụng cho CBC (CBC luôn chạy một luồng, xem `src/exam_solver_pulp.py`) |
 | `random_seed` | Số nguyên ≥ 0 | `0` | Hạt giống ngẫu nhiên của CP-SAT, để chạy lại cho cùng kết quả |
 | `proctors_per_room` | Số nguyên ≥ 1 | `2` | $\nu$ |
 | `forbid_own_course` | `true` hoặc `false` | `false` | $\theta$, bật A-H10 |
