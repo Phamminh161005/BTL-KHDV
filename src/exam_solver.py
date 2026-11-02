@@ -207,21 +207,25 @@ def solve(instance: Instance, config: dict) -> SolveResult:
         for i, cs in student_courses.items()
         for d in days
     }
+    # A-S1, A-S2, A-S5 viết bằng bất đẳng thức một chiều đúng như model_spec A.6, không dùng
+    # AddMaxEquality/AddMinEquality: vì mục tiêu là cực tiểu, tại nghiệm tối ưu các biến phụ tự nhận đúng giá
+    # trị max/min; dạng "bằng chính xác" làm mô hình khó chứng minh tối ưu hơn nhiều (toy: không chứng minh
+    # được trong 300 giây, so với khoảng 20 giây ở dạng bất đẳng thức).
     p1_terms = []
-    # A-S1: a_(i,d) = max(E_(i,d)-1, 0).
+    # A-S1: a_(i,d) >= E_(i,d) - 1, a >= 0.
     for i, cs in student_courses.items():
         for d in days:
             a = model.NewIntVar(0, max(len(cs) - 1, 0), f"a_{i}_{d}")
-            model.AddMaxEquality(a, [exams_per_day[i, d] - 1, 0])
+            model.Add(a >= exams_per_day[i, d] - 1)
             p1_terms.append(a)
     p1 = sum(p1_terms)
 
-    # A-S2: b_(i,d) = max(E_(i,d)+E_(i,d')-1, 0).
+    # A-S2: b_(i,d) >= E_(i,d) + E_(i,d') - 1, b >= 0.
     p2_terms = []
     for i, cs in student_courses.items():
         for d, d2 in instance.day_pairs:
             b = model.NewIntVar(0, max(len(cs) - 1, 0), f"b_{i}_{d}_{d2}")
-            model.AddMaxEquality(b, [exams_per_day[i, d] + exams_per_day[i, d2] - 1, 0])
+            model.Add(b >= exams_per_day[i, d] + exams_per_day[i, d2] - 1)
             p2_terms.append(b)
     p2 = sum(p2_terms)
 
@@ -244,8 +248,10 @@ def solve(instance: Instance, config: dict) -> SolveResult:
         loads.append(load)
     max_load = model.NewIntVar(0, len(slots), "max_proctor_load")
     min_load = model.NewIntVar(0, len(slots), "min_proctor_load")
-    model.AddMaxEquality(max_load, loads)
-    model.AddMinEquality(min_load, loads)
+    # A-S5: Lambda_max >= lambda_g, Lambda_min <= lambda_g với mọi giám thị g.
+    for load in loads:
+        model.Add(max_load >= load)
+        model.Add(min_load <= load)
     p5 = max_load - min_load
 
     # A-S6: số lượt thi vượt mức một lượt cho mỗi môn.
@@ -265,7 +271,7 @@ def solve(instance: Instance, config: dict) -> SolveResult:
     )
 
     solver = cp_model.CpSolver()
-    solver.parameters.log_search_progress = True
+    solver.parameters.log_search_progress = False
     solver.parameters.max_time_in_seconds = float(config["time_limit_sec"])
     solver.parameters.num_search_workers = int(config["num_workers"])
     solver.parameters.random_seed = int(config["random_seed"])
@@ -309,12 +315,27 @@ def solve(instance: Instance, config: dict) -> SolveResult:
     for gs in proctoring.values():
         gs.sort()
 
+    # Điểm phạt tính lại chính xác từ lời giải. Với lời giải FEASIBLE (hết giờ), các biến phụ a, b, max_load,
+    # min_load chỉ bị chặn một phía nên có thể chưa về đúng max/min; đọc thẳng giá trị của chúng sẽ báo điểm
+    # phạt cao hơn thực tế. P_3, P_4, P_6 không có biến phụ nên đọc thẳng là chính xác.
+    exact_p1 = sum(max(0, solver.Value(exams_per_day[i, d]) - 1)
+                   for i in student_courses for d in days)
+    exact_p2 = sum(max(0, solver.Value(exams_per_day[i, d]) + solver.Value(exams_per_day[i, d2]) - 1)
+                   for i in student_courses for d, d2 in instance.day_pairs)
+    load_values = [solver.Value(load) for load in loads]
+    exact_p5 = max(load_values) - min(load_values) if load_values else 0
+    penalties = {
+        "A-S1": exact_p1,
+        "A-S2": exact_p2,
+        "A-S3": int(solver.Value(p3)),
+        "A-S4": int(solver.Value(p4)),
+        "A-S5": exact_p5,
+        "A-S6": int(solver.Value(p6)),
+    }
     return SolveResult(
         **kwargs,
-        objective=round(solver.ObjectiveValue()),
+        objective=sum(config["weights"][name] * value for name, value in penalties.items()),
         best_bound=solver.BestObjectiveBound(),
-        penalties={
-            name: int(solver.Value(expr)) for name, expr in penalties_expr.items()
-        },
+        penalties=penalties,
         solution=Solution(sittings, proctoring),
     )
