@@ -1,15 +1,28 @@
-"""Xem và xuất lịch thi theo docs/data_schema.md mục 7.
+"""Giao diện nhập dữ liệu, kiểm tra, cấu hình và xếp lịch thi (MANH-2).
 
 Chạy: streamlit run app/app.py
 """
 import json
+import os
+import shutil
+import tempfile
 from io import BytesIO
 from pathlib import Path
 
 import streamlit as st
 from openpyxl import Workbook
 
-DEFAULT_PATH = Path(__file__).resolve().parents[1] / "output" / "toy" / "schedule.json"
+from src.config import DEFAULT_CONFIG
+
+ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_RESULT_PATH = ROOT / "output" / "toy" / "schedule.json"
+DATA_DIR = ROOT / "data"
+CONFIGS_DIR = ROOT / "configs"
+OUTPUT_DIR = ROOT / "output"
+
+# Giữ DEFAULT_PATH cho khả năng tương thích với test cũ
+DEFAULT_PATH = DEFAULT_RESULT_PATH
+
 PERIODS = {
     1: "07:00 - 09:30",
     2: "09:40 - 12:10",
@@ -45,7 +58,14 @@ KPI_NOTES = {
     "seat_fill_rate": "Tổng (số sinh viên × số ca) chia tổng (sức chứa phòng dùng × số ca).",
     "solve_time_sec": "Thời gian giải tính bằng giây, không gồm thời gian đọc dữ liệu.",
 }
+REQUIRED_CSV = ["slots.csv", "rooms.csv", "courses.csv", "enrollments.csv", "lecturers.csv"]
+OPTIONAL_CSV = ["teaching.csv", "unavailability.csv"]
+ALL_CSV = REQUIRED_CSV + OPTIONAL_CSV
 
+
+# ---------------------------------------------------------------------------
+# Hàm tiện ích hiển thị
+# ---------------------------------------------------------------------------
 
 def format_value(value, ratio=False):
     if value is None:
@@ -119,6 +139,246 @@ def export_excel(sittings):
     return output.getvalue()
 
 
+# ---------------------------------------------------------------------------
+# Phần 1: Nhập dữ liệu, kiểm tra, cấu hình, chạy xếp lịch
+# ---------------------------------------------------------------------------
+
+def _available_datasets():
+    """Liệt kê thư mục con trong data/ có chứa ít nhất một file CSV bắt buộc."""
+    datasets = []
+    if DATA_DIR.is_dir():
+        for d in sorted(DATA_DIR.iterdir()):
+            if d.is_dir() and any((d / f).exists() for f in REQUIRED_CSV):
+                datasets.append(d.name)
+    return datasets
+
+
+def _save_uploaded_files(uploaded_files):
+    """Lưu file tải lên vào thư mục tạm, trả về đường dẫn thư mục."""
+    tmp = tempfile.mkdtemp(prefix="exam_upload_")
+    for uploaded in uploaded_files:
+        target = os.path.join(tmp, uploaded.name)
+        with open(target, "wb") as f:
+            f.write(uploaded.getvalue())
+    return tmp
+
+
+def _show_messages_from_load(messages):
+    """Hiện thông báo theo mức error/warning/info kèm tên file và số dòng."""
+    for level, label, display in (
+        ("error", "Lỗi", st.error),
+        ("warning", "Cảnh báo", st.warning),
+        ("info", "Thông tin", st.info),
+    ):
+        level_msgs = [m for m in messages if m.level == level]
+        if level_msgs:
+            st.markdown(f"**{label} ({len(level_msgs)})**")
+        for m in level_msgs:
+            location = m.file or ""
+            if m.line is not None:
+                location += f", dòng {m.line}"
+            display(f"[{m.code}] {m.message}" + (f" ({location})" if location else ""))
+
+
+def _show_data_preview(load_result):
+    """Hiện xem trước dữ liệu: thống kê và bảng môn thi, bảng phòng."""
+    instance = load_result.instance
+    if instance is None:
+        return
+
+    # Thống kê tổng quan
+    num_courses = len(instance.courses)
+    num_rooms = len(instance.rooms)
+    all_students = set()
+    for c in instance.courses.values():
+        all_students |= c.students
+    num_students = len(all_students)
+    num_slots = len(instance.slots)
+    num_proctors = len(instance.proctors)
+
+    st.subheader("Xem trước dữ liệu")
+    cols = st.columns(5)
+    cols[0].metric("Số môn", num_courses)
+    cols[1].metric("Số phòng", num_rooms)
+    cols[2].metric("Số sinh viên", num_students)
+    cols[3].metric("Số ca", num_slots)
+    cols[4].metric("Số giám thị", num_proctors)
+
+    # Bảng môn thi
+    st.markdown("Bảng môn thi")
+    course_data = []
+    for c in instance.courses.values():
+        course_data.append({
+            "Mã môn": c.course_id,
+            "Tên môn": c.name,
+            "Hình thức": "Thi viết" if c.exam_type == "written" else "Thi máy",
+            "Thời lượng (phút)": c.duration_min,
+            "Số SV": len(c.students),
+            "Số lượt tối đa": c.max_sittings,
+        })
+    st.dataframe(course_data, hide_index=True, width="stretch")
+
+    # Bảng phòng
+    st.markdown("Bảng phòng")
+    room_data = []
+    for r in instance.rooms.values():
+        room_data.append({
+            "Mã phòng": r.room_id,
+            "Tên phòng": r.name,
+            "Loại": "Phòng thường" if r.room_type == "normal" else "Phòng máy",
+            "Sức chứa khi thi": r.exam_capacity,
+        })
+    st.dataframe(room_data, hide_index=True, width="stretch")
+
+
+def _config_form():
+    """Hiển thị form cấu hình, trả về (config_dict, config_valid)."""
+    st.subheader("Cấu hình")
+    defaults = DEFAULT_CONFIG
+
+    valid = True
+    cfg = {}
+
+    col1, col2 = st.columns(2)
+    with col1:
+        time_limit = st.number_input(
+            "time_limit_sec (giới hạn thời gian giải, giây)",
+            min_value=1, value=defaults["time_limit_sec"], step=10,
+            help="Số dương. Với chiến lược two_phase là tổng thời gian cả hai pha.",
+        )
+        cfg["time_limit_sec"] = time_limit
+
+        forbid = st.checkbox(
+            "forbid_own_course (cấm coi thi môn mình dạy)",
+            value=defaults["forbid_own_course"],
+            help="Bật ràng buộc A-H10: giám thị không được coi thi môn mình dạy.",
+        )
+        cfg["forbid_own_course"] = forbid
+
+    with col2:
+        st.markdown("Trọng số ràng buộc mềm (số nguyên ≥ 0)")
+        weights = {}
+        for key in ["A-S1", "A-S2", "A-S3", "A-S4", "A-S5", "A-S6"]:
+            default_w = defaults["weights"][key]
+            w = st.number_input(
+                f"{key}", min_value=0, value=default_w, step=1,
+                help=PENALTY_NOTES.get(key, ""), key=f"weight_{key}",
+            )
+            if not isinstance(w, int) or w < 0:
+                valid = False
+            weights[key] = w
+        cfg["weights"] = weights
+
+    # Các giá trị cố định lấy mặc định
+    for key in ["strategy", "num_workers", "random_seed", "proctors_per_room",
+                 "written_capacity_ratio", "default_max_sittings_computer"]:
+        cfg[key] = defaults[key]
+
+    return cfg, valid
+
+
+def _write_temp_config(cfg):
+    """Ghi cấu hình ra file tạm và trả về đường dẫn."""
+    tmp = tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False, encoding="utf-8")
+    json.dump(cfg, tmp, ensure_ascii=False)
+    tmp.close()
+    return tmp.name
+
+
+def page_input():
+    """Trang nhập dữ liệu và chạy xếp lịch."""
+    st.header("Nhập dữ liệu và xếp lịch")
+
+    # Bước 1: Chọn dữ liệu
+    st.subheader("Chọn dữ liệu")
+    source = st.radio(
+        "Nguồn dữ liệu",
+        ["Bộ dữ liệu có sẵn", "Tải lên file CSV"],
+        horizontal=True,
+    )
+
+    data_dir = None
+    dataset_name = None
+
+    if source == "Bộ dữ liệu có sẵn":
+        datasets = _available_datasets()
+        if not datasets:
+            st.warning("Không tìm thấy bộ dữ liệu nào trong thư mục data/.")
+            return
+        dataset_name = st.selectbox("Chọn bộ dữ liệu", datasets)
+        if dataset_name:
+            data_dir = str(DATA_DIR / dataset_name)
+    else:
+        uploaded_files = st.file_uploader(
+            "Chọn các file CSV",
+            type=["csv"],
+            accept_multiple_files=True,
+            help=f"Bắt buộc: {', '.join(REQUIRED_CSV)}. Tùy chọn: {', '.join(OPTIONAL_CSV)}.",
+        )
+        if uploaded_files:
+            data_dir = _save_uploaded_files(uploaded_files)
+            dataset_name = "upload"
+        else:
+            st.info(f"Vui lòng tải lên ít nhất các file: {', '.join(REQUIRED_CSV)}")
+            return
+
+    if data_dir is None:
+        return
+
+    # Bước 2: Kiểm tra dữ liệu
+    st.subheader("Kiểm tra dữ liệu")
+    from src.data_loader import load_instance
+    config_path = str(CONFIGS_DIR / "default.json")
+    if not os.path.exists(config_path):
+        config_path = None
+    load_result = load_instance(data_dir, config_path)
+
+    _show_messages_from_load(load_result.messages)
+
+    has_error = any(m.level == "error" for m in load_result.messages)
+    if has_error:
+        st.error("Dữ liệu có lỗi. Hãy sửa các lỗi trên rồi thử lại.")
+
+    # Bước 3: Xem trước dữ liệu
+    _show_data_preview(load_result)
+
+    # Bước 4: Cấu hình
+    cfg, config_valid = _config_form()
+
+    # Bước 5: Nút xếp lịch
+    can_run = load_result.ok and config_valid
+    run_clicked = st.button("Xếp lịch", disabled=not can_run, type="primary")
+
+    if not can_run and not has_error:
+        st.info("Cấu hình không hợp lệ. Hãy kiểm tra lại các giá trị.")
+
+    if run_clicked:
+        config_path_tmp = _write_temp_config(cfg)
+        out_dir = str(OUTPUT_DIR / dataset_name)
+        out_path = os.path.join(out_dir, "schedule.json")
+
+        try:
+            with st.spinner("Đang xếp lịch, vui lòng chờ..."):
+                from src.run import run
+                schedule = run(data_dir=data_dir, config_path=config_path_tmp, out_path=out_path)
+        except NotImplementedError as e:
+            st.warning(
+                f"Solver chưa được cài đặt: {e}\n\n"
+                "Phần này sẽ hoạt động khi solver (CP-SAT hoặc PuLP) được triển khai ở task tiếp theo."
+            )
+            return
+        finally:
+            os.unlink(config_path_tmp)
+
+        st.success(f"Đã xếp xong. Kết quả lưu tại {out_path}")
+        st.session_state["schedule_result"] = schedule
+        st.session_state["schedule_path"] = out_path
+
+
+# ---------------------------------------------------------------------------
+# Phần 2: Xem kết quả (giống MANH-1)
+# ---------------------------------------------------------------------------
+
 def show_messages(schedule):
     st.subheader("Thông báo và vi phạm")
     for level, label, display in (
@@ -146,25 +406,8 @@ def show_messages(schedule):
         st.info("Không có thông báo hoặc vi phạm được ghi trong file.")
 
 
-def main():
-    st.set_page_config(page_title="Lịch thi", layout="wide")
-    st.title("Lịch thi cuối kỳ")
-    uploaded = st.file_uploader("Tải file kết quả schedule.json", type=["json"])
-    path = st.text_input("Đường dẫn file kết quả", str(DEFAULT_PATH))
-    st.caption("File tải lên được ưu tiên; nếu chưa tải, mở đường dẫn trên (mặc định là bộ toy).")
-    try:
-        content = uploaded.getvalue() if uploaded is not None else Path(path).read_bytes()
-        schedule = json.loads(content.decode("utf-8-sig"))
-        if not isinstance(schedule, dict) or schedule.get("status") not in STATUS_NOTES:
-            raise ValueError("Thiếu trạng thái hợp lệ theo schema mục 7.")
-        if not isinstance(schedule.get("messages", []), list) or not isinstance(schedule.get("violations", []), list):
-            raise ValueError("messages và violations phải là mảng.")
-        if any(not isinstance(item, dict) for key in ("messages", "violations") for item in schedule.get(key, [])):
-            raise ValueError("Mỗi thông báo và vi phạm phải là một đối tượng.")
-    except (OSError, UnicodeError, ValueError) as exc:
-        st.error(f"Không đọc được file kết quả: {exc}")
-        return
-
+def show_schedule(schedule):
+    """Hiển thị kết quả lịch thi (các màn hình MANH-1)."""
     status = schedule["status"]
     cols = st.columns(4)
     cols[0].metric("Trạng thái", status, help=STATUS_NOTES[status])
@@ -217,6 +460,50 @@ def main():
             st.dataframe(matches, hide_index=True, width="stretch")
         st.caption("File kết quả chỉ có mã giảng viên được phân công, không có tên hoặc danh sách giảng viên không được phân công.")
     st.download_button("Xuất Excel", data=export_excel(sittings), file_name="lich_thi.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+
+def page_view():
+    """Trang xem file kết quả (giữ chức năng gốc MANH-1)."""
+    st.header("Xem kết quả")
+
+    # Xem từ session state nếu vừa chạy xong
+    if "schedule_result" in st.session_state:
+        st.info(f"Hiển thị kết quả vừa chạy ({st.session_state.get('schedule_path', '')}).")
+        show_schedule(st.session_state["schedule_result"])
+        return
+
+    uploaded = st.file_uploader("Tải file kết quả schedule.json", type=["json"])
+    path = st.text_input("Đường dẫn file kết quả", str(DEFAULT_RESULT_PATH))
+    st.caption("File tải lên được ưu tiên; nếu chưa tải, mở đường dẫn trên (mặc định là bộ toy).")
+    try:
+        content = uploaded.getvalue() if uploaded is not None else Path(path).read_bytes()
+        schedule = json.loads(content.decode("utf-8-sig"))
+        if not isinstance(schedule, dict) or schedule.get("status") not in STATUS_NOTES:
+            raise ValueError("Thiếu trạng thái hợp lệ theo schema mục 7.")
+        if not isinstance(schedule.get("messages", []), list) or not isinstance(schedule.get("violations", []), list):
+            raise ValueError("messages và violations phải là mảng.")
+        if any(not isinstance(item, dict) for key in ("messages", "violations") for item in schedule.get(key, [])):
+            raise ValueError("Mỗi thông báo và vi phạm phải là một đối tượng.")
+    except (OSError, UnicodeError, ValueError) as exc:
+        st.error(f"Không đọc được file kết quả: {exc}")
+        return
+
+    show_schedule(schedule)
+
+
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
+
+def main():
+    st.set_page_config(page_title="Lịch thi", layout="wide")
+    st.title("Lịch thi cuối kỳ")
+
+    tab_view, tab_input = st.tabs(["Xem kết quả", "Nhập dữ liệu và xếp lịch"])
+    with tab_view:
+        page_view()
+    with tab_input:
+        page_input()
 
 
 if __name__ == "__main__":

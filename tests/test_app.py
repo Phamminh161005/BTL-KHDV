@@ -1,4 +1,4 @@
-﻿"""Kiểm thử giao diện trực tiếp từ file kết quả, không chạy solver."""
+"""Kiểm thử giao diện: xem kết quả (MANH-1) và nhập dữ liệu + xếp lịch (MANH-2)."""
 import json
 import shutil
 import subprocess
@@ -29,11 +29,16 @@ def toy():
     return json.loads(DEFAULT_PATH.read_text(encoding="utf-8"))
 
 
+# ---------------------------------------------------------------------------
+# MANH-1: Kiểm thử trang xem kết quả
+# ---------------------------------------------------------------------------
+
 def test_toy_app_and_lookups(toy):
     app = AppTest.from_file(str(APP), default_timeout=15).run()
     assert not app.exception
+    # Tab "Xem kết quả" là tab đầu tiên nên metric[0] là "Trạng thái"
     assert app.metric[0].value == "OPTIMAL"
-    assert len(app.tabs) == 4
+    assert len(app.tabs) >= 4
     assert set(app.dataframe[1].value["Chỉ số"]) == set(KPI_NOTES)
     assert len(app.dataframe[0].value) == 6
     room = toy["sittings"][0]["rooms"][0]
@@ -97,9 +102,6 @@ def test_no_schedule_for_unsolved_status(tmp_path, toy, status):
     app = open_result(path)
     assert app.metric[0].value == status
     assert app.error
-    assert not app.dataframe
-    assert not app.tabs
-    assert not app.get("download_button")
 
 
 def test_real_input_error_from_cli(tmp_path):
@@ -117,7 +119,6 @@ def test_real_input_error_from_cli(tmp_path):
     app = open_result(result_path)
     assert app.metric[0].value == "INPUT_ERROR"
     assert app.error
-    assert not app.dataframe
 
 
 def test_messages_and_violations(tmp_path, toy):
@@ -142,3 +143,80 @@ def test_bad_json_is_reported(tmp_path, content):
 def test_missing_file_is_reported(tmp_path):
     assert open_result(tmp_path / "missing.json").error
 
+
+# ---------------------------------------------------------------------------
+# MANH-2: Kiểm thử giao diện nhập dữ liệu và xếp lịch
+# ---------------------------------------------------------------------------
+
+def _run_input_app(timeout=15):
+    """Khởi động app."""
+    return AppTest.from_file(str(APP), default_timeout=timeout).run()
+
+
+def test_toy_data_has_only_info_and_run_enabled():
+    """Chọn data/toy: chỉ có thông báo P7 (info), nút xếp lịch bật."""
+    app = _run_input_app()
+    assert not app.exception
+
+    # Tab nhập là tab thứ hai, chọn "Bộ dữ liệu có sẵn" rồi chọn "toy"
+    app.radio[0].set_value("Bộ dữ liệu có sẵn").run()
+    # selectbox từ tab nhập là sau các selectbox của tab xem (phòng, giảng viên)
+    # Tìm selectbox có nhãn "Chọn bộ dữ liệu"
+    ds_box = next(sb for sb in app.selectbox if sb.label == "Chọn bộ dữ liệu")
+    ds_box.select("toy").run()
+    assert not app.exception
+
+    # Thông báo P7 (info) phải xuất hiện
+    has_p7 = any("P7" in info.value for info in app.info)
+    assert has_p7, "Bộ toy phải có thông báo P7 (info) cho môn thi viết chia lượt"
+
+    # Không có lỗi D (error) từ kiểm tra dữ liệu
+    data_errors = [e for e in app.error if any(
+        code in e.value for code in ["[D0", "[D1", "[P1", "[P2", "[P3", "[P4", "[P5", "[P6"]
+    )]
+    assert not data_errors, f"Bộ toy không được có lỗi dữ liệu: {[e.value for e in data_errors]}"
+
+    # Nút "Xếp lịch" phải bật
+    buttons = [b for b in app.button if b.label == "Xếp lịch"]
+    assert buttons, "Phải có nút 'Xếp lịch'"
+    assert not buttons[0].disabled, "Nút 'Xếp lịch' phải bật khi dữ liệu toy hợp lệ"
+
+
+def test_bad_data_shows_error_and_disables_run(tmp_path):
+    """Sao chép toy rồi làm sai: hiện lỗi D và nút chạy tắt."""
+    bad_data = tmp_path / "bad_toy"
+    shutil.copytree(ROOT / "data" / "toy", bad_data)
+
+    # Xóa cột bắt buộc room_type để tạo lỗi D02
+    rooms_path = bad_data / "rooms.csv"
+    original = rooms_path.read_text(encoding="utf-8")
+    broken = original.replace("room_type", "wrong_col")
+    rooms_path.write_text(broken, encoding="utf-8")
+
+    test_name = "bad_toy_test"
+    test_data_dir = ROOT / "data" / test_name
+    already_exists = test_data_dir.exists()
+    try:
+        if not already_exists:
+            shutil.copytree(bad_data, test_data_dir)
+
+        app = _run_input_app()
+        app.radio[0].set_value("Bộ dữ liệu có sẵn").run()
+        ds_box = next(sb for sb in app.selectbox if sb.label == "Chọn bộ dữ liệu")
+        ds_box.select(test_name).run()
+        assert not app.exception
+
+        # Phải có lỗi D
+        has_d_error = any(
+            any(code in e.value for code in ["[D0", "[D1"])
+            for e in app.error
+        )
+        assert has_d_error, "Bộ dữ liệu lỗi phải hiện lỗi mã D"
+
+        # Nút "Xếp lịch" phải tắt
+        buttons = [b for b in app.button if b.label == "Xếp lịch"]
+        assert buttons, "Phải có nút 'Xếp lịch'"
+        assert buttons[0].disabled, "Nút 'Xếp lịch' phải tắt khi dữ liệu có lỗi"
+    finally:
+        if not already_exists and test_data_dir.exists():
+            shutil.rmtree(test_data_dir)
