@@ -5,16 +5,19 @@ Chạy: streamlit run app/app.py
 import json
 import os
 import shutil
+import sys
 import tempfile
 from io import BytesIO
 from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 import streamlit as st
 from openpyxl import Workbook
 
 from src.config import DEFAULT_CONFIG
-
-ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_RESULT_PATH = ROOT / "output" / "toy" / "schedule.json"
 DATA_DIR = ROOT / "data"
 CONFIGS_DIR = ROOT / "configs"
