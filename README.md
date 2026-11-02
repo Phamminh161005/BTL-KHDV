@@ -115,7 +115,7 @@ và mở file `INPUT_ERROR` sinh ra bằng AppTest; không sửa dữ liệu toy
 
 | Thành viên | Mảng việc | Mã task |
 |---|---|---|
-| Phạm Văn Minh (trưởng nhóm) | Điều phối, đặc tả mô hình, validator, duyệt code, ghép báo cáo | `MINH-n` |
+| Phạm Văn Minh | Điều phối, đặc tả mô hình, validator, duyệt code, ghép báo cáo | `MINH-n` |
 | Tôn Thiện Khỏe | Sinh dữ liệu, solver, thực nghiệm | `KHOE-n` |
 | Vũ Văn Mạnh | Phân tích dịch vụ, giao diện, slide | `MANH-n` |
 

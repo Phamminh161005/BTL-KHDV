@@ -4,7 +4,6 @@ Tài liệu này viết các quy tắc trong `docs/scope.md` thành mô hình qu
 
 Phiên bản hiện tại mới có bài toán A (lịch thi). Bài toán B (lịch phòng học/phòng máy) sẽ được bổ sung ở phiên bản sau, theo cùng cách trình bày.
 
-Công thức viết bằng LaTeX. Xem trong VS Code bằng `Ctrl+Shift+V`; GitHub cũng hiển thị được.
 
 ---
 

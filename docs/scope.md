@@ -2,7 +2,7 @@
 
 **Đề tài:** Hệ thống xếp lịch phòng thi và phòng máy học phần
 
-> Tài liệu này trả lời câu hỏi "nhóm làm đến đâu". Mọi task trên Coreach phải nằm trong phạm vi này.
+> Mọi task trên Coreach phải nằm trong phạm vi này.
 > Muốn thêm/bớt gì thì sửa tài liệu này trước (qua Pull Request), rồi mới tạo task.
 
 ---
