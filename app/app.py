@@ -1,7 +1,12 @@
 """Giao diện nhập dữ liệu, kiểm tra, cấu hình và xếp lịch thi (MANH-2).
 
 Chạy: streamlit run app/app.py
+
+Biến môi trường (dùng cho kiểm thử, để không ghi vào data/ và output/ của repo):
+    EXAM_APP_DATA_DIR    thư mục chứa các bộ dữ liệu, mặc định data/
+    EXAM_APP_OUTPUT_DIR  thư mục ghi kết quả, mặc định output/
 """
+import hashlib
 import json
 import os
 import shutil
@@ -17,11 +22,11 @@ if str(ROOT) not in sys.path:
 import streamlit as st
 from openpyxl import Workbook
 
-from src.config import DEFAULT_CONFIG
+from src.config import load_config
 DEFAULT_RESULT_PATH = ROOT / "output" / "toy" / "schedule.json"
-DATA_DIR = ROOT / "data"
+DATA_DIR = Path(os.environ.get("EXAM_APP_DATA_DIR", ROOT / "data"))
 CONFIGS_DIR = ROOT / "configs"
-OUTPUT_DIR = ROOT / "output"
+OUTPUT_DIR = Path(os.environ.get("EXAM_APP_OUTPUT_DIR", ROOT / "output"))
 
 # Giữ DEFAULT_PATH cho khả năng tương thích với test cũ
 DEFAULT_PATH = DEFAULT_RESULT_PATH
@@ -157,12 +162,28 @@ def _available_datasets():
 
 
 def _save_uploaded_files(uploaded_files):
-    """Lưu file tải lên vào thư mục tạm, trả về đường dẫn thư mục."""
+    """Lưu file tải lên vào thư mục tạm, trả về đường dẫn thư mục.
+
+    Streamlit chạy lại toàn bộ trang sau mỗi thao tác, nên thư mục tạm được dùng lại khi các file tải lên không
+    đổi, và thư mục cũ bị xóa khi người dùng tải bộ file khác.
+    """
+    digest = hashlib.sha256()
+    for uploaded in sorted(uploaded_files, key=lambda f: f.name):
+        digest.update(uploaded.name.encode("utf-8"))
+        digest.update(uploaded.getvalue())
+    key = digest.hexdigest()
+    previous = st.session_state.get("upload_dir")
+    if st.session_state.get("upload_key") == key and previous and os.path.isdir(previous):
+        return previous
+    if previous:
+        shutil.rmtree(previous, ignore_errors=True)
     tmp = tempfile.mkdtemp(prefix="exam_upload_")
     for uploaded in uploaded_files:
         target = os.path.join(tmp, uploaded.name)
         with open(target, "wb") as f:
             f.write(uploaded.getvalue())
+    st.session_state["upload_key"] = key
+    st.session_state["upload_dir"] = tmp
     return tmp
 
 
@@ -237,7 +258,9 @@ def _show_data_preview(load_result):
 def _config_form():
     """Hiển thị form cấu hình, trả về (config_dict, config_valid)."""
     st.subheader("Cấu hình")
-    defaults = DEFAULT_CONFIG
+    # Giá trị mặc định lấy từ configs/default.json (khóa thiếu được điền theo src.config.DEFAULT_CONFIG)
+    config_file = CONFIGS_DIR / "default.json"
+    defaults = load_config(str(config_file) if config_file.exists() else None, [])
 
     valid = True
     cfg = {}
@@ -349,16 +372,20 @@ def page_input():
     cfg, config_valid = _config_form()
 
     # Bước 5: Nút xếp lịch
-    can_run = load_result.ok and config_valid
+    # Bật forbid_own_course mà thiếu teaching.csv thì bộ đọc dữ liệu sẽ báo lỗi D11 khi chạy: chặn ngay từ đây.
+    missing_teaching = cfg["forbid_own_course"] and not os.path.exists(os.path.join(data_dir, "teaching.csv"))
+    if missing_teaching:
+        st.error("Đã bật forbid_own_course nhưng bộ dữ liệu không có teaching.csv (lỗi D11). "
+                 "Hãy bổ sung teaching.csv hoặc tắt tùy chọn này.")
+    can_run = load_result.ok and config_valid and not missing_teaching
     run_clicked = st.button("Xếp lịch", disabled=not can_run, type="primary")
 
-    if not can_run and not has_error:
+    if not config_valid:
         st.info("Cấu hình không hợp lệ. Hãy kiểm tra lại các giá trị.")
 
     if run_clicked:
         config_path_tmp = _write_temp_config(cfg)
-        out_dir = str(OUTPUT_DIR / dataset_name)
-        out_path = os.path.join(out_dir, "schedule.json")
+        out_path = os.path.join(str(OUTPUT_DIR / dataset_name), "schedule.json")
 
         try:
             with st.spinner("Đang xếp lịch, vui lòng chờ..."):
@@ -373,9 +400,32 @@ def page_input():
         finally:
             os.unlink(config_path_tmp)
 
-        st.success(f"Đã xếp xong. Kết quả lưu tại {out_path}")
         st.session_state["schedule_result"] = schedule
         st.session_state["schedule_path"] = out_path
+        st.session_state["run_summary"] = _run_summary(schedule, out_path)
+        st.session_state["run_data_dir"] = data_dir
+        # Vẽ lại cả trang: tab "Xem kết quả" được vẽ trước tab này, nên phải chạy lại thì mới hiện kết quả mới.
+        st.rerun()
+
+    # Chỉ nhắc lại kết quả khi bộ dữ liệu đang chọn đúng là bộ vừa chạy
+    if "run_summary" in st.session_state and st.session_state.get("run_data_dir") == data_dir:
+        kind, text = st.session_state["run_summary"]
+        {"success": st.success, "warning": st.warning, "error": st.error}[kind](text)
+
+
+def _run_summary(schedule, out_path):
+    """Thông báo sau khi chạy, theo đúng trạng thái kết quả: trả về (loại thông báo, nội dung)."""
+    status = schedule["status"]
+    violations = schedule.get("violations") or []
+    where = f"Kết quả lưu tại {out_path}; xem chi tiết ở tab Xem kết quả."
+    if status in ("OPTIMAL", "FEASIBLE") and not violations:
+        kind = "success" if status == "OPTIMAL" else "warning"
+        return kind, f"Đã xếp xong ({status}). {STATUS_NOTES[status]} {where}"
+    if violations:
+        return "error", f"Lịch tìm được có {len(violations)} vi phạm ràng buộc cứng, không được dùng. {where}"
+    errors = [m["message"] for m in schedule.get("messages", []) if m.get("level") == "error"]
+    reason = (" Nguyên nhân: " + "; ".join(errors[:3])) if errors else ""
+    return "error", f"Không xếp được lịch ({status}). {STATUS_NOTES[status]}{reason} {where}"
 
 
 # ---------------------------------------------------------------------------
@@ -469,9 +519,13 @@ def page_view():
     """Trang xem file kết quả (giữ chức năng gốc MANH-1)."""
     st.header("Xem kết quả")
 
-    # Xem từ session state nếu vừa chạy xong
+    # Xem từ session state nếu vừa chạy xong; nút "Mở file khác" quay lại chế độ chọn file
     if "schedule_result" in st.session_state:
-        st.info(f"Hiển thị kết quả vừa chạy ({st.session_state.get('schedule_path', '')}).")
+        st.info(f"Đang hiển thị kết quả vừa chạy ({st.session_state.get('schedule_path', '')}).")
+        if st.button("Mở file khác", key="close_latest_result"):
+            for key in ("schedule_result", "schedule_path", "run_summary", "run_data_dir"):
+                st.session_state.pop(key, None)
+            st.rerun()
         show_schedule(st.session_state["schedule_result"])
         return
 
