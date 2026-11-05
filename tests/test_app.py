@@ -1,4 +1,5 @@
-"""Kiểm thử giao diện: xem kết quả (MANH-1) và nhập dữ liệu + xếp lịch (MANH-2)."""
+"""Kiểm thử giao diện: xem kết quả (MANH-1), nhập dữ liệu + xếp lịch (MANH-2), so sánh + sự cố (MANH-3)."""
+import copy
 import json
 import shutil
 import subprocess
@@ -11,7 +12,7 @@ import pytest
 from openpyxl import load_workbook
 from streamlit.testing.v1 import AppTest
 
-from app.app import DEFAULT_PATH, KPI_NOTES, _run_summary, calendar_rows, export_excel
+from app.app import DEFAULT_PATH, KPI_NOTES, _run_summary, calendar_rows, compare_schedules, export_excel
 
 ROOT = Path(__file__).resolve().parents[1]
 APP = ROOT / "app" / "app.py"
@@ -270,3 +271,136 @@ def test_run_summary_reports_violations_as_error(toy):
     toy["violations"] = [{"code": "A-H2", "message": "Trùng ca"}]
     kind, text = _run_summary(toy, "out.json")
     assert kind == "error" and "1 vi phạm" in text
+
+
+# ---------------------------------------------------------------------------
+# MANH-3: Kiểm thử so sánh hai lịch
+# ---------------------------------------------------------------------------
+
+def test_compare_identical_schedules(toy):
+    """So sánh hai lịch giống hệt nhau: không có lượt thay đổi."""
+    changed, affected_students, affected_proctors = compare_schedules(toy, toy)
+    assert changed == []
+    assert len(affected_students) == 0
+    assert len(affected_proctors) == 0
+
+
+def test_compare_with_moved_sitting(toy):
+    """Dời một lượt thi sang ca khác: bảng thay đổi có đúng lượt đó."""
+    modified = copy.deepcopy(toy)
+    # Dời lượt đầu tiên sang ca khác
+    target = modified["sittings"][0]
+    original_period = target["start_period"]
+    original_date = target["date"]
+    target["start_period"] = 1 if original_period != 1 else 2
+    target["periods"] = [target["start_period"]]
+    # Cập nhật sitting_id để phù hợp (giữ ID gốc vì so sánh theo sitting_id)
+
+    changed, affected_students, affected_proctors = compare_schedules(toy, modified)
+    assert len(changed) >= 1
+
+    # Tìm lượt có sitting_id trùng
+    sitting_id = toy["sittings"][0]["sitting_id"]
+    match = [c for c in changed if c["Lượt thi"] == sitting_id]
+    assert match, f"Lượt {sitting_id} phải xuất hiện trong danh sách thay đổi"
+    assert "Dời ca" in match[0]["Thay đổi"]
+
+    # Kiểm tra sinh viên bị ảnh hưởng
+    expected_students = set()
+    for r in toy["sittings"][0]["rooms"]:
+        expected_students.update(r.get("students", []))
+    assert expected_students <= affected_students
+
+
+def test_compare_with_changed_proctors(toy):
+    """Đổi giám thị một phòng: bảng thay đổi báo đổi giám thị."""
+    modified = copy.deepcopy(toy)
+    # Đổi giám thị phòng đầu tiên của lượt đầu tiên
+    old_proctors = modified["sittings"][0]["rooms"][0]["proctors"]
+    modified["sittings"][0]["rooms"][0]["proctors"] = ["GV99", "GV98"]
+
+    changed, _, affected_proctors = compare_schedules(toy, modified)
+    assert len(changed) >= 1
+    sitting_id = toy["sittings"][0]["sitting_id"]
+    match = [c for c in changed if c["Lượt thi"] == sitting_id]
+    assert match
+    assert "Đổi giám thị" in match[0]["Thay đổi"]
+    assert "GV99" in affected_proctors
+    assert set(old_proctors) <= affected_proctors
+
+
+def test_compare_with_removed_sitting(toy):
+    """Xóa một lượt: bảng thay đổi báo đã xóa."""
+    modified = copy.deepcopy(toy)
+    removed = modified["sittings"].pop(0)
+
+    changed, affected_students, _ = compare_schedules(toy, modified)
+    match = [c for c in changed if c["Lượt thi"] == removed["sitting_id"]]
+    assert match
+    assert "Đã xóa" in match[0]["Thay đổi"]
+
+
+def test_compare_tab_ui_identical(toy, tmp_path):
+    """Kiểm tra giao diện tab So sánh hai lịch khi hai lịch giống nhau."""
+    app = AppTest.from_file(str(APP), default_timeout=15).run()
+    assert not app.exception
+
+    # Tìm ô nhập đường dẫn Lịch A và Lịch B
+    path_a = next(t for t in app.text_input if t.label == "Đường dẫn lịch A")
+    path_b = next(t for t in app.text_input if t.label == "Đường dẫn lịch B")
+
+    path_a.set_value(str(DEFAULT_PATH)).run()
+    path_b.set_value(str(DEFAULT_PATH)).run()
+    assert not app.exception
+
+    assert any("Không có lượt thi nào thay đổi giữa hai lịch" in i.value for i in app.info)
+
+
+def test_compare_tab_ui_with_diff(toy, tmp_path):
+    """Kiểm tra giao diện tab So sánh hai lịch khi có lượt thi bị thay đổi."""
+    modified = copy.deepcopy(toy)
+    target = modified["sittings"][0]
+    target["start_period"] = 1 if target["start_period"] != 1 else 2
+    target["periods"] = [target["start_period"]]
+
+    mod_path = tmp_path / "modified.json"
+    mod_path.write_text(json.dumps(modified), encoding="utf-8")
+
+    app = AppTest.from_file(str(APP), default_timeout=15).run()
+    path_a = next(t for t in app.text_input if t.label == "Đường dẫn lịch A")
+    path_b = next(t for t in app.text_input if t.label == "Đường dẫn lịch B")
+
+    path_a.set_value(str(DEFAULT_PATH)).run()
+    path_b.set_value(str(mod_path)).run()
+    assert not app.exception
+
+    # Phải có metric số sinh viên và giám thị bị ảnh hưởng
+    assert any("Số sinh viên bị ảnh hưởng" in m.label for m in app.metric)
+    assert any("Số giám thị bị ảnh hưởng" in m.label for m in app.metric)
+
+
+def test_incident_tab_missing_reschedule_warning(app_dirs, toy):
+    """Bấm Xếp lại khi chưa có src/reschedule.py thì hiện thông báo hướng dẫn thay vì văng lỗi."""
+    _, output_dir = app_dirs
+    toy_out = output_dir / "toy"
+    toy_out.mkdir(parents=True, exist_ok=True)
+    (toy_out / "schedule.json").write_text(json.dumps(toy), encoding="utf-8")
+
+    app = _run_input_app()
+    base_input = next(t for t in app.text_input if t.label == "Đường dẫn lịch gốc")
+    base_input.set_value(str(toy_out / "schedule.json")).run()
+    assert not app.exception
+
+    btn = next(b for b in app.button if b.label == "Xếp lại")
+    btn.click().run()
+    assert not app.exception
+    assert any("chưa sẵn sàng" in w.value or "MINH-3" in w.value for w in app.warning)
+
+
+def test_solver_selection_options():
+    """Kiểm tra tab Nhập dữ liệu có tùy chọn solver CP-SAT và PuLP."""
+    app = _run_input_app()
+    solver_radio = next(r for r in app.radio if r.label == "Solver")
+    assert "CP-SAT (mặc định)" in solver_radio.options
+    assert "PuLP" in solver_radio.options
+    assert solver_radio.value == "CP-SAT (mặc định)"

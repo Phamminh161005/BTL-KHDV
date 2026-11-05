@@ -109,7 +109,7 @@ và mở file `INPUT_ERROR` sinh ra bằng AppTest; không sửa dữ liệu toy
 | `exam_solver.py` | Chiến lược `single` hoàn chỉnh, có kiểm thử: trên `toy` đạt `OPTIMAL` 2391 trong khoảng 20 giây. Chiến lược `two_phase` chưa cài đặt (Khỏe, task KHOE-3) |
 | `exam_solver_pulp.py` | Hoàn chỉnh, có kiểm thử. Trên `toy` tìm được lời giải tối ưu 2391 nhưng không chứng minh được tối ưu trong vài phút (model_spec A.13) |
 | `room_solver.py` | Chờ spec bài toán B (Minh viết spec, Khỏe cài đặt) |
-| `app/app.py` | Xem lịch, KPI, tra cứu phòng/sinh viên/giám thị, xuất Excel; có AppTest |
+| `app/app.py` | Xem và so sánh lịch, kiểm tra dữ liệu, chạy solver (CP-SAT/PuLP), khai báo sự cố và xếp lại; có AppTest |
 
 ## Phân công
 

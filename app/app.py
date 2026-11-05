@@ -1,4 +1,4 @@
-"""Giao diện nhập dữ liệu, kiểm tra, cấu hình và xếp lịch thi (MANH-2).
+"""Giao diện nhập dữ liệu, kiểm tra, cấu hình, xếp lịch thi, so sánh và xếp lại khi sự cố (MANH-2, MANH-3).
 
 Chạy: streamlit run app/app.py
 
@@ -371,6 +371,15 @@ def page_input():
     # Bước 4: Cấu hình
     cfg, config_valid = _config_form()
 
+    # Bước 4b: Chọn solver
+    solver_choice = st.radio(
+        "Solver",
+        ["CP-SAT (mặc định)", "PuLP"],
+        horizontal=True,
+        help="CP-SAT (Google OR-Tools) hoặc PuLP (CBC). Phần chọn solver để dành cho task sau.",
+    )
+    solver = "cp-sat" if solver_choice.startswith("CP-SAT") else "pulp"
+
     # Bước 5: Nút xếp lịch
     # Bật forbid_own_course mà thiếu teaching.csv thì bộ đọc dữ liệu sẽ báo lỗi D11 khi chạy: chặn ngay từ đây.
     missing_teaching = cfg["forbid_own_course"] and not os.path.exists(os.path.join(data_dir, "teaching.csv"))
@@ -390,7 +399,7 @@ def page_input():
         try:
             with st.spinner("Đang xếp lịch, vui lòng chờ..."):
                 from src.run import run
-                schedule = run(data_dir=data_dir, config_path=config_path_tmp, out_path=out_path)
+                schedule = run(data_dir=data_dir, config_path=config_path_tmp, out_path=out_path, solver=solver)
         except NotImplementedError as e:
             st.warning(
                 f"Solver chưa được cài đặt: {e}\n\n"
@@ -549,6 +558,309 @@ def page_view():
 
 
 # ---------------------------------------------------------------------------
+# Phần 3: So sánh hai lịch (MANH-3)
+# ---------------------------------------------------------------------------
+
+def _load_schedule_file(label, key):
+    """Đọc file schedule.json từ file tải lên hoặc đường dẫn, trả về dict hoặc None."""
+    uploaded = st.file_uploader(f"Tải {label}", type=["json"], key=f"cmp_upload_{key}")
+    default_path = str(DEFAULT_RESULT_PATH) if key == "a" else ""
+    path = st.text_input(f"Đường dẫn {label}", value=default_path, key=f"cmp_path_{key}")
+    try:
+        if uploaded is not None:
+            raw = uploaded.getvalue()
+        elif path:
+            raw = Path(path).read_bytes()
+        else:
+            return None
+        schedule = json.loads(raw.decode("utf-8-sig"))
+        if not isinstance(schedule, dict) or schedule.get("status") not in STATUS_NOTES:
+            raise ValueError("Thiếu trạng thái hợp lệ.")
+        return schedule
+    except (OSError, UnicodeError, ValueError, json.JSONDecodeError) as exc:
+        st.error(f"Không đọc được {label}: {exc}")
+        return None
+
+
+def compare_schedules(old, new):
+    """So sánh hai lịch thi, trả về (changed_sittings, affected_students, affected_proctors).
+
+    changed_sittings: danh sách dict mô tả các lượt thay đổi (dời ca, đổi phòng, đổi giám thị).
+    affected_students: tập mã sinh viên bị ảnh hưởng bởi thay đổi.
+    affected_proctors: tập mã giám thị bị ảnh hưởng bởi thay đổi.
+    """
+    old_sittings = {s["sitting_id"]: s for s in old.get("sittings", [])}
+    new_sittings = {s["sitting_id"]: s for s in new.get("sittings", [])}
+
+    all_ids = sorted(set(old_sittings) | set(new_sittings))
+    changed = []
+    affected_students = set()
+    affected_proctors = set()
+
+    for sid in all_ids:
+        o = old_sittings.get(sid)
+        n = new_sittings.get(sid)
+
+        if o is None and n is not None:
+            # Lượt mới thêm
+            changed.append({
+                "Lượt thi": sid,
+                "Mã môn": n["course_id"],
+                "Thay đổi": "Thêm mới",
+                "Cũ": "—",
+                "Mới": f"{n['date']} ca {n['start_period']}, phòng " + ", ".join(r["room_id"] for r in n["rooms"]),
+            })
+            for r in n["rooms"]:
+                affected_students.update(r.get("students", []))
+                affected_proctors.update(r.get("proctors", []))
+            continue
+
+        if n is None and o is not None:
+            # Lượt bị xóa
+            changed.append({
+                "Lượt thi": sid,
+                "Mã môn": o["course_id"],
+                "Thay đổi": "Đã xóa",
+                "Cũ": f"{o['date']} ca {o['start_period']}, phòng " + ", ".join(r["room_id"] for r in o["rooms"]),
+                "Mới": "—",
+            })
+            for r in o["rooms"]:
+                affected_students.update(r.get("students", []))
+                affected_proctors.update(r.get("proctors", []))
+            continue
+
+        # Cả hai đều có: kiểm tra thay đổi
+        diffs = []
+        if o["date"] != n["date"] or o["start_period"] != n["start_period"]:
+            diffs.append("Dời ca")
+        old_rooms = sorted(r["room_id"] for r in o["rooms"])
+        new_rooms = sorted(r["room_id"] for r in n["rooms"])
+        if old_rooms != new_rooms:
+            diffs.append("Đổi phòng")
+        old_proctors = sorted(p for r in o["rooms"] for p in r.get("proctors", []))
+        new_proctors = sorted(p for r in n["rooms"] for p in r.get("proctors", []))
+        if old_proctors != new_proctors:
+            diffs.append("Đổi giám thị")
+
+        if diffs:
+            changed.append({
+                "Lượt thi": sid,
+                "Mã môn": o["course_id"],
+                "Thay đổi": ", ".join(diffs),
+                "Cũ": f"{o['date']} ca {o['start_period']}, phòng " + ", ".join(r["room_id"] for r in o["rooms"]),
+                "Mới": f"{n['date']} ca {n['start_period']}, phòng " + ", ".join(r["room_id"] for r in n["rooms"]),
+            })
+            # Sinh viên và giám thị bị ảnh hưởng: lấy từ cả hai phía
+            for r in o["rooms"] + n["rooms"]:
+                affected_students.update(r.get("students", []))
+                affected_proctors.update(r.get("proctors", []))
+
+    return changed, affected_students, affected_proctors
+
+
+def _show_comparison(old, new):
+    """Hiển thị so sánh KPI, điểm phạt và các lượt thay đổi giữa hai lịch."""
+    # Bảng KPI cạnh nhau
+    st.subheader("So sánh KPI")
+    old_kpi = old.get("kpi") or {}
+    new_kpi = new.get("kpi") or {}
+    ratio_keys = ("room_utilization_normal", "room_utilization_lab", "seat_fill_rate")
+    kpi_rows = []
+    for key, note in KPI_NOTES.items():
+        ov = old_kpi.get(key)
+        nv = new_kpi.get(key)
+        is_ratio = key in ratio_keys
+        diff = ""
+        if ov is not None and nv is not None:
+            d = nv - ov
+            diff = f"{d:+.2%}" if is_ratio else f"{d:+g}"
+        kpi_rows.append({
+            "Chỉ số": key,
+            "Lịch A": format_value(ov, is_ratio),
+            "Lịch B": format_value(nv, is_ratio),
+            "Chênh lệch": diff,
+        })
+    st.dataframe(kpi_rows, hide_index=True, width="stretch")
+
+    # Bảng điểm phạt cạnh nhau
+    st.subheader("So sánh điểm phạt")
+    old_pen = old.get("penalties") or {}
+    new_pen = new.get("penalties") or {}
+    pen_rows = []
+    for key, note in PENALTY_NOTES.items():
+        ov = old_pen.get(key)
+        nv = new_pen.get(key)
+        diff = ""
+        if ov is not None and nv is not None:
+            d = nv - ov
+            diff = f"{d:+g}"
+        pen_rows.append({
+            "Chỉ số": key,
+            "Lịch A": format_value(ov),
+            "Lịch B": format_value(nv),
+            "Chênh lệch": diff,
+            "Ghi chú": note,
+        })
+    st.dataframe(pen_rows, hide_index=True, width="stretch")
+
+    # Bảng lượt thi thay đổi
+    st.subheader("Các lượt thi thay đổi")
+    changed, affected_students, affected_proctors = compare_schedules(old, new)
+    if not changed:
+        st.info("Không có lượt thi nào thay đổi giữa hai lịch.")
+    else:
+        st.dataframe(changed, hide_index=True, width="stretch")
+        cols = st.columns(2)
+        cols[0].metric("Số sinh viên bị ảnh hưởng", len(affected_students))
+        cols[1].metric("Số giám thị bị ảnh hưởng", len(affected_proctors))
+
+
+def page_compare():
+    """Trang so sánh hai lịch thi."""
+    st.header("So sánh hai lịch")
+
+    col1, col2 = st.columns(2)
+    with col1:
+        st.subheader("Lịch A")
+        sched_a = _load_schedule_file("lịch A", "a")
+    with col2:
+        st.subheader("Lịch B")
+        sched_b = _load_schedule_file("lịch B", "b")
+
+    if sched_a is None or sched_b is None:
+        st.info("Vui lòng chọn cả hai file lịch để so sánh.")
+        return
+
+    _show_comparison(sched_a, sched_b)
+
+
+# ---------------------------------------------------------------------------
+# Phần 4: Sự cố và xếp lại (MANH-3)
+# ---------------------------------------------------------------------------
+
+def page_incident():
+    """Trang khai báo sự cố và xếp lại lịch."""
+    st.header("Sự cố và xếp lại")
+
+    # Bước 1: Chọn bộ dữ liệu và lịch gốc
+    st.subheader("Chọn dữ liệu và lịch gốc")
+    datasets = _available_datasets()
+    if not datasets:
+        st.warning("Không tìm thấy bộ dữ liệu nào trong thư mục data/.")
+        return
+    dataset_name = st.selectbox("Bộ dữ liệu", datasets, key="incident_dataset")
+    data_dir = str(DATA_DIR / dataset_name)
+
+    base_upload = st.file_uploader("Tải lịch gốc (schedule.json)", type=["json"], key="incident_base_upload")
+    default_base = str(OUTPUT_DIR / dataset_name / "schedule.json")
+    base_path = st.text_input("Đường dẫn lịch gốc", default_base, key="incident_base_path")
+    try:
+        if base_upload is not None:
+            base_raw = base_upload.getvalue()
+        elif base_path:
+            base_raw = Path(base_path).read_bytes()
+        else:
+            st.info("Vui lòng chọn file lịch gốc.")
+            return
+        base_schedule = json.loads(base_raw.decode("utf-8-sig"))
+        if base_schedule.get("status") not in ("OPTIMAL", "FEASIBLE"):
+            st.error("Lịch gốc phải có trạng thái OPTIMAL hoặc FEASIBLE.")
+            return
+    except (OSError, json.JSONDecodeError, ValueError) as exc:
+        st.error(f"Không đọc được lịch gốc: {exc}")
+        return
+
+    sittings = base_schedule.get("sittings", [])
+    if not sittings:
+        st.error("Lịch gốc không có lượt thi nào.")
+        return
+
+    # Thu thập danh sách phòng, giảng viên, ngày từ bộ dữ liệu và lịch gốc
+    from src.data_loader import load_instance
+    load_res = load_instance(data_dir)
+    if load_res.instance:
+        all_rooms = sorted(load_res.instance.rooms.keys())
+        all_proctors = sorted(load_res.instance.proctors.keys())
+        all_dates = sorted({d.isoformat() for d in load_res.instance.days})
+    else:
+        all_rooms = sorted({r["room_id"] for s in sittings for r in s["rooms"]})
+        all_proctors = sorted({p for s in sittings for r in s["rooms"] for p in r.get("proctors", [])})
+        all_dates = sorted({s["date"] for s in sittings})
+
+    # Bước 2: Khai báo sự cố
+    st.subheader("Khai báo sự cố")
+    num_incidents = st.number_input("Số sự cố", min_value=1, max_value=20, value=1, step=1, key="num_incidents")
+
+    incidents = []
+    valid_incidents = True
+    for i in range(int(num_incidents)):
+        st.markdown(f"Sự cố {i + 1}")
+        c1, c2, c3, c4 = st.columns(4)
+        with c1:
+            rtype_label = st.selectbox("Loại", ["Phòng", "Giảng viên"], key=f"inc_rtype_{i}")
+        with c2:
+            target_ids = all_rooms if rtype_label == "Phòng" else all_proctors
+            rid = st.selectbox("Đối tượng", target_ids, key=f"inc_rid_{i}")
+        with c3:
+            date = st.selectbox("Ngày", all_dates, key=f"inc_date_{i}")
+        with c4:
+            period_choice = st.selectbox("Ca", ["Cả ngày", "Ca 1", "Ca 2", "Ca 3", "Ca 4"], key=f"inc_period_{i}")
+
+        if rid and date:
+            period = None if period_choice == "Cả ngày" else int(period_choice[-1])
+            incidents.append({
+                "resource_type": "room" if rtype_label == "Phòng" else "lecturer",
+                "resource_id": rid,
+                "date": date,
+                "period": period,
+            })
+
+    if not incidents:
+        valid_incidents = False
+
+    # Bước 3: Xếp lại
+    can_reschedule = valid_incidents and len(incidents) > 0
+    resched_clicked = st.button("Xếp lại", disabled=not can_reschedule, type="primary", key="btn_reschedule")
+
+    if resched_clicked:
+        # Lưu lịch gốc ra file tạm nếu cần
+        base_tmp = tempfile.NamedTemporaryFile(mode="wb", suffix=".json", delete=False)
+        base_tmp.write(base_raw)
+        base_tmp.close()
+
+        out_path = os.path.join(str(OUTPUT_DIR / dataset_name), "schedule_resched.json")
+
+        try:
+            from src.reschedule import reschedule
+        except (ImportError, ModuleNotFoundError):
+            st.warning(
+                "Chức năng xếp lại khi sự cố chưa sẵn sàng (thiếu src/reschedule.py, task MINH-3).\n\n"
+                "Phần này sẽ hoạt động khi module reschedule được triển khai và gộp vào main."
+            )
+            os.unlink(base_tmp.name)
+            return
+
+        try:
+            with st.spinner("Đang xếp lại lịch, vui lòng chờ..."):
+                new_schedule = reschedule(
+                    data_dir=data_dir,
+                    base_schedule_path=base_tmp.name,
+                    incidents=incidents,
+                    config_path=None,
+                    out_path=out_path,
+                )
+        except NotImplementedError as e:
+            st.warning(f"Chức năng xếp lại chưa hoàn chỉnh: {e}")
+            return
+        finally:
+            os.unlink(base_tmp.name)
+
+        solve_time = new_schedule.get("solve_time_sec", 0)
+        st.success(f"Đã xếp lại xong trong {solve_time} giây. Kết quả lưu tại {out_path}")
+        _show_comparison(base_schedule, new_schedule)
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
@@ -556,11 +868,20 @@ def main():
     st.set_page_config(page_title="Lịch thi", layout="wide")
     st.title("Lịch thi cuối kỳ")
 
-    tab_view, tab_input = st.tabs(["Xem kết quả", "Nhập dữ liệu và xếp lịch"])
+    tab_view, tab_input, tab_compare, tab_incident = st.tabs([
+        "Xem kết quả",
+        "Nhập dữ liệu và xếp lịch",
+        "So sánh hai lịch",
+        "Sự cố và xếp lại",
+    ])
     with tab_view:
         page_view()
     with tab_input:
         page_input()
+    with tab_compare:
+        page_compare()
+    with tab_incident:
+        page_incident()
 
 
 if __name__ == "__main__":
