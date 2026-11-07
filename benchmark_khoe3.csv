@@ -1,0 +1,5 @@
+﻿dataset,strategy,status,objective,best_bound,solve_time_sec,has_solution,violations
+medium,single,FEASIBLE,15648,-4696.0,300.459,True,0
+medium,two_phase,FEASIBLE,11586,-1206.0,241.127,True,0
+large,single,FEASIBLE,43310,-8910.0,301.298,True,0
+large,two_phase,FEASIBLE,35722,-8962.0,242.979,True,0
