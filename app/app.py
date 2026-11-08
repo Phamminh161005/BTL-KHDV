@@ -376,7 +376,8 @@ def page_input():
         "Solver",
         ["CP-SAT (mặc định)", "PuLP"],
         horizontal=True,
-        help="CP-SAT (Google OR-Tools) hoặc PuLP (CBC). Phần chọn solver để dành cho task sau.",
+        help="CP-SAT (Google OR-Tools) là solver chính. PuLP (CBC) là solver đối chứng: chậm hơn nhiều, "
+             "chỉ hỗ trợ chiến lược single và thường không giải được bộ medium trong giới hạn thời gian.",
     )
     solver = "cp-sat" if solver_choice.startswith("CP-SAT") else "pulp"
 
@@ -401,10 +402,8 @@ def page_input():
                 from src.run import run
                 schedule = run(data_dir=data_dir, config_path=config_path_tmp, out_path=out_path, solver=solver)
         except NotImplementedError as e:
-            st.warning(
-                f"Solver chưa được cài đặt: {e}\n\n"
-                "Phần này sẽ hoạt động khi solver (CP-SAT hoặc PuLP) được triển khai ở task tiếp theo."
-            )
+            # Ví dụ: PuLP chỉ hỗ trợ chiến lược single
+            st.error(f"Lựa chọn này chưa được hỗ trợ: {e}. Hãy đổi solver hoặc chiến lược rồi chạy lại.")
             return
         finally:
             os.unlink(config_path_tmp)
@@ -582,80 +581,35 @@ def _load_schedule_file(label, key):
         return None
 
 
+CHANGE_LABELS = {"time": "Dời ca", "rooms": "Đổi phòng", "proctors": "Đổi giám thị",
+                 "students": "Đổi sinh viên", "removed": "Đã xóa", "added": "Thêm mới"}
+
+
+def _describe(view):
+    """Mô tả ngắn một lượt thi trong bảng thay đổi: ngày, ca, phòng và giám thị."""
+    if view is None:
+        return "—"
+    proctors = "; ".join(f"{room}: {', '.join(gs)}" for room, gs in view["proctors"].items())
+    return f"{view['date']} ca {view['start_period']}, phòng {', '.join(view['rooms'])} (giám thị {proctors})"
+
+
 def compare_schedules(old, new):
-    """So sánh hai lịch thi, trả về (changed_sittings, affected_students, affected_proctors).
+    """So sánh hai lịch thi bằng src.reschedule.diff_schedules (data_schema mục 7.6).
 
-    changed_sittings: danh sách dict mô tả các lượt thay đổi (dời ca, đổi phòng, đổi giám thị).
-    affected_students: tập mã sinh viên bị ảnh hưởng bởi thay đổi.
-    affected_proctors: tập mã giám thị bị ảnh hưởng bởi thay đổi.
+    Các lượt được ghép theo môn chứ không theo sitting_id, nên lượt bị dời sang ca khác hiện là "Dời ca".
+    Sinh viên và giám thị bị ảnh hưởng được đếm theo từng người: chỉ đổi giám thị thì không sinh viên nào bị ảnh hưởng.
+    Trả về (các dòng của bảng thay đổi, tóm tắt).
     """
-    old_sittings = {s["sitting_id"]: s for s in old.get("sittings", [])}
-    new_sittings = {s["sitting_id"]: s for s in new.get("sittings", [])}
-
-    all_ids = sorted(set(old_sittings) | set(new_sittings))
-    changed = []
-    affected_students = set()
-    affected_proctors = set()
-
-    for sid in all_ids:
-        o = old_sittings.get(sid)
-        n = new_sittings.get(sid)
-
-        if o is None and n is not None:
-            # Lượt mới thêm
-            changed.append({
-                "Lượt thi": sid,
-                "Mã môn": n["course_id"],
-                "Thay đổi": "Thêm mới",
-                "Cũ": "—",
-                "Mới": f"{n['date']} ca {n['start_period']}, phòng " + ", ".join(r["room_id"] for r in n["rooms"]),
-            })
-            for r in n["rooms"]:
-                affected_students.update(r.get("students", []))
-                affected_proctors.update(r.get("proctors", []))
-            continue
-
-        if n is None and o is not None:
-            # Lượt bị xóa
-            changed.append({
-                "Lượt thi": sid,
-                "Mã môn": o["course_id"],
-                "Thay đổi": "Đã xóa",
-                "Cũ": f"{o['date']} ca {o['start_period']}, phòng " + ", ".join(r["room_id"] for r in o["rooms"]),
-                "Mới": "—",
-            })
-            for r in o["rooms"]:
-                affected_students.update(r.get("students", []))
-                affected_proctors.update(r.get("proctors", []))
-            continue
-
-        # Cả hai đều có: kiểm tra thay đổi
-        diffs = []
-        if o["date"] != n["date"] or o["start_period"] != n["start_period"]:
-            diffs.append("Dời ca")
-        old_rooms = sorted(r["room_id"] for r in o["rooms"])
-        new_rooms = sorted(r["room_id"] for r in n["rooms"])
-        if old_rooms != new_rooms:
-            diffs.append("Đổi phòng")
-        old_proctors = sorted(p for r in o["rooms"] for p in r.get("proctors", []))
-        new_proctors = sorted(p for r in n["rooms"] for p in r.get("proctors", []))
-        if old_proctors != new_proctors:
-            diffs.append("Đổi giám thị")
-
-        if diffs:
-            changed.append({
-                "Lượt thi": sid,
-                "Mã môn": o["course_id"],
-                "Thay đổi": ", ".join(diffs),
-                "Cũ": f"{o['date']} ca {o['start_period']}, phòng " + ", ".join(r["room_id"] for r in o["rooms"]),
-                "Mới": f"{n['date']} ca {n['start_period']}, phòng " + ", ".join(r["room_id"] for r in n["rooms"]),
-            })
-            # Sinh viên và giám thị bị ảnh hưởng: lấy từ cả hai phía
-            for r in o["rooms"] + n["rooms"]:
-                affected_students.update(r.get("students", []))
-                affected_proctors.update(r.get("proctors", []))
-
-    return changed, affected_students, affected_proctors
+    from src.reschedule import diff_schedules
+    changes, summary = diff_schedules(old, new)
+    rows = [{
+        "Mã môn": ch["course_id"],
+        "Thay đổi": ", ".join(CHANGE_LABELS[k] for k in ch["kinds"]),
+        "Cũ": _describe(ch["old"]),
+        "Mới": _describe(ch["new"]),
+        "Sinh viên bị ảnh hưởng": ch["students_affected"],
+    } for ch in changes]
+    return rows, summary
 
 
 def _show_comparison(old, new):
@@ -705,14 +659,21 @@ def _show_comparison(old, new):
 
     # Bảng lượt thi thay đổi
     st.subheader("Các lượt thi thay đổi")
-    changed, affected_students, affected_proctors = compare_schedules(old, new)
+    changed, summary = compare_schedules(old, new)
     if not changed:
         st.info("Không có lượt thi nào thay đổi giữa hai lịch.")
     else:
+        cols = st.columns(4)
+        cols[0].metric("Số lượt thay đổi", summary["sittings_changed"])
+        cols[1].metric("Số lượt dời ca", summary["sittings_moved"])
+        cols[2].metric("Số sinh viên bị ảnh hưởng", summary["students_affected"],
+                       help="Sinh viên có ngày, ca hoặc phòng thi bị đổi")
+        cols[3].metric("Số giám thị bị ảnh hưởng", summary["proctors_affected"],
+                       help="Giám thị có danh sách ca coi thi bị đổi")
         st.dataframe(changed, hide_index=True, width="stretch")
-        cols = st.columns(2)
-        cols[0].metric("Số sinh viên bị ảnh hưởng", len(affected_students))
-        cols[1].metric("Số giám thị bị ảnh hưởng", len(affected_proctors))
+        st.caption("Lượt của cùng một môn được ghép theo ca bắt đầu, rồi theo số sinh viên chung. "
+                   "Cột \"Sinh viên bị ảnh hưởng\" của từng lượt có thể đếm trùng một sinh viên chuyển giữa hai lượt; "
+                   "số tổng ở trên không trùng lặp.")
 
 
 def page_compare():
@@ -752,8 +713,10 @@ def page_incident():
     data_dir = str(DATA_DIR / dataset_name)
 
     base_upload = st.file_uploader("Tải lịch gốc (schedule.json)", type=["json"], key="incident_base_upload")
-    default_base = str(OUTPUT_DIR / dataset_name / "schedule.json")
-    base_path = st.text_input("Đường dẫn lịch gốc", default_base, key="incident_base_path")
+    default_base = OUTPUT_DIR / dataset_name / "schedule.json"
+    if not default_base.exists() and dataset_name == "toy":
+        default_base = DEFAULT_RESULT_PATH     # bộ toy chưa chạy lần nào: dùng kết quả tham chiếu
+    base_path = st.text_input("Đường dẫn lịch gốc", str(default_base), key="incident_base_path")
     try:
         if base_upload is not None:
             base_raw = base_upload.getvalue()
@@ -777,7 +740,8 @@ def page_incident():
 
     # Thu thập danh sách phòng, giảng viên, ngày từ bộ dữ liệu và lịch gốc
     from src.data_loader import load_instance
-    load_res = load_instance(data_dir)
+    config_path = str(CONFIGS_DIR / "default.json") if (CONFIGS_DIR / "default.json").exists() else None
+    load_res = load_instance(data_dir, config_path)
     if load_res.instance:
         all_rooms = sorted(load_res.instance.rooms.keys())
         all_proctors = sorted(load_res.instance.proctors.keys())
@@ -823,41 +787,55 @@ def page_incident():
     resched_clicked = st.button("Xếp lại", disabled=not can_reschedule, type="primary", key="btn_reschedule")
 
     if resched_clicked:
-        # Lưu lịch gốc ra file tạm nếu cần
+        from src.reschedule import reschedule
+
+        # Lịch gốc có thể là file tải lên nên luôn ghi ra file tạm để truyền đường dẫn
         base_tmp = tempfile.NamedTemporaryFile(mode="wb", suffix=".json", delete=False)
         base_tmp.write(base_raw)
         base_tmp.close()
-
-        out_path = os.path.join(str(OUTPUT_DIR / dataset_name), "schedule_resched.json")
-
-        try:
-            from src.reschedule import reschedule
-        except (ImportError, ModuleNotFoundError):
-            st.warning(
-                "Chức năng xếp lại khi sự cố chưa sẵn sàng (thiếu src/reschedule.py, task MINH-3).\n\n"
-                "Phần này sẽ hoạt động khi module reschedule được triển khai và gộp vào main."
-            )
-            os.unlink(base_tmp.name)
-            return
-
+        out_path = str(OUTPUT_DIR / dataset_name / "reschedule.json")
         try:
             with st.spinner("Đang xếp lại lịch, vui lòng chờ..."):
-                new_schedule = reschedule(
-                    data_dir=data_dir,
-                    base_schedule_path=base_tmp.name,
-                    incidents=incidents,
-                    config_path=None,
-                    out_path=out_path,
-                )
-        except NotImplementedError as e:
-            st.warning(f"Chức năng xếp lại chưa hoàn chỉnh: {e}")
-            return
+                new_schedule = reschedule(data_dir=data_dir, base_schedule_path=base_tmp.name, incidents=incidents,
+                                          config_path=config_path, out_path=out_path)
         finally:
             os.unlink(base_tmp.name)
+        # Giữ kết quả trong session để không mất khi người dùng thao tác tiếp trên trang
+        st.session_state["incident_result"] = {"data_dir": data_dir, "base": base_schedule, "new": new_schedule,
+                                               "incidents": incidents, "out_path": out_path}
 
-        solve_time = new_schedule.get("solve_time_sec", 0)
-        st.success(f"Đã xếp lại xong trong {solve_time} giây. Kết quả lưu tại {out_path}")
-        _show_comparison(base_schedule, new_schedule)
+    # Chỉ hiện kết quả khi bộ dữ liệu, lịch gốc và sự cố đang chọn đúng là của lần xếp lại đó
+    result = st.session_state.get("incident_result")
+    if result is None or (result["data_dir"], result["base"], result["incidents"]) != (data_dir, base_schedule, incidents):
+        return
+    new_schedule = result["new"]
+    kind, text = _reschedule_summary(new_schedule, result["out_path"])
+    {"success": st.success, "warning": st.warning, "error": st.error}[kind](text)
+    if new_schedule["status"] not in ("OPTIMAL", "FEASIBLE"):
+        show_messages(new_schedule)     # lỗi sự cố (I01, I03) hoặc chẩn đoán vô nghiệm (N01–N05)
+        return
+    _show_comparison(result["base"], new_schedule)
+
+
+def _reschedule_summary(schedule, out_path):
+    """Thông báo sau khi xếp lại, theo đúng trạng thái kết quả: trả về (loại thông báo, nội dung)."""
+    status = schedule["status"]
+    violations = schedule.get("violations") or []
+    where = f"Kết quả lưu tại {out_path}."
+    if status in ("OPTIMAL", "FEASIBLE") and not violations:
+        s = (schedule.get("reschedule") or {}).get("summary") or {}
+        text = (f"Đã xếp lại xong ({status}) trong {schedule.get('solve_time_sec')} giây: "
+                f"{s.get('sittings_changed', 0)} lượt thay đổi, trong đó {s.get('sittings_moved', 0)} lượt dời ca; "
+                f"{s.get('students_affected', 0)} sinh viên và {s.get('proctors_affected', 0)} giám thị bị ảnh hưởng. "
+                f"{where}")
+        return ("success" if status == "OPTIMAL" else "warning"), text
+    if violations:
+        return "error", f"Lịch xếp lại có {len(violations)} vi phạm ràng buộc cứng, không được dùng. {where}"
+    errors = [m["message"] for m in schedule.get("messages", []) if m.get("level") == "error"]
+    reason = (" Nguyên nhân: " + "; ".join(errors[:3]) + ".") if errors else ""
+    if any(m.get("code", "").startswith("N") for m in schedule.get("messages", [])):
+        reason += " Xem kết quả chẩn đoán (mã N) bên dưới."
+    return "error", f"Không xếp lại được ({status}). {STATUS_NOTES[status]}{reason} {where}"
 
 
 # ---------------------------------------------------------------------------
