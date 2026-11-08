@@ -7,5 +7,9 @@
   "forbid_own_course": false,
   "written_capacity_ratio": 0.5,
   "default_max_sittings_computer": 3,
-  "weights": {"A-S1": 100, "A-S2": 30, "A-S3": 50, "A-S4": 1, "A-S5": 20, "A-S6": 200}
+  "weights": {"A-S1": 100, "A-S2": 30, "A-S3": 50, "A-S4": 1, "A-S5": 20, "A-S6": 200},
+  "reschedule": {
+    "time_limit_sec": 45,
+    "weights": {"A-R1": 1000, "A-R2": 100, "A-R3": 50, "A-R4": 20}
+  }
 }

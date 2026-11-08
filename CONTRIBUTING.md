@@ -36,7 +36,7 @@ Không commit thẳng vào `main`.
 
 - Viết tiếng Việt có dấu, một dòng ngắn nói đã làm gì, ví dụ `Thêm ràng buộc A-H2 cho sinh viên`.
 - Mỗi commit làm một việc. Không gộp nhiều thay đổi không liên quan vào một commit.
-- Không commit file sinh ra khi chạy (đã có `.gitignore`), trừ `output/toy/schedule.json` là kết quả tham chiếu.
+- Không commit file sinh ra khi chạy (đã có `.gitignore`), trừ `tests/reference/toy_schedule.json` là kết quả tham chiếu.
 
 ## 4. Viết code
 

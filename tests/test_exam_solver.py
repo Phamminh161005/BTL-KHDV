@@ -1,7 +1,7 @@
 """Kiểm thử chấp nhận cho solver bài toán A (src/exam_solver.py, người phụ trách: Khỏe).
 
 Đáp án tham chiếu: trên data/toy với configs/default.json, giá trị mục tiêu tối ưu là 2391. Con số này được
-tính bằng bản cài đặt thử của spec và xác nhận bằng validator độc lập (output/toy/schedule.json).
+tính bằng bản cài đặt thử của spec và xác nhận bằng validator độc lập (tests/reference/toy_schedule.json).
 Lịch tối ưu có thể khác nhau giữa các lần chạy, nhưng giá trị mục tiêu tối ưu là duy nhất.
 
 Các ca kiểm thử tự bỏ qua (skip) khi solver chưa được cài đặt.
