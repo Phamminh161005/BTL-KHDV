@@ -23,7 +23,7 @@ import streamlit as st
 from openpyxl import Workbook
 
 from src.config import load_config
-DEFAULT_RESULT_PATH = ROOT / "output" / "toy" / "schedule.json"
+DEFAULT_RESULT_PATH = ROOT / "tests" / "reference" / "toy_schedule.json"
 DATA_DIR = Path(os.environ.get("EXAM_APP_DATA_DIR", ROOT / "data"))
 CONFIGS_DIR = ROOT / "configs"
 OUTPUT_DIR = Path(os.environ.get("EXAM_APP_OUTPUT_DIR", ROOT / "output"))

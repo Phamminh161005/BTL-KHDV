@@ -407,7 +407,32 @@ Các kiểm tra sau chạy trước khi dựng mô hình. Mỗi lỗi được b
 | P8 | Có cặp (sinh viên, môn) bị lặp trong dữ liệu đăng ký | Cảnh báo, loại bản ghi trùng |
 | P9 | Có phòng $\kappa_r \le 0$ | Cảnh báo, loại phòng đó khỏi mô hình |
 
-Các kiểm tra này là điều kiện cần, không phải điều kiện đủ. Dữ liệu qua hết các kiểm tra vẫn có thể vô nghiệm, ví dụ khi có quá nhiều môn trùng sinh viên so với số ca. Khi đó CP-SAT trả về `INFEASIBLE`. Để gợi ý nguyên nhân, chạy lại lần lượt với một nhóm ràng buộc được nới ra (ví dụ bỏ phần giám thị, rồi bỏ A-H2) và báo nhóm nào làm mô hình có nghiệm trở lại.
+Các kiểm tra này là điều kiện cần, không phải điều kiện đủ. Dữ liệu qua hết các kiểm tra vẫn có thể vô nghiệm, ví dụ khi có quá nhiều môn trùng sinh viên so với số ca. Khi đó CP-SAT trả về `INFEASIBLE`. Để gợi ý nguyên nhân, chạy lại lần lượt với một nhóm ràng buộc được nới ra và báo nhóm nào làm mô hình có nghiệm trở lại.
+
+#### Chẩn đoán khi vô nghiệm
+
+Cài đặt ở `src/diagnose.py`, tự chạy trong `src/run.py` và `src/reschedule.py` mỗi khi solver trả về `INFEASIBLE` (tắt bằng `--no-diagnose`). Có ba nhóm ràng buộc được thử bỏ, mỗi lần bỏ một nhóm:
+
+| Nhóm | Ràng buộc bị bỏ | Nếu bỏ nhóm này mà có lịch, nghĩa là |
+|---|---|---|
+| Giám thị | Biến $w$, A-H7, A-H8, A-H10 và ràng buộc bổ trợ | Không đủ giám thị rảnh để coi thi |
+| A-H2 | Không trùng lịch sinh viên | Quá ít ca so với số môn một số sinh viên phải thi |
+| A-H6 | Lịch bận của phòng | Phòng bận quá nhiều ca |
+
+Mỗi lần thử chỉ tìm một lịch hợp lệ bất kỳ, không có hàm mục tiêu, với giới hạn 30 giây (hoặc `time_limit_sec` nếu nhỏ hơn). Kết quả được báo bằng mã N01–N05 (data_schema mục 5):
+
+1. Mỗi nhóm bỏ đi mà có lịch được báo một thông báo N01, kèm gợi ý sửa dữ liệu. Có thể có nhiều hơn một nhóm.
+2. Nếu không nhóm nào riêng lẻ đủ, thử bỏ cả ba nhóm cùng lúc. Có lịch thì báo N02 (nhiều nguyên nhân cùng lúc). Vẫn vô nghiệm thì báo N03: nguyên nhân nằm ở phần còn lại (A-H1, A-H3, A-H4, A-H5), tức không đủ phòng phù hợp hoặc không đủ ca để mở đủ số lượt cần thiết.
+3. Lần thử nào hết giờ mà chưa kết luận được thì báo N04. N05 ghi tổng thời gian chẩn đoán.
+
+Chẩn đoán luôn dùng CP-SAT, kể cả khi lần giải chính dùng PuLP + CBC. Kết quả kiểm thử trên các biến thể của bộ `toy` (`tests/test_reschedule.py`), mỗi trường hợp chẩn đoán xong dưới 1 giây:
+
+| Biến thể | Chẩn đoán |
+|---|---|
+| Chỉ 2 giảng viên coi thi | N01, nhóm giám thị |
+| Chỉ 7 ca (ngày 14/12 và ca 1–3 ngày 15/12) | N01, nhóm A-H2 |
+| Phòng máy duy nhất bận từ 15/12 đến 17/12 | N01, nhóm A-H6 |
+| Chỉ 2 ca (ca 1, ca 2 ngày 14/12) | N03: một phòng máy với 2 ca không đủ cho các lượt thi máy |
 
 ### A.9. Đối chiếu với 10 quy tắc lập mô hình của Daskin
 
@@ -494,6 +519,72 @@ Ba vấn đề kỹ thuật của CBC phát hiện khi cài đặt, đã xử l�
 1. Bản CBC đóng gói trong PuLP cho Windows bị treo ngay khi bắt đầu nhánh và cận nếu truyền tham số `-threads`, kể cả `threads=1`. Vì vậy không truyền tham số này; CBC chạy một luồng.
 2. Khi CBC dừng do hết giờ mà đã có lời giải, `prob.status` của PuLP vẫn là "Optimal". Trạng thái được đọc từ `prob.sol_status`, nơi phân biệt được tối ưu (1) và chỉ khả thi (2).
 3. Với mô hình lớn, CBC không dừng đúng giới hạn thời gian vì chỉ kiểm tra giới hạn giữa các bước. Solver đặt thêm hạn cứng (giới hạn cộng 30 giây hoặc 20%, lấy số lớn hơn) và dừng CBC khi vượt quá.
+
+### A.14. Xếp lại khi có sự cố
+
+Bối cảnh: lịch thi đã công bố thì xảy ra sự cố, ví dụ một phòng hỏng máy hoặc một giảng viên bận đột xuất. Dịch vụ tốt cần lịch mới vẫn hợp lệ, xáo trộn càng ít càng tốt so với lịch cũ, và có trong vòng 1 phút (scope mục 7). Giải lại từ đầu không đạt yêu cầu này, vì solver không biết lịch cũ nên có thể ra một lịch khác hẳn.
+
+#### Đầu vào
+
+- Bộ dữ liệu gốc và lịch cũ (file `schedule.json` của chính bộ dữ liệu đó).
+- Danh sách sự cố. Mỗi sự cố có đúng dạng một dòng của `unavailability.csv`: loại (`room` hoặc `lecturer`), mã, ngày, và ca hoặc cả ngày. Sự cố được thêm vào $B^{R}_r$ hoặc $B^{G}_g$.
+
+Mô hình giữ nguyên mọi ràng buộc cứng ở A.5 và điểm phạt ở A.6. Chỉ thêm điểm phạt thay đổi và lời giải gợi ý.
+
+#### Điểm phạt thay đổi
+
+Gọi $\bar{X}$, $\bar{U}$, $\bar{Q}$, $\bar{W}$ là các bộ chỉ số mà $x$, $u$, $q$, $w$ bằng 1 trong lịch cũ ($\bar{Q}$ chỉ gồm các môn chia lượt). Biến nào không còn tồn tại (ví dụ $u$ của phòng vừa báo hỏng) được coi là bằng 0, tức thay đổi đó chắc chắn xảy ra.
+
+| Mã | Đếm | Công thức |
+|---|---|---|
+| A-R1 | Lượt cũ không còn mở ở ca bắt đầu cũ (dời ca) | $R_1 = \sum_{(c,s) \in \bar{X}} (1 - x_{c,s})$ |
+| A-R2 | Lượt cũ giữ ca nhưng bỏ một phòng cũ (đổi phòng) | $R_2 = \sum_{(c,r,s) \in \bar{U}} (x_{c,s} - u_{c,r,s})$ |
+| A-R3 | Sinh viên của môn chia lượt bị chuyển khỏi lượt cũ | $R_3 = \sum_{(i,c,s) \in \bar{Q}} (1 - q_{i,c,s})$ |
+| A-R4 | Giám thị bị bỏ khỏi một ca coi thi cũ (phòng, ca) | $R_4 = \sum_{(g,r,t) \in \bar{W}} (1 - w_{g,r,t})$ |
+
+Vì $u_{c,r,s} \le x_{c,s}$, mỗi số hạng của $R_2$ bằng 0 hoặc 1, và bằng 1 đúng khi lượt giữ ca mà bỏ phòng $r$. Lượt bị dời ca đã được tính ở A-R1 nên không bị tính thêm ở A-R2. Mọi công thức đều tuyến tính, không cần biến phụ.
+
+Hàm mục tiêu khi xếp lại:
+
+$$
+\min \ Z + \rho_1 R_1 + \rho_2 R_2 + \rho_3 R_3 + \rho_4 R_4
+$$
+
+Trọng số mặc định (khóa `reschedule.weights` trong cấu hình, data_schema mục 6):
+
+| Trọng số | Giá trị | Lý do |
+|---|---|---|
+| $\rho_1$ (A-R1) | 1000 | Dời ca buộc toàn bộ sinh viên và giám thị của lượt xem lại lịch; đắt bằng 5 lượt thêm (A-S6) |
+| $\rho_2$ (A-R2) | 100 | Đổi phòng giữ nguyên giờ thi, chỉ cần báo sinh viên của phòng đó |
+| $\rho_3$ (A-R3) | 50 | Chuyển một sinh viên sang lượt khác chỉ đáng khi giảm được ít nhất 2 đơn vị A-S2 hoặc nửa đơn vị A-S1 |
+| $\rho_4$ (A-R4) | 20 | Đổi giám thị một ca coi thi, ngang một đơn vị chênh lệch tải A-S5 |
+
+Khi thử trên `toy`, với $\rho_3$ bằng 10, 30, 50 hoặc 100 thì số sinh viên bị ảnh hưởng đều bằng nhau. Trọng số nhỏ hơn chỉ cho phép solver đảo thêm chính những sinh viên vốn đã bị ảnh hưởng để giảm $Z$.
+
+#### Cách giải
+
+- Luôn giải một lần (single), vì lời giải gợi ý cần đủ cả bốn nhóm biến. Giới hạn thời gian là `reschedule.time_limit_sec`, mặc định 45 giây, để tổng thời gian kể cả dựng mô hình dưới 1 phút với bộ `medium`.
+- Mọi biến $x$, $u$, $q$, $w$ được gợi ý (`AddHint` của CP-SAT) bằng giá trị trong lịch cũ. Lịch cũ chỉ vi phạm vài ràng buộc liên quan đến sự cố, nên CP-SAT sửa từ đó và tìm được lời giải tốt rất nhanh.
+- Lịch cũ phải khớp dữ liệu: cùng môn, cùng danh sách sinh viên, cùng phòng và ca. Thêm môn hoặc thêm sinh viên sau khi công bố lịch nằm ngoài phạm vi của phiên bản này.
+- Nếu vô nghiệm (ví dụ sự cố làm mất phòng máy duy nhất), chạy chẩn đoán như ở A.8.
+
+#### Kết quả
+
+`objective` vẫn là $Z$ của lịch mới, để so trực tiếp với lịch cũ. `best_bound` là `null` vì cận dưới của solver gồm cả điểm phạt thay đổi. File kết quả có thêm `changes` (từng lượt bị đổi) và `reschedule` (sự cố, $R_1..R_4$, tóm tắt số lượt, sinh viên và giám thị bị ảnh hưởng), xem data_schema mục 7.6.
+
+Số sinh viên và giám thị bị ảnh hưởng không lấy từ $R_3$, $R_4$ mà được đếm bằng cách so sánh trực tiếp hai lịch: sinh viên bị ảnh hưởng khi ngày, ca hoặc phòng thi của mình đổi; giám thị bị ảnh hưởng khi tập (ngày, ca, phòng) coi thi của mình đổi. Các lượt được ghép theo từng môn, không theo `sitting_id`, nên một lượt bị dời ca hiện là "dời ca" chứ không phải một lượt bị xóa cộng một lượt mới.
+
+Ở ví dụ trong data_schema mục 7.6 (bộ `toy`, phòng máy hỏng), $R_3 = 17$ nhưng chỉ 11 sinh viên bị ảnh hưởng: 11 sinh viên của lượt INT3306 bị dời được tính vào $R_3$, và 6 lần chuyển còn lại là chính một số sinh viên này được đổi sang lượt khác của INT2211 để giảm $Z$. CP-SAT chạy nhiều luồng nên các lần chạy có thể cho lịch hơi khác nhau với cùng giá trị mục tiêu.
+
+Kết quả đo (8 luồng, cấu hình mặc định). Lịch cũ của `toy` là kết quả tham chiếu; lịch cũ của `medium` là lịch hai pha với giới hạn 300 giây ($Z$ = 11586):
+
+| Bộ | Sự cố | Kết quả | Thời gian giải |
+|---|---|---|---|
+| `toy` | Phòng máy G2-LAB1 hỏng ca 3 ngày 15/12 | `OPTIMAL`, không vi phạm, 1 lượt dời ca, 11 sinh viên và 3 giám thị bị ảnh hưởng, $Z$ từ 2391 lên 2601 | 0,3 giây |
+| `toy` | Giảng viên GV02 bận cả ngày 15/12 | `OPTIMAL`, không vi phạm, chỉ đổi giám thị của 2 lượt, $Z$ giữ 2391 | 0,2 giây |
+| `toy` | Không có sự cố | `OPTIMAL`, lịch giữ nguyên | 0,2 giây |
+| `medium` | Phòng máy E3-LAB2 hỏng ca 1 ngày 14/12, phòng G2-103 hỏng cả ngày 14/12 | `FEASIBLE`, không vi phạm, 2 lượt đổi phòng, không lượt nào dời ca, 68 sinh viên và 5 giám thị bị ảnh hưởng, $Z$ giữ 11586 | 45 giây (tổng 50 giây) |
+| `medium` | Giảng viên GV01 bận cả ngày 14/12 | `OPTIMAL`, không vi phạm, chỉ đổi giám thị, $Z$ giữ 11586 | 39 giây (tổng 43 giây) |
 
 ---
 

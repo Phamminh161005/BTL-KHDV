@@ -24,7 +24,8 @@ configs/
 └── default.json               cấu hình chạy
 output/
 └── <tên bộ dữ liệu>/
-    └── schedule.json          kết quả
+    ├── schedule.json          kết quả xếp lịch
+    └── reschedule.json        kết quả xếp lại khi có sự cố (mục 7.6)
 ```
 
 Một bộ dữ liệu là một thư mục chứa các file CSV ở trên. Tên file viết thường, đúng như trên.
@@ -291,7 +292,7 @@ Bộ đọc dữ liệu không dừng ở lỗi đầu tiên mà kiểm tra hế
 - `warning`: tự xử lý theo quy tắc (bỏ dòng, bỏ phòng...) rồi chạy tiếp.
 - `info`: chỉ để biết.
 
-Mã D là lỗi định dạng dữ liệu (tài liệu này). Mã P là kiểm tra trước khi giải (spec A.8). Mã R là thông báo của bước hậu xử lý sau khi giải. Mã S là thông báo của solver.
+Mã D là lỗi định dạng dữ liệu (tài liệu này). Mã P là kiểm tra trước khi giải (spec A.8). Mã R là thông báo của bước hậu xử lý sau khi giải. Mã S là thông báo của solver. Mã N là chẩn đoán nguyên nhân khi vô nghiệm (spec A.8). Mã I là thông báo khi xếp lại có sự cố (spec A.14).
 
 | Mã | Mức | Nội dung |
 |---|---|---|
@@ -315,6 +316,14 @@ Mã D là lỗi định dạng dữ liệu (tài liệu này). Mã P là kiểm 
 | R01 | info | Hậu xử lý: một phòng của lượt thi không có sinh viên nào (mục 7.3) |
 | S01 | warning | Solver không tự dừng ở giới hạn thời gian nên bị dừng cưỡng bức; trạng thái `UNKNOWN` |
 | S02 | error | Bộ giải bên ngoài (CBC) thoát bất thường; trạng thái `UNKNOWN` |
+| N01 | warning | Chẩn đoán: bỏ một nhóm ràng buộc (giám thị, A-H2 hoặc A-H6) thì xếp được lịch; kèm gợi ý sửa dữ liệu. Có thể có nhiều N01 |
+| N02 | warning | Chẩn đoán: không nhóm nào riêng lẻ đủ, nhưng bỏ cả ba nhóm thì xếp được lịch (nhiều nguyên nhân cùng lúc) |
+| N03 | warning | Chẩn đoán: bỏ cả ba nhóm vẫn vô nghiệm; nguyên nhân ở phòng và số lượt (A-H1, A-H3, A-H4, A-H5) |
+| N04 | info | Chẩn đoán: một lần thử hết giờ mà chưa kết luận được |
+| N05 | info | Chẩn đoán: tổng thời gian chẩn đoán |
+| I01 | error | Sự cố không hợp lệ: sai loại, mã phòng hoặc giảng viên không có trong dữ liệu, sai dạng ngày, ca ngoài 1–4 |
+| I02 | warning | Sự cố không ảnh hưởng gì (ngày hoặc ca không có trong lịch thi, hoặc giảng viên không coi thi), bị bỏ qua |
+| I03 | error | Không đọc được lịch cũ, lịch cũ không có lượt thi, hoặc lịch cũ không thuộc bộ dữ liệu này (khác môn, khác danh sách sinh viên, phòng hoặc ca lạ) |
 
 Mỗi thông báo có dạng (cũng là dạng xuất hiện trong file kết quả, mục 7):
 
@@ -345,6 +354,7 @@ Mọi khóa đều có giá trị mặc định. File cấu hình có thể ch�
 | `written_capacity_ratio` | Số trong khoảng (0, 1] | `0.5` | Tỷ lệ sức chứa khi thi của phòng thường |
 | `default_max_sittings_computer` | Số nguyên ≥ 1 | `3` | $L_c$ mặc định của môn thi máy |
 | `weights` | Đối tượng | Xem dưới | Trọng số các ràng buộc mềm, số nguyên ≥ 0 |
+| `reschedule` | Đối tượng | Xem dưới | Chỉ dùng khi xếp lại có sự cố (spec A.14): `time_limit_sec` là giới hạn thời gian xếp lại; `weights` là trọng số phạt thay đổi A-R1..A-R4, số nguyên ≥ 0 |
 
 Trọng số mặc định (theo spec A.6). Khóa nào không ghi thì lấy mặc định của khóa đó:
 
@@ -358,7 +368,11 @@ Trọng số mặc định (theo spec A.6). Khóa nào không ghi thì lấy m�
   "forbid_own_course": false,
   "written_capacity_ratio": 0.5,
   "default_max_sittings_computer": 3,
-  "weights": {"A-S1": 100, "A-S2": 30, "A-S3": 50, "A-S4": 1, "A-S5": 20, "A-S6": 200}
+  "weights": {"A-S1": 100, "A-S2": 30, "A-S3": 50, "A-S4": 1, "A-S5": 20, "A-S6": 200},
+  "reschedule": {
+    "time_limit_sec": 45,
+    "weights": {"A-R1": 1000, "A-R2": 100, "A-R3": 50, "A-R4": 20}
+  }
 }
 ```
 
@@ -502,6 +516,64 @@ Validator kiểm tra lời giải độc lập với solver (spec A.10) và ghi 
 `code` là mã ràng buộc cứng trong scope. `refs` chứa các mã liên quan để giao diện có thể làm nổi bật.
 
 Ngoài việc soát lịch trong file kết quả, validator còn soát phần giám thị trong lời giải gốc của solver trước khi gộp. Lý do: file kết quả chỉ ghi một danh sách giám thị cho mỗi phòng của một lượt, nên không thể hiện được hai lỗi "lượt 2 ca đổi giám thị giữa hai ca" và "giám thị được xếp vào phòng không có ai thi". Hai lỗi này được báo với mã A-H7.
+
+### 7.6. Kết quả xếp lại khi có sự cố
+
+Hàm `reschedule` trong `src/reschedule.py` (giao diện gọi hàm này) và lệnh `python -m src.reschedule` ghi file cùng cấu trúc với mục 7.1, mặc định vào `output/<tên bộ dữ liệu>/reschedule.json`, với các khác biệt sau:
+
+- `objective` là $Z$ của lịch mới, chưa cộng điểm phạt thay đổi. `best_bound` luôn là `null`.
+- `meta.strategy` luôn là `single`; `meta.config.time_limit_sec` bằng `reschedule.time_limit_sec`.
+- Thêm hai trường `changes` và `reschedule`. Khi trạng thái là `INPUT_ERROR`, `INFEASIBLE` hoặc `UNKNOWN`, `changes` là mảng rỗng và `reschedule.summary` là `null`.
+
+Sự cố truyền vào hàm có dạng:
+
+```json
+{"resource_type": "room", "resource_id": "G2-LAB1", "date": "2026-12-15", "period": 3}
+```
+
+`period` là 1–4, hoặc `null` nghĩa là cả ngày.
+
+Trường `reschedule`:
+
+```json
+{
+  "base_schedule": "toy_schedule.json",
+  "incidents": [{"resource_type": "room", "resource_id": "G2-LAB1", "date": "2026-12-15", "period": 3}],
+  "change_penalties": {"A-R1": 1, "A-R2": 0, "A-R3": 17, "A-R4": 6},
+  "change_cost": 1970,
+  "summary": {
+    "sittings_changed": 6, "sittings_moved": 1, "sittings_room_changed": 0,
+    "sittings_proctor_changed": 2, "sittings_removed": 0, "sittings_added": 0,
+    "students_affected": 11, "proctors_affected": 3
+  }
+}
+```
+
+| Khóa | Mô tả |
+|---|---|
+| `base_schedule` | Tên file lịch cũ |
+| `incidents` | Các sự cố đã áp dụng, đã chuẩn hóa |
+| `change_penalties` | $R_1..R_4$ (spec A.14), chưa nhân trọng số |
+| `change_cost` | $\sum_k \rho_k R_k$ |
+| `summary` | Số lượt bị đổi theo từng loại; số sinh viên có ngày, ca hoặc phòng thi bị đổi; số giám thị có tập ca coi thi bị đổi |
+
+Mỗi phần tử của `changes` là một lượt bị đổi:
+
+```json
+{
+  "course_id": "INT3306",
+  "kinds": ["time", "proctors"],
+  "old": {"sitting_id": "INT3306@2026-12-15_3", "date": "2026-12-15", "start_period": 3,
+          "rooms": ["G2-LAB1"], "proctors": {"G2-LAB1": ["GV01", "GV06"]}},
+  "new": {"sitting_id": "INT3306@2026-12-14_1", "date": "2026-12-14", "start_period": 1,
+          "rooms": ["G2-LAB1"], "proctors": {"G2-LAB1": ["GV04", "GV06"]}},
+  "students_affected": 11
+}
+```
+
+`kinds` gồm một hoặc nhiều giá trị: `time` (dời ca), `rooms` (đổi phòng), `proctors` (đổi giám thị), `students` (giữ ca và phòng nhưng đổi sinh viên giữa các phòng hoặc các lượt), `removed` (bỏ lượt, `new` là `null`), `added` (thêm lượt, `old` là `null`). Lượt không đổi gì không có trong `changes`.
+
+Các lượt được ghép theo từng môn: trước hết ghép lượt cùng ca bắt đầu, phần còn lại ghép theo số sinh viên chung nhiều nhất. `students_affected` của một lượt đếm sinh viên của lượt cũ hoặc lượt mới có ngày, ca hoặc phòng thi bị đổi, nên một sinh viên chuyển giữa hai lượt có thể được đếm ở cả hai; con số không trùng lặp nằm ở `summary`. Hàm `diff_schedules(old, new)` trong `src/reschedule.py` so sánh hai file `schedule.json` bất kỳ theo đúng quy tắc này.
 
 ## 8. Những điều cố ý không quy định
 
