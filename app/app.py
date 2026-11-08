@@ -1,4 +1,4 @@
-"""Giao diện nhập dữ liệu, kiểm tra, cấu hình và xếp lịch thi (MANH-2).
+"""Giao diện nhập dữ liệu, kiểm tra, cấu hình, xếp lịch thi, so sánh và xếp lại khi sự cố (MANH-2, MANH-3).
 
 Chạy: streamlit run app/app.py
 
@@ -371,6 +371,16 @@ def page_input():
     # Bước 4: Cấu hình
     cfg, config_valid = _config_form()
 
+    # Bước 4b: Chọn solver
+    solver_choice = st.radio(
+        "Solver",
+        ["CP-SAT (mặc định)", "PuLP"],
+        horizontal=True,
+        help="CP-SAT (Google OR-Tools) là solver chính. PuLP (CBC) là solver đối chứng: chậm hơn nhiều, "
+             "chỉ hỗ trợ chiến lược single và thường không giải được bộ medium trong giới hạn thời gian.",
+    )
+    solver = "cp-sat" if solver_choice.startswith("CP-SAT") else "pulp"
+
     # Bước 5: Nút xếp lịch
     # Bật forbid_own_course mà thiếu teaching.csv thì bộ đọc dữ liệu sẽ báo lỗi D11 khi chạy: chặn ngay từ đây.
     missing_teaching = cfg["forbid_own_course"] and not os.path.exists(os.path.join(data_dir, "teaching.csv"))
@@ -390,12 +400,10 @@ def page_input():
         try:
             with st.spinner("Đang xếp lịch, vui lòng chờ..."):
                 from src.run import run
-                schedule = run(data_dir=data_dir, config_path=config_path_tmp, out_path=out_path)
+                schedule = run(data_dir=data_dir, config_path=config_path_tmp, out_path=out_path, solver=solver)
         except NotImplementedError as e:
-            st.warning(
-                f"Solver chưa được cài đặt: {e}\n\n"
-                "Phần này sẽ hoạt động khi solver (CP-SAT hoặc PuLP) được triển khai ở task tiếp theo."
-            )
+            # Ví dụ: PuLP chỉ hỗ trợ chiến lược single
+            st.error(f"Lựa chọn này chưa được hỗ trợ: {e}. Hãy đổi solver hoặc chiến lược rồi chạy lại.")
             return
         finally:
             os.unlink(config_path_tmp)
@@ -549,6 +557,288 @@ def page_view():
 
 
 # ---------------------------------------------------------------------------
+# Phần 3: So sánh hai lịch (MANH-3)
+# ---------------------------------------------------------------------------
+
+def _load_schedule_file(label, key):
+    """Đọc file schedule.json từ file tải lên hoặc đường dẫn, trả về dict hoặc None."""
+    uploaded = st.file_uploader(f"Tải {label}", type=["json"], key=f"cmp_upload_{key}")
+    default_path = str(DEFAULT_RESULT_PATH) if key == "a" else ""
+    path = st.text_input(f"Đường dẫn {label}", value=default_path, key=f"cmp_path_{key}")
+    try:
+        if uploaded is not None:
+            raw = uploaded.getvalue()
+        elif path:
+            raw = Path(path).read_bytes()
+        else:
+            return None
+        schedule = json.loads(raw.decode("utf-8-sig"))
+        if not isinstance(schedule, dict) or schedule.get("status") not in STATUS_NOTES:
+            raise ValueError("Thiếu trạng thái hợp lệ.")
+        return schedule
+    except (OSError, UnicodeError, ValueError, json.JSONDecodeError) as exc:
+        st.error(f"Không đọc được {label}: {exc}")
+        return None
+
+
+CHANGE_LABELS = {"time": "Dời ca", "rooms": "Đổi phòng", "proctors": "Đổi giám thị",
+                 "students": "Đổi sinh viên", "removed": "Đã xóa", "added": "Thêm mới"}
+
+
+def _describe(view):
+    """Mô tả ngắn một lượt thi trong bảng thay đổi: ngày, ca, phòng và giám thị."""
+    if view is None:
+        return "—"
+    proctors = "; ".join(f"{room}: {', '.join(gs)}" for room, gs in view["proctors"].items())
+    return f"{view['date']} ca {view['start_period']}, phòng {', '.join(view['rooms'])} (giám thị {proctors})"
+
+
+def compare_schedules(old, new):
+    """So sánh hai lịch thi bằng src.reschedule.diff_schedules (data_schema mục 7.6).
+
+    Các lượt được ghép theo môn chứ không theo sitting_id, nên lượt bị dời sang ca khác hiện là "Dời ca".
+    Sinh viên và giám thị bị ảnh hưởng được đếm theo từng người: chỉ đổi giám thị thì không sinh viên nào bị ảnh hưởng.
+    Trả về (các dòng của bảng thay đổi, tóm tắt).
+    """
+    from src.reschedule import diff_schedules
+    changes, summary = diff_schedules(old, new)
+    rows = [{
+        "Mã môn": ch["course_id"],
+        "Thay đổi": ", ".join(CHANGE_LABELS[k] for k in ch["kinds"]),
+        "Cũ": _describe(ch["old"]),
+        "Mới": _describe(ch["new"]),
+        "Sinh viên bị ảnh hưởng": ch["students_affected"],
+    } for ch in changes]
+    return rows, summary
+
+
+def _show_comparison(old, new):
+    """Hiển thị so sánh KPI, điểm phạt và các lượt thay đổi giữa hai lịch."""
+    # Bảng KPI cạnh nhau
+    st.subheader("So sánh KPI")
+    old_kpi = old.get("kpi") or {}
+    new_kpi = new.get("kpi") or {}
+    ratio_keys = ("room_utilization_normal", "room_utilization_lab", "seat_fill_rate")
+    kpi_rows = []
+    for key, note in KPI_NOTES.items():
+        ov = old_kpi.get(key)
+        nv = new_kpi.get(key)
+        is_ratio = key in ratio_keys
+        diff = ""
+        if ov is not None and nv is not None:
+            d = nv - ov
+            diff = f"{d:+.2%}" if is_ratio else f"{d:+g}"
+        kpi_rows.append({
+            "Chỉ số": key,
+            "Lịch A": format_value(ov, is_ratio),
+            "Lịch B": format_value(nv, is_ratio),
+            "Chênh lệch": diff,
+        })
+    st.dataframe(kpi_rows, hide_index=True, width="stretch")
+
+    # Bảng điểm phạt cạnh nhau
+    st.subheader("So sánh điểm phạt")
+    old_pen = old.get("penalties") or {}
+    new_pen = new.get("penalties") or {}
+    pen_rows = []
+    for key, note in PENALTY_NOTES.items():
+        ov = old_pen.get(key)
+        nv = new_pen.get(key)
+        diff = ""
+        if ov is not None and nv is not None:
+            d = nv - ov
+            diff = f"{d:+g}"
+        pen_rows.append({
+            "Chỉ số": key,
+            "Lịch A": format_value(ov),
+            "Lịch B": format_value(nv),
+            "Chênh lệch": diff,
+            "Ghi chú": note,
+        })
+    st.dataframe(pen_rows, hide_index=True, width="stretch")
+
+    # Bảng lượt thi thay đổi
+    st.subheader("Các lượt thi thay đổi")
+    changed, summary = compare_schedules(old, new)
+    if not changed:
+        st.info("Không có lượt thi nào thay đổi giữa hai lịch.")
+    else:
+        cols = st.columns(4)
+        cols[0].metric("Số lượt thay đổi", summary["sittings_changed"])
+        cols[1].metric("Số lượt dời ca", summary["sittings_moved"])
+        cols[2].metric("Số sinh viên bị ảnh hưởng", summary["students_affected"],
+                       help="Sinh viên có ngày, ca hoặc phòng thi bị đổi")
+        cols[3].metric("Số giám thị bị ảnh hưởng", summary["proctors_affected"],
+                       help="Giám thị có danh sách ca coi thi bị đổi")
+        st.dataframe(changed, hide_index=True, width="stretch")
+        st.caption("Lượt của cùng một môn được ghép theo ca bắt đầu, rồi theo số sinh viên chung. "
+                   "Cột \"Sinh viên bị ảnh hưởng\" của từng lượt có thể đếm trùng một sinh viên chuyển giữa hai lượt; "
+                   "số tổng ở trên không trùng lặp.")
+
+
+def page_compare():
+    """Trang so sánh hai lịch thi."""
+    st.header("So sánh hai lịch")
+
+    col1, col2 = st.columns(2)
+    with col1:
+        st.subheader("Lịch A")
+        sched_a = _load_schedule_file("lịch A", "a")
+    with col2:
+        st.subheader("Lịch B")
+        sched_b = _load_schedule_file("lịch B", "b")
+
+    if sched_a is None or sched_b is None:
+        st.info("Vui lòng chọn cả hai file lịch để so sánh.")
+        return
+
+    _show_comparison(sched_a, sched_b)
+
+
+# ---------------------------------------------------------------------------
+# Phần 4: Sự cố và xếp lại (MANH-3)
+# ---------------------------------------------------------------------------
+
+def page_incident():
+    """Trang khai báo sự cố và xếp lại lịch."""
+    st.header("Sự cố và xếp lại")
+
+    # Bước 1: Chọn bộ dữ liệu và lịch gốc
+    st.subheader("Chọn dữ liệu và lịch gốc")
+    datasets = _available_datasets()
+    if not datasets:
+        st.warning("Không tìm thấy bộ dữ liệu nào trong thư mục data/.")
+        return
+    dataset_name = st.selectbox("Bộ dữ liệu", datasets, key="incident_dataset")
+    data_dir = str(DATA_DIR / dataset_name)
+
+    base_upload = st.file_uploader("Tải lịch gốc (schedule.json)", type=["json"], key="incident_base_upload")
+    default_base = OUTPUT_DIR / dataset_name / "schedule.json"
+    if not default_base.exists() and dataset_name == "toy":
+        default_base = DEFAULT_RESULT_PATH     # bộ toy chưa chạy lần nào: dùng kết quả tham chiếu
+    base_path = st.text_input("Đường dẫn lịch gốc", str(default_base), key="incident_base_path")
+    try:
+        if base_upload is not None:
+            base_raw = base_upload.getvalue()
+        elif base_path:
+            base_raw = Path(base_path).read_bytes()
+        else:
+            st.info("Vui lòng chọn file lịch gốc.")
+            return
+        base_schedule = json.loads(base_raw.decode("utf-8-sig"))
+        if base_schedule.get("status") not in ("OPTIMAL", "FEASIBLE"):
+            st.error("Lịch gốc phải có trạng thái OPTIMAL hoặc FEASIBLE.")
+            return
+    except (OSError, json.JSONDecodeError, ValueError) as exc:
+        st.error(f"Không đọc được lịch gốc: {exc}")
+        return
+
+    sittings = base_schedule.get("sittings", [])
+    if not sittings:
+        st.error("Lịch gốc không có lượt thi nào.")
+        return
+
+    # Thu thập danh sách phòng, giảng viên, ngày từ bộ dữ liệu và lịch gốc
+    from src.data_loader import load_instance
+    config_path = str(CONFIGS_DIR / "default.json") if (CONFIGS_DIR / "default.json").exists() else None
+    load_res = load_instance(data_dir, config_path)
+    if load_res.instance:
+        all_rooms = sorted(load_res.instance.rooms.keys())
+        all_proctors = sorted(load_res.instance.proctors.keys())
+        all_dates = sorted({d.isoformat() for d in load_res.instance.days})
+    else:
+        all_rooms = sorted({r["room_id"] for s in sittings for r in s["rooms"]})
+        all_proctors = sorted({p for s in sittings for r in s["rooms"] for p in r.get("proctors", [])})
+        all_dates = sorted({s["date"] for s in sittings})
+
+    # Bước 2: Khai báo sự cố
+    st.subheader("Khai báo sự cố")
+    num_incidents = st.number_input("Số sự cố", min_value=1, max_value=20, value=1, step=1, key="num_incidents")
+
+    incidents = []
+    valid_incidents = True
+    for i in range(int(num_incidents)):
+        st.markdown(f"Sự cố {i + 1}")
+        c1, c2, c3, c4 = st.columns(4)
+        with c1:
+            rtype_label = st.selectbox("Loại", ["Phòng", "Giảng viên"], key=f"inc_rtype_{i}")
+        with c2:
+            target_ids = all_rooms if rtype_label == "Phòng" else all_proctors
+            rid = st.selectbox("Đối tượng", target_ids, key=f"inc_rid_{i}")
+        with c3:
+            date = st.selectbox("Ngày", all_dates, key=f"inc_date_{i}")
+        with c4:
+            period_choice = st.selectbox("Ca", ["Cả ngày", "Ca 1", "Ca 2", "Ca 3", "Ca 4"], key=f"inc_period_{i}")
+
+        if rid and date:
+            period = None if period_choice == "Cả ngày" else int(period_choice[-1])
+            incidents.append({
+                "resource_type": "room" if rtype_label == "Phòng" else "lecturer",
+                "resource_id": rid,
+                "date": date,
+                "period": period,
+            })
+
+    if not incidents:
+        valid_incidents = False
+
+    # Bước 3: Xếp lại
+    can_reschedule = valid_incidents and len(incidents) > 0
+    resched_clicked = st.button("Xếp lại", disabled=not can_reschedule, type="primary", key="btn_reschedule")
+
+    if resched_clicked:
+        from src.reschedule import reschedule
+
+        # Lịch gốc có thể là file tải lên nên luôn ghi ra file tạm để truyền đường dẫn
+        base_tmp = tempfile.NamedTemporaryFile(mode="wb", suffix=".json", delete=False)
+        base_tmp.write(base_raw)
+        base_tmp.close()
+        out_path = str(OUTPUT_DIR / dataset_name / "reschedule.json")
+        try:
+            with st.spinner("Đang xếp lại lịch, vui lòng chờ..."):
+                new_schedule = reschedule(data_dir=data_dir, base_schedule_path=base_tmp.name, incidents=incidents,
+                                          config_path=config_path, out_path=out_path)
+        finally:
+            os.unlink(base_tmp.name)
+        # Giữ kết quả trong session để không mất khi người dùng thao tác tiếp trên trang
+        st.session_state["incident_result"] = {"data_dir": data_dir, "base": base_schedule, "new": new_schedule,
+                                               "incidents": incidents, "out_path": out_path}
+
+    # Chỉ hiện kết quả khi bộ dữ liệu, lịch gốc và sự cố đang chọn đúng là của lần xếp lại đó
+    result = st.session_state.get("incident_result")
+    if result is None or (result["data_dir"], result["base"], result["incidents"]) != (data_dir, base_schedule, incidents):
+        return
+    new_schedule = result["new"]
+    kind, text = _reschedule_summary(new_schedule, result["out_path"])
+    {"success": st.success, "warning": st.warning, "error": st.error}[kind](text)
+    if new_schedule["status"] not in ("OPTIMAL", "FEASIBLE"):
+        show_messages(new_schedule)     # lỗi sự cố (I01, I03) hoặc chẩn đoán vô nghiệm (N01–N05)
+        return
+    _show_comparison(result["base"], new_schedule)
+
+
+def _reschedule_summary(schedule, out_path):
+    """Thông báo sau khi xếp lại, theo đúng trạng thái kết quả: trả về (loại thông báo, nội dung)."""
+    status = schedule["status"]
+    violations = schedule.get("violations") or []
+    where = f"Kết quả lưu tại {out_path}."
+    if status in ("OPTIMAL", "FEASIBLE") and not violations:
+        s = (schedule.get("reschedule") or {}).get("summary") or {}
+        text = (f"Đã xếp lại xong ({status}) trong {schedule.get('solve_time_sec')} giây: "
+                f"{s.get('sittings_changed', 0)} lượt thay đổi, trong đó {s.get('sittings_moved', 0)} lượt dời ca; "
+                f"{s.get('students_affected', 0)} sinh viên và {s.get('proctors_affected', 0)} giám thị bị ảnh hưởng. "
+                f"{where}")
+        return ("success" if status == "OPTIMAL" else "warning"), text
+    if violations:
+        return "error", f"Lịch xếp lại có {len(violations)} vi phạm ràng buộc cứng, không được dùng. {where}"
+    errors = [m["message"] for m in schedule.get("messages", []) if m.get("level") == "error"]
+    reason = (" Nguyên nhân: " + "; ".join(errors[:3]) + ".") if errors else ""
+    if any(m.get("code", "").startswith("N") for m in schedule.get("messages", [])):
+        reason += " Xem kết quả chẩn đoán (mã N) bên dưới."
+    return "error", f"Không xếp lại được ({status}). {STATUS_NOTES[status]}{reason} {where}"
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
@@ -556,11 +846,20 @@ def main():
     st.set_page_config(page_title="Lịch thi", layout="wide")
     st.title("Lịch thi cuối kỳ")
 
-    tab_view, tab_input = st.tabs(["Xem kết quả", "Nhập dữ liệu và xếp lịch"])
+    tab_view, tab_input, tab_compare, tab_incident = st.tabs([
+        "Xem kết quả",
+        "Nhập dữ liệu và xếp lịch",
+        "So sánh hai lịch",
+        "Sự cố và xếp lại",
+    ])
     with tab_view:
         page_view()
     with tab_input:
         page_input()
+    with tab_compare:
+        page_compare()
+    with tab_incident:
+        page_incident()
 
 
 if __name__ == "__main__":

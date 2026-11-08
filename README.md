@@ -56,11 +56,21 @@ python -m src.reschedule --data data/toy --base tests/reference/toy_schedule.jso
 pytest
 ```
 
-### Xem và xuất lịch thi
+### Giao diện
 
-Giao diện mặc định mở kết quả tham chiếu `tests/reference/toy_schedule.json`. Có thể tải lên file JSON khác
-hoặc nhập đường dẫn file kết quả; file tải lên được ưu tiên. Giao diện không tải CSV
-và không chạy solver.
+Giao diện có bốn tab:
+
+- Xem kết quả: mặc định mở kết quả tham chiếu `tests/reference/toy_schedule.json`. Có thể tải lên file JSON khác
+  hoặc nhập đường dẫn file kết quả; file tải lên được ưu tiên. Sau khi chạy ở tab thứ hai, tab này hiện ngay kết quả vừa chạy.
+- Nhập dữ liệu và xếp lịch: chọn bộ dữ liệu có sẵn hoặc tải CSV lên, xem thông báo kiểm tra dữ liệu, chỉnh cấu hình,
+  chọn solver CP-SAT hoặc PuLP rồi chạy.
+- So sánh hai lịch: bảng KPI và điểm phạt cạnh nhau, các lượt bị đổi (dời ca, đổi phòng, đổi giám thị), số sinh viên và
+  giám thị bị ảnh hưởng. Dùng `diff_schedules` trong `src/reschedule.py` (data_schema mục 7.6).
+- Sự cố và xếp lại: chọn lịch gốc, khai báo một hoặc nhiều sự cố (phòng hoặc giảng viên, ngày, ca hoặc cả ngày), bấm
+  "Xếp lại" để gọi `reschedule`; kết quả ghi vào `output/<tên bộ dữ liệu>/reschedule.json` và được so sánh với lịch gốc.
+  Nếu không xếp lại được, giao diện hiện nguyên nhân và kết quả chẩn đoán.
+
+Phần xem kết quả:
 
 - Tổng quan có trạng thái, mục tiêu, cận dưới, thời gian giải, điểm phạt A-S1 đến A-S6
   chưa nhân trọng số và toàn bộ KPI (kèm giải thích tiếng Việt). Giá trị `null` không được coi là 0.
@@ -73,9 +83,8 @@ và không chạy solver.
 - `INPUT_ERROR`, `INFEASIBLE`, `UNKNOWN` chỉ hiển thị tổng quan và thông báo,
   không vẽ lịch hoặc cho xuất lịch.
 
-Kiểm thử giao diện: `pytest tests/test_app.py`. Test tạo bản sao dữ liệu toy trong
-thư mục tạm, sửa sức chứa phòng thành số âm, chạy `python -m src.run --data ... --out ...`
-và mở file `INPUT_ERROR` sinh ra bằng AppTest; không sửa dữ liệu toy gốc.
+Kiểm thử giao diện: `pytest tests/test_app.py`. Test chạy bằng AppTest trên bản sao dữ liệu toy trong
+thư mục tạm (biến môi trường `EXAM_APP_DATA_DIR`, `EXAM_APP_OUTPUT_DIR`), không ghi vào `data/` và `output/` của repo.
 
 ## Cấu trúc thư mục
 
@@ -115,7 +124,7 @@ và mở file `INPUT_ERROR` sinh ra bằng AppTest; không sửa dữ liệu toy
 | `exam_solver.py` | Chiến lược `single` hoàn chỉnh, có kiểm thử: trên `toy` đạt `OPTIMAL` 2391 trong khoảng 20 giây. Chiến lược `two_phase` hoàn chỉnh (KHOE-3), trên `toy` đạt 2391 trong khoảng 7 giây |
 | `exam_solver_pulp.py` | Hoàn chỉnh, có kiểm thử. Trên `toy` tìm được lời giải tối ưu 2391 nhưng không chứng minh được tối ưu trong vài phút (model_spec A.13) |
 | `room_solver.py` | Chờ spec bài toán B (Minh viết spec, Khỏe cài đặt) |
-| `app/app.py` | Xem lịch, KPI, tra cứu phòng/sinh viên/giám thị, xuất Excel; có AppTest |
+| `app/app.py` | Xem và so sánh lịch, kiểm tra dữ liệu, chạy solver (CP-SAT/PuLP), khai báo sự cố và xếp lại; có AppTest |
 
 ## Phân công
 
