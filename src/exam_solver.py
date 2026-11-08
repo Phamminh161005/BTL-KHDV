@@ -16,11 +16,33 @@ from ortools.sat.python import cp_model
 from src.instance import Instance, Message, Sitting, Solution, SolveResult
 
 
-def solve(instance: Instance, config: dict) -> SolveResult:
-    if config["strategy"] == "two_phase":
-        return _solve_two_phase(instance, config)
-    if config["strategy"] != "single":
+# Các nhóm ràng buộc có thể tạm bỏ khi chẩn đoán vô nghiệm (model_spec A.8, src/diagnose.py)
+RELAX_GROUPS = ("proctors", "A-H2", "A-H6")
+CHANGE_KEYS = ("A-R1", "A-R2", "A-R3", "A-R4")
+
+
+def solve(instance: Instance, config: dict, *, base: Solution | None = None,
+          change_weights: dict | None = None, relax=frozenset(), optimize: bool = True) -> SolveResult:
+    """Giải bài toán A.
+
+    Ba tham số tùy chọn chỉ dùng cho xếp lại và chẩn đoán; không truyền thì solver chạy như cũ:
+    - base, change_weights: lịch cũ và trọng số phạt thay đổi khi xếp lại (model_spec A.14). Lịch cũ được
+      dùng làm lời giải gợi ý (AddHint) và mục tiêu cộng thêm điểm phạt thay đổi A-R1..A-R4.
+    - relax: tập con của RELAX_GROUPS, các nhóm ràng buộc cứng tạm bỏ (model_spec A.8).
+    - optimize=False: chỉ tìm một lời giải hợp lệ bất kỳ, không tối ưu (dùng khi chẩn đoán).
+    Khi có một trong các tham số này, solver luôn giải một lần (single), kể cả với strategy two_phase.
+    """
+    relax = frozenset(relax)
+    unknown = relax - set(RELAX_GROUPS)
+    if unknown:
+        raise ValueError(f"Nhóm ràng buộc không hỗ trợ: {sorted(unknown)}")
+    if config["strategy"] not in ("single", "two_phase"):
         raise ValueError(f"Chiến lược không hỗ trợ: {config['strategy']}")
+    if config["strategy"] == "two_phase" and base is None and not relax and optimize:
+        return _solve_two_phase(instance, config)
+    relax_proctors = "proctors" in relax
+    if base is not None and change_weights is None:
+        change_weights = config["reschedule"]["weights"]
 
     model = cp_model.CpModel()
     courses = instance.courses
@@ -49,10 +71,10 @@ def solve(instance: Instance, config: dict) -> SolveResult:
         for s in start[c]
     }
     u = {}
-    # A-H6: không tạo u cho lượt có ca giao với lịch bận của phòng.
+    # A-H6: không tạo u cho lượt có ca giao với lịch bận của phòng (trừ khi đang chẩn đoán, bỏ A-H6).
     for c in courses:
         for r in suitable[c]:
-            busy = rooms[r].busy
+            busy = set() if "A-H6" in relax else rooms[r].busy
             for s in start[c]:
                 if all(t not in busy for t in cov[c, s]):
                     u[c, r, s] = model.NewBoolVar(f"u_{c}_{r}_{s[0]}_{s[1]}")
@@ -63,13 +85,13 @@ def solve(instance: Instance, config: dict) -> SolveResult:
         for i in students_by_course[c]
         for s in start[c]
     }
-    # A-H8: ca giảng viên bận không có biến w.
+    # A-H8: ca giảng viên bận không có biến w. Khi bỏ phần giám thị (chẩn đoán) thì không có biến w nào.
     w = {
         (g, r, t): model.NewBoolVar(f"w_{g}_{r}_{t[0]}_{t[1]}")
         for g in proctors
         for r in rooms
         for t in slots
-        if t not in proctors[g].busy
+        if t not in proctors[g].busy and not relax_proctors
     }
 
     starts_covering: dict[tuple[str, tuple], list] = defaultdict(list)
@@ -111,6 +133,8 @@ def solve(instance: Instance, config: dict) -> SolveResult:
     # Gộp theo danh sách môn chỉ khi tất cả đều không chia lượt (A.11).
     seen_unsplit: set[tuple[str, ...]] = set()
     for i, cs in student_courses.items():
+        if "A-H2" in relax:
+            break
         if all(not courses[c].splittable for c in cs):
             key = tuple(cs)
             if key in seen_unsplit:
@@ -141,8 +165,12 @@ def solve(instance: Instance, config: dict) -> SolveResult:
         for t in slots:
             model.Add(sum(room_use[r, t]) <= 1)
 
+    # Phần giám thị (A-H7, A-H8, A-H10, ràng buộc bổ trợ) bị bỏ hết khi chẩn đoán với relax "proctors".
+    proctor_rooms = () if relax_proctors else rooms
+    proctor_ids = () if relax_proctors else proctors
+
     # A-H7: phòng có lượt thi phải có đúng nu giám thị ở mọi ca.
-    for r in rooms:
+    for r in proctor_rooms:
         for t in slots:
             model.Add(
                 sum(w[g, r, t] for g in proctors if (g, r, t) in w)
@@ -151,7 +179,7 @@ def solve(instance: Instance, config: dict) -> SolveResult:
 
     # A-H7: lượt hai ca phải giữ nguyên giám thị ở cả hai ca.
     # Khi có lượt hai ca bắt đầu tại s: |w_(g,r,s) - w_(g,r,s+)| = 0.
-    for r in rooms:
+    for r in proctor_rooms:
         for s in slots:
             if s[1] not in (1, 3):
                 continue
@@ -173,12 +201,12 @@ def solve(instance: Instance, config: dict) -> SolveResult:
                 model.Add(after - before <= 1 - active_long)
 
     # A-H8: giám thị không coi nhiều phòng trong cùng ca; ca bận đã bỏ biến.
-    for g in proctors:
+    for g in proctor_ids:
         for t in slots:
             model.Add(sum(w[g, r, t] for r in rooms if (g, r, t) in w) <= 1)
 
     # A-H10 (tùy chọn): giảng viên không được coi môn mình đang dạy.
-    if config["forbid_own_course"]:
+    if config["forbid_own_course"] and not relax_proctors:
         for g, lecturer in proctors.items():
             taught = lecturer.teaches & courses.keys()
             if not taught:
@@ -195,7 +223,7 @@ def solve(instance: Instance, config: dict) -> SolveResult:
                         model.Add(w.get((g, r, t), 0) + sum(own_room) <= 1)
 
     # A.5 bổ trợ: số phòng dùng <= số giám thị rảnh / nu tại từng ca.
-    for t in slots:
+    for t in slots if not relax_proctors else ():
         available = sum(t not in proctors[g].busy for g in proctors)
         model.Add(sum(v for r in rooms for v in room_use[r, t]) <= available // nu)
 
@@ -266,10 +294,18 @@ def solve(instance: Instance, config: dict) -> SolveResult:
         "A-S5": p5,
         "A-S6": p6,
     }
+    # A.14: xếp lại khi có sự cố. Phạt mỗi thay đổi so với lịch cũ và dùng lịch cũ làm lời giải gợi ý.
+    change_expr = _change_terms(base, instance, x, u, q, w) if base is not None else {}
+    if base is not None:
+        _add_hints(model, base, instance, x, u, q, w)
+
     # A.6: cực tiểu tổng điểm phạt có trọng số, cấu hình có thể tắt trọng số.
-    model.Minimize(
-        sum(config["weights"][name] * expr for name, expr in penalties_expr.items())
-    )
+    # A.14: khi xếp lại, cộng thêm điểm phạt thay đổi. optimize=False (chẩn đoán): chỉ tìm lời giải hợp lệ.
+    if optimize:
+        model.Minimize(
+            sum(config["weights"][name] * expr for name, expr in penalties_expr.items())
+            + sum(change_weights[name] * expr for name, expr in change_expr.items())
+        )
 
     solver = cp_model.CpSolver()
     solver.parameters.log_search_progress = False
@@ -342,15 +378,62 @@ def solve(instance: Instance, config: dict) -> SolveResult:
         "A-S5": exact_p5,
         "A-S6": int(solver.Value(p6)),
     }
+    # Khi xếp lại, cận dưới của solver gồm cả điểm phạt thay đổi nên không so được với objective (chỉ gồm Z).
+    best_bound = solver.BestObjectiveBound() if optimize and base is None else None
     return SolveResult(
         **kwargs,
         objective=sum(
             config["weights"][name] * value for name, value in penalties.items()
         ),
-        best_bound=solver.BestObjectiveBound(),
+        best_bound=best_bound,
         penalties=penalties,
         solution=Solution(sittings, proctoring),
+        change_penalties=({name: _value(solver, expr) for name, expr in change_expr.items()}
+                          if base is not None else None),
     )
+
+
+def _value(solver: cp_model.CpSolver, expr) -> int:
+    """Giá trị của một biểu thức tuyến tính, chấp nhận cả hằng số nguyên."""
+    return int(expr) if isinstance(expr, int) else int(solver.Value(expr))
+
+
+def _base_keys(base: Solution, instance: Instance):
+    """Các bộ chỉ số x, u, q, w bằng 1 trong lịch cũ."""
+    base_x, base_u, base_q = set(), set(), set()
+    for st in base.sittings:
+        base_x.add((st.course_id, st.start))
+        for r in st.rooms:
+            base_u.add((st.course_id, r, st.start))
+        if instance.courses[st.course_id].splittable:
+            for i in st.students:
+                base_q.add((i, st.course_id, st.start))
+    base_w = {(g, r, t) for (r, t), gs in base.proctoring.items() for g in gs}
+    return base_x, base_u, base_q, base_w
+
+
+def _change_terms(base: Solution, instance: Instance, x, u, q, w) -> dict:
+    """Điểm phạt thay đổi so với lịch cũ (model_spec A.14). Biến không còn tồn tại (ví dụ phòng vừa báo hỏng)
+    được coi như bằng 0, tức thay đổi chắc chắn xảy ra."""
+    base_x, base_u, base_q, base_w = _base_keys(base, instance)
+    # A-R1: lượt cũ không còn được mở ở đúng ca bắt đầu cũ.
+    r1 = sum(1 - x[k] if k in x else 1 for k in sorted(base_x))
+    # A-R2: lượt cũ vẫn giữ ca nhưng bỏ một phòng cũ: x_(c,s) - u_(c,r,s), bằng 1 đúng khi giữ ca mà bỏ phòng.
+    r2 = sum(x[c, s] - u[c, r, s] if (c, r, s) in u else (x[c, s] if (c, s) in x else 0)
+             for c, r, s in sorted(base_u))
+    # A-R3: sinh viên của môn chia lượt bị chuyển khỏi lượt cũ.
+    r3 = sum(1 - q[k] if k in q else 1 for k in sorted(base_q))
+    # A-R4: giám thị bị bỏ khỏi một ca coi thi cũ (phòng, ca).
+    r4 = sum(1 - w[k] if k in w else 1 for k in sorted(base_w))
+    return {"A-R1": r1, "A-R2": r2, "A-R3": r3, "A-R4": r4}
+
+
+def _add_hints(model: cp_model.CpModel, base: Solution, instance: Instance, x, u, q, w) -> None:
+    """Lời giải gợi ý cho CP-SAT: mọi biến x, u, q, w nhận giá trị của lịch cũ."""
+    base_x, base_u, base_q, base_w = _base_keys(base, instance)
+    for keys, variables in ((base_x, x), (base_u, u), (base_q, q), (base_w, w)):
+        for k, var in variables.items():
+            model.AddHint(var, 1 if k in keys else 0)
 
 
 def _solve_two_phase(instance: Instance, config: dict) -> SolveResult:

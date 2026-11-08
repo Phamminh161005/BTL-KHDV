@@ -30,6 +30,6 @@ Với `configs/default.json`, giá trị mục tiêu tối ưu là 2391, với �
 |---|---|---|---|---|---|
 | 2 | 50 | 1 | 41 | 0 | 3 |
 
-Kết quả này được tính bằng bản cài đặt thử của `docs/model_spec.md` và xác nhận bằng validator độc lập; lịch đầy đủ ở `output/toy/schedule.json`. Bật `forbid_own_course` cũng cho cùng giá trị tối ưu 2391.
+Kết quả này được tính bằng bản cài đặt thử của `docs/model_spec.md` và xác nhận bằng validator độc lập; lịch đầy đủ ở `tests/reference/toy_schedule.json`. Bật `forbid_own_course` cũng cho cùng giá trị tối ưu 2391.
 
 Bài toán có thể có nhiều lịch cùng đạt tối ưu, nên solver khác có thể ra lịch khác nhưng phải đạt đúng giá trị 2391 (kiểm thử `tests/test_exam_solver.py`).

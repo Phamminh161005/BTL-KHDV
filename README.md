@@ -49,13 +49,16 @@ python -m src.run --data data/toy --solver pulp
 # Mở giao diện xem lịch
 streamlit run app/app.py
 
+# Xếp lại khi có sự cố: phòng G2-LAB1 hỏng ca 3 ngày 15/12 (kết quả ghi vào output/toy/reschedule.json)
+python -m src.reschedule --data data/toy --base tests/reference/toy_schedule.json --incident room,G2-LAB1,2026-12-15,3
+
 # Chạy kiểm thử
 pytest
 ```
 
 ### Xem và xuất lịch thi
 
-Giao diện mặc định mở `output/toy/schedule.json`. Có thể tải lên file JSON khác
+Giao diện mặc định mở kết quả tham chiếu `tests/reference/toy_schedule.json`. Có thể tải lên file JSON khác
 hoặc nhập đường dẫn file kết quả; file tải lên được ưu tiên. Giao diện không tải CSV
 và không chạy solver.
 
@@ -80,7 +83,7 @@ và mở file `INPUT_ERROR` sinh ra bằng AppTest; không sửa dữ liệu toy
 ├── docs/                  Tài liệu: phạm vi, mô hình, định dạng dữ liệu
 ├── configs/default.json   Cấu hình mặc định (data_schema mục 6)
 ├── data/toy/              Bộ dữ liệu nhỏ dùng để kiểm thử (xem data/toy/README.md)
-├── output/toy/            Kết quả tham chiếu schedule.json của bộ toy
+├── output/               Kết quả các lần chạy (không commit)
 ├── src/
 │   ├── instance.py        Cấu trúc dữ liệu dùng chung, giao diện SolveResult của solver
 │   ├── config.py          Đọc cấu hình
@@ -92,9 +95,11 @@ và mở file `INPUT_ERROR` sinh ra bằng AppTest; không sửa dữ liệu toy
 │   ├── validator.py       Kiểm tra lời giải độc lập với solver
 │   ├── kpi.py             Tính KPI và tính lại điểm phạt
 │   ├── generator.py       Sinh dữ liệu giả lập
-│   └── run.py             Chạy toàn bộ quy trình
+│   ├── run.py             Chạy toàn bộ quy trình
+│   ├── reschedule.py      Xếp lại khi có sự cố, so sánh hai lịch
+│   └── diagnose.py        Chẩn đoán nguyên nhân khi vô nghiệm
 ├── app/app.py             Giao diện Streamlit
-├── tests/                 Kiểm thử (pytest)
+├── tests/                 Kiểm thử (pytest); tests/reference/toy_schedule.json là kết quả tham chiếu của bộ toy
 ├── experiments/           Script và kết quả thực nghiệm
 └── report/                Báo cáo
 ```
@@ -104,9 +109,10 @@ và mở file `INPUT_ERROR` sinh ra bằng AppTest; không sửa dữ liệu toy
 | Thành phần | Trạng thái |
 |---|---|
 | `data_loader.py`, `config.py`, `instance.py` | Hoàn chỉnh, có kiểm thử |
-| `validator.py`, `kpi.py`, `schedule.py`, `run.py` | Hoàn chỉnh, có kiểm thử |
+| `validator.py`, `kpi.py`, `schedule.py`, `run.py` | Hoàn chỉnh, có kiểm thử. Khi vô nghiệm, `run.py` tự chẩn đoán nguyên nhân (tắt bằng `--no-diagnose`) |
+| `reschedule.py`, `diagnose.py` | Hoàn chỉnh, có kiểm thử: xếp lại khi có sự cố sao cho ít thay đổi nhất (model_spec A.14), chẩn đoán khi vô nghiệm (A.8) |
 | `generator.py` | Hoàn chỉnh, có kiểm thử; dữ liệu sinh sẵn (seed 1) trong `data/toy_gen`, `data/medium`, `data/large` |
-| `exam_solver.py` | Chiến lược `single` hoàn chỉnh, có kiểm thử: trên `toy` đạt `OPTIMAL` 2391 trong khoảng 20 giây. Chiến lược `two_phase` chưa cài đặt (Khỏe, task KHOE-3) |
+| `exam_solver.py` | Chiến lược `single` hoàn chỉnh, có kiểm thử: trên `toy` đạt `OPTIMAL` 2391 trong khoảng 20 giây. Chiến lược `two_phase` hoàn chỉnh (KHOE-3), trên `toy` đạt 2391 trong khoảng 7 giây |
 | `exam_solver_pulp.py` | Hoàn chỉnh, có kiểm thử. Trên `toy` tìm được lời giải tối ưu 2391 nhưng không chứng minh được tối ưu trong vài phút (model_spec A.13) |
 | `room_solver.py` | Chờ spec bài toán B (Minh viết spec, Khỏe cài đặt) |
 | `app/app.py` | Xem lịch, KPI, tra cứu phòng/sinh viên/giám thị, xuất Excel; có AppTest |

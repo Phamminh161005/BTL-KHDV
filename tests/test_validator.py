@@ -1,4 +1,4 @@
-"""Kiểm thử validator và KPI trên kết quả tham chiếu output/toy/schedule.json.
+"""Kiểm thử validator và KPI trên kết quả tham chiếu tests/reference/toy_schedule.json.
 
 Ngoài việc xác nhận kết quả tham chiếu hợp lệ, các ca kiểm thử cố ý làm hỏng lịch để chắc chắn validator
 phát hiện được từng loại vi phạm (không phải lúc nào cũng báo "ổn").
@@ -18,7 +18,7 @@ from src.validator import validate, validate_raw_proctoring
 ROOT = os.path.join(os.path.dirname(__file__), "..")
 LOADED = load_instance(os.path.join(ROOT, "data", "toy"), os.path.join(ROOT, "configs", "default.json"))
 INST, CFG = LOADED.instance, LOADED.config
-with open(os.path.join(ROOT, "output", "toy", "schedule.json"), encoding="utf-8") as f:
+with open(os.path.join(ROOT, "tests", "reference", "toy_schedule.json"), encoding="utf-8") as f:
     REFERENCE = json.load(f)
 
 

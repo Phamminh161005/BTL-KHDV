@@ -3,6 +3,7 @@
 Cách chạy:
     py -3.12 -m src.run --data data/toy
     py -3.12 -m src.run --data data/toy --solver pulp
+    py -3.12 -m src.run --data data/toy --no-diagnose      # không chẩn đoán khi vô nghiệm
     py -3.12 -m src.run --data data/medium --config configs/default.json --out output/medium/schedule.json
 """
 from __future__ import annotations
@@ -22,7 +23,9 @@ SOLVERS = {
 }
 
 
-def run(data_dir: str, config_path: str | None, out_path: str | None, solver: str = "cp-sat") -> dict:
+def run(data_dir: str, config_path: str | None, out_path: str | None, solver: str = "cp-sat",
+        diagnose: bool = True) -> dict:
+    """diagnose: khi solver trả về INFEASIBLE, chạy chẩn đoán nguyên nhân (src/diagnose.py, mã N01–N05)."""
     if solver not in SOLVERS:
         raise ValueError(f"solver phải là một trong {sorted(SOLVERS)}, gặp {solver!r}")
     dataset = os.path.basename(os.path.normpath(data_dir))
@@ -31,6 +34,9 @@ def run(data_dir: str, config_path: str | None, out_path: str | None, solver: st
     if loaded.ok:
         solve = importlib.import_module(SOLVERS[solver]).solve
         result = solve(loaded.instance, loaded.config)
+        if diagnose and result.status == "INFEASIBLE":
+            from src.diagnose import diagnose as run_diagnosis
+            result.messages += run_diagnosis(loaded.instance, loaded.config)
     schedule = build_schedule(loaded.instance, loaded.config, loaded.messages, result, dataset)
     out_path = out_path or os.path.join("output", dataset, "schedule.json")
     os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
@@ -45,11 +51,13 @@ def main() -> int:
     parser.add_argument("--out", default=None, help="Mặc định output/<tên bộ dữ liệu>/schedule.json")
     parser.add_argument("--solver", choices=sorted(SOLVERS), default="cp-sat",
                         help="cp-sat (mặc định) hoặc pulp (solver đối chứng PuLP + CBC)")
+    parser.add_argument("--no-diagnose", action="store_true",
+                        help="Không chẩn đoán nguyên nhân khi vô nghiệm")
     args = parser.parse_args()
     config_path = args.config if os.path.exists(args.config) else None
 
     try:
-        schedule = run(args.data, config_path, args.out, solver=args.solver)
+        schedule = run(args.data, config_path, args.out, solver=args.solver, diagnose=not args.no_diagnose)
     except NotImplementedError as e:
         print(f"Chưa chạy được: {e}")
         return 2

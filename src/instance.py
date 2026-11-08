@@ -153,3 +153,5 @@ class SolveResult:
     solution: Optional[Solution] = None
     messages: list[Message] = field(default_factory=list)
     solver_name: str = ""
+    # Chỉ có khi xếp lại (model_spec A.14): số thay đổi A-R1..A-R4 so với lịch cũ, chưa nhân trọng số
+    change_penalties: Optional[dict[str, int]] = None
