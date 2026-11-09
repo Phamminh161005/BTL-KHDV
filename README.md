@@ -58,7 +58,7 @@ pytest
 
 ### Giao diện
 
-Giao diện có bốn tab:
+Giao diện có năm tab:
 
 - Xem kết quả: mặc định mở kết quả tham chiếu `tests/reference/toy_schedule.json`. Có thể tải lên file JSON khác
   hoặc nhập đường dẫn file kết quả; file tải lên được ưu tiên. Sau khi chạy ở tab thứ hai, tab này hiện ngay kết quả vừa chạy.
@@ -69,6 +69,11 @@ Giao diện có bốn tab:
 - Sự cố và xếp lại: chọn lịch gốc, khai báo một hoặc nhiều sự cố (phòng hoặc giảng viên, ngày, ca hoặc cả ngày), bấm
   "Xếp lại" để gọi `reschedule`; kết quả ghi vào `output/<tên bộ dữ liệu>/reschedule.json` và được so sánh với lịch gốc.
   Nếu không xếp lại được, giao diện hiện nguyên nhân và kết quả chẩn đoán.
+- Kết quả thực nghiệm: đọc `perf.csv`, `reschedule.csv`, `sensitivity.csv` trong `experiments/results/`
+  (có thể đổi qua `EXAM_APP_RESULTS_DIR`). Biểu đồ thời gian giải trung bình theo seed và bảng mục tiêu/cận dưới/gap
+  lọc theo bộ dữ liệu; thời gian xếp lại theo kịch bản với ngưỡng 60 giây; đường đánh đổi P1/P6 và độ nhạy
+  điểm phạt, KPI theo hệ số nhân của trọng số đã chọn. Mỗi bảng đang xem có nút tải CSV; file thiếu hoặc sai cột
+  chỉ báo lỗi trong phần tương ứng.
 
 Phần xem kết quả:
 
@@ -124,7 +129,7 @@ thư mục tạm (biến môi trường `EXAM_APP_DATA_DIR`, `EXAM_APP_OUTPUT_DI
 | `exam_solver.py` | Chiến lược `single` hoàn chỉnh, có kiểm thử: trên `toy` đạt `OPTIMAL` 2391 trong khoảng 20 giây. Chiến lược `two_phase` hoàn chỉnh (KHOE-3), trên `toy` đạt 2391 trong khoảng 7 giây |
 | `exam_solver_pulp.py` | Hoàn chỉnh, có kiểm thử. Trên `toy` tìm được lời giải tối ưu 2391 nhưng không chứng minh được tối ưu trong vài phút (model_spec A.13) |
 | `room_solver.py` | Chờ spec bài toán B (Minh viết spec, Khỏe cài đặt) |
-| `app/app.py` | Xem và so sánh lịch, kiểm tra dữ liệu, chạy solver (CP-SAT/PuLP), khai báo sự cố và xếp lại; có AppTest |
+| `app/app.py` | Xem và so sánh lịch, kiểm tra dữ liệu, chạy solver (CP-SAT/PuLP), khai báo sự cố và xếp lại; biểu đồ và bảng CSV thực nghiệm; có AppTest |
 
 ## Phân công
 

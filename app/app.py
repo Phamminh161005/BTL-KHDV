@@ -5,14 +5,17 @@ Chạy: streamlit run app/app.py
 Biến môi trường (dùng cho kiểm thử, để không ghi vào data/ và output/ của repo):
     EXAM_APP_DATA_DIR    thư mục chứa các bộ dữ liệu, mặc định data/
     EXAM_APP_OUTPUT_DIR  thư mục ghi kết quả, mặc định output/
+    EXAM_APP_RESULTS_DIR thư mục CSV thực nghiệm, mặc định experiments/results/
 """
+import csv
 import hashlib
 import json
 import os
 import shutil
+import statistics
 import sys
 import tempfile
-from io import BytesIO
+from io import BytesIO, StringIO
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -839,6 +842,177 @@ def _reschedule_summary(schedule, out_path):
 
 
 # ---------------------------------------------------------------------------
+# Kết quả thực nghiệm
+# ---------------------------------------------------------------------------
+
+RESULT_COLUMNS = {
+    "perf.csv": "dataset,solver,strategy,seed,time_limit_sec,status,objective,best_bound,gap,solve_time_sec,violations,num_sittings,students_multi_exam_day,proctor_load_range".split(","),
+    "reschedule.csv": "dataset,scenario,incidents,status,objective_before,objective_after,solve_time_sec,total_time_sec,sittings_changed,sittings_moved,students_affected,proctors_affected,violations".split(","),
+    "sensitivity.csv": "experiment,parameter,value,dataset,status,objective,A-S1,A-S2,A-S3,A-S4,A-S5,A-S6,students_multi_exam_day,avg_gap_days,proctor_load_range,num_sittings,seat_fill_rate,solve_time_sec".split(","),
+}
+
+
+def _read_experiment(filename):
+    path = Path(os.environ.get("EXAM_APP_RESULTS_DIR", ROOT / "experiments" / "results")) / filename
+    try:
+        with path.open(encoding="utf-8-sig", newline="") as stream:
+            reader = csv.DictReader(stream)
+            missing = set(RESULT_COLUMNS[filename]) - set(reader.fieldnames or [])
+            if missing:
+                raise ValueError(f"thiếu cột: {', '.join(sorted(missing))}")
+            return list(reader)
+    except FileNotFoundError:
+        st.info(f"Chưa có {filename} trong {path.parent}. Chạy thực nghiệm để tạo file này.")
+    except (OSError, UnicodeError, csv.Error, ValueError) as exc:
+        st.warning(f"Không đọc được {filename}: {exc}")
+    return None
+
+
+def _number(row, column):
+    value = row[column].strip()
+    return float(value) if value else None
+
+
+def _csv_download(rows, columns, filename, key):
+    buffer = StringIO()
+    writer = csv.DictWriter(buffer, fieldnames=columns, extrasaction="ignore")
+    writer.writeheader()
+    writer.writerows(rows)
+    st.download_button("Tải bảng CSV", buffer.getvalue().encode("utf-8-sig"),
+                       file_name=filename, mime="text/csv", key=key)
+
+
+def _experiment_table(rows, columns, filename, key):
+    st.dataframe([{column: row.get(column, "") for column in columns} for row in rows],
+                 hide_index=True, width="stretch")
+    _csv_download(rows, columns, filename, key)
+
+
+def _perf_results():
+    st.subheader("Hiệu năng giải lịch")
+    rows = _read_experiment("perf.csv")
+    if rows is None:
+        return
+    datasets = sorted({row["dataset"] for row in rows})
+    if not datasets:
+        st.info("perf.csv chưa có dòng dữ liệu.")
+        return
+    selected = st.selectbox("Bộ dữ liệu hiệu năng", ["Tất cả"] + datasets, key="perf_dataset")
+    rows = [row for row in rows if selected == "Tất cả" or row["dataset"] == selected]
+    try:
+        groups = {}
+        for row in rows:
+            if row["status"].upper() not in ("OPTIMAL", "FEASIBLE"):
+                continue
+            time = _number(row, "solve_time_sec")
+            if time is not None:
+                key = (row["dataset"], row["solver"], row["strategy"])
+                groups.setdefault(key, []).append(time)
+        chart = [{"Bộ dữ liệu": ds, "Cách giải": f"{solver} / {strategy}",
+                  "Giây (trung bình seed)": statistics.mean(times)}
+                 for (ds, solver, strategy), times in sorted(groups.items())]
+        if chart:
+            st.bar_chart(chart, x="Bộ dữ liệu", y="Giây (trung bình seed)", color="Cách giải")
+        else:
+            st.info("Không có thời gian giải hợp lệ để vẽ biểu đồ.")
+        columns = ["dataset", "solver", "strategy", "seed", "status", "objective", "best_bound", "gap"]
+        st.caption("Mục tiêu, cận dưới và gap theo từng seed; chỉ thời gian giải của lịch hợp lệ được tính trung bình.")
+        _experiment_table(rows, columns, "perf-hien-thi.csv", "download_perf")
+    except (ValueError, TypeError) as exc:
+        st.warning(f"Dữ liệu perf.csv không hợp lệ: {exc}")
+
+
+def _reschedule_results():
+    st.subheader("Thời gian xếp lại")
+    rows = _read_experiment("reschedule.csv")
+    if rows is None:
+        return
+    try:
+        chart = [{"Kịch bản": f"{row['dataset']} / {row['scenario']}",
+                  "Tổng thời gian (giây)": _number(row, "total_time_sec")}
+                 for row in rows if _number(row, "total_time_sec") is not None]
+        if chart:
+            st.vega_lite_chart({"data": {"values": chart}, "layer": [
+                {"mark": "bar", "encoding": {"x": {"field": "Kịch bản", "type": "nominal", "sort": None},
+                                               "y": {"field": "Tổng thời gian (giây)", "type": "quantitative"}}},
+                {"mark": {"type": "rule", "color": "#c0392b", "strokeDash": [6, 4]},
+                 "encoding": {"y": {"datum": 60}}}
+            ]}, width="stretch")
+            st.caption("Đường đỏ: KPI xếp lại dưới 60 giây.")
+        else:
+            st.info("Không có thời gian xếp lại để vẽ biểu đồ.")
+        _experiment_table(rows, ["dataset", "scenario", "total_time_sec", "sittings_changed",
+                                 "sittings_moved", "students_affected", "proctors_affected"],
+                          "reschedule-hien-thi.csv", "download_reschedule")
+    except (ValueError, TypeError) as exc:
+        st.warning(f"Dữ liệu reschedule.csv không hợp lệ: {exc}")
+
+
+def _sensitivity_results():
+    st.subheader("Độ nhạy trọng số")
+    rows = _read_experiment("sensitivity.csv")
+    if rows is None:
+        return
+    datasets = sorted({row["dataset"] for row in rows})
+    if not datasets:
+        st.info("sensitivity.csv chưa có dòng dữ liệu.")
+        return
+    selected = st.selectbox("Bộ dữ liệu độ nhạy", datasets, key="sensitivity_dataset")
+    rows = [row for row in rows if row["dataset"] == selected]
+    try:
+        tradeoff = [row for row in rows if row["experiment"] == "tradeoff"]
+        points = [{"P1": _number(row, "A-S1"), "P6": _number(row, "A-S6"),
+                   "Trọng số A-S6": row["value"]} for row in tradeoff]
+        points = sorted((p for p in points if p["P1"] is not None and p["P6"] is not None),
+                        key=lambda p: p["P1"])
+        st.markdown("#### Đánh đổi P1 - P6")
+        if points:
+            st.vega_lite_chart({"data": {"values": points}, "layer": [
+                {"mark": {"type": "line", "point": True}, "encoding": {
+                    "x": {"field": "P1", "type": "quantitative"},
+                    "y": {"field": "P6", "type": "quantitative"},
+                    "tooltip": [{"field": "Trọng số A-S6"}, {"field": "P1"}, {"field": "P6"}]}},
+                {"mark": {"type": "text", "dy": -12}, "encoding": {
+                    "x": {"field": "P1", "type": "quantitative"},
+                    "y": {"field": "P6", "type": "quantitative"},
+                    "text": {"field": "Trọng số A-S6"}}}
+            ]}, width="stretch")
+        else:
+            st.info("Không có điểm tradeoff P1/P6 để vẽ biểu đồ.")
+        _experiment_table(tradeoff, RESULT_COLUMNS["sensitivity.csv"], "tradeoff-hien-thi.csv", "download_tradeoff")
+
+        st.markdown("#### Thay đổi hệ số nhân")
+        weights = sorted({row["parameter"] for row in rows if row["experiment"] == "weight"})
+        if not weights:
+            st.info("Không có thực nghiệm weight để vẽ biểu đồ.")
+            return
+        weight = st.selectbox("Trọng số cần xem", weights, key="sensitivity_weight")
+        chosen = [row for row in rows if row["experiment"] == "weight" and row["parameter"] == weight]
+        penalties = ["A-S1", "A-S2", "A-S3", "A-S4", "A-S5", "A-S6"]
+        kpis = ["students_multi_exam_day", "avg_gap_days", "proctor_load_range",
+                "num_sittings", "seat_fill_rate", "solve_time_sec"]
+        plotted = [{"Hệ số nhân": _number(row, "value"),
+                    **{column: _number(row, column) for column in penalties + kpis}} for row in chosen]
+        plotted.sort(key=lambda row: row["Hệ số nhân"] if row["Hệ số nhân"] is not None else float("inf"))
+        if plotted and all(row["Hệ số nhân"] is not None for row in plotted):
+            st.caption("Điểm phạt (chưa nhân trọng số)")
+            st.line_chart(plotted, x="Hệ số nhân", y=penalties)
+            st.caption("Các KPI theo hệ số nhân")
+            st.line_chart(plotted, x="Hệ số nhân", y=kpis)
+        _experiment_table(chosen, RESULT_COLUMNS["sensitivity.csv"], "weight-hien-thi.csv", "download_weight")
+    except (ValueError, TypeError) as exc:
+        st.warning(f"Dữ liệu sensitivity.csv không hợp lệ: {exc}")
+
+
+def page_experiments():
+    _perf_results()
+    st.divider()
+    _reschedule_results()
+    st.divider()
+    _sensitivity_results()
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
@@ -846,11 +1020,12 @@ def main():
     st.set_page_config(page_title="Lịch thi", layout="wide")
     st.title("Lịch thi cuối kỳ")
 
-    tab_view, tab_input, tab_compare, tab_incident = st.tabs([
+    tab_view, tab_input, tab_compare, tab_incident, tab_experiments = st.tabs([
         "Xem kết quả",
         "Nhập dữ liệu và xếp lịch",
         "So sánh hai lịch",
         "Sự cố và xếp lại",
+        "Kết quả thực nghiệm",
     ])
     with tab_view:
         page_view()
@@ -860,6 +1035,8 @@ def main():
         page_compare()
     with tab_incident:
         page_incident()
+    with tab_experiments:
+        page_experiments()
 
 
 if __name__ == "__main__":
