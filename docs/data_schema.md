@@ -32,19 +32,19 @@ Một bộ dữ liệu là một thư mục chứa các file CSV ở trên. Tên
 
 ## 2. Quy ước chung cho mọi file CSV
 
-| Quy ước | Nội dung |
-|---|---|
-| Mã hóa | UTF-8, có hoặc không có BOM (Excel thường ghi kèm BOM) |
-| Dấu phân cách | Dấu phẩy `,`. Bộ đọc cũng chấp nhận dấu chấm phẩy `;` (Excel trên máy cài tiếng Việt hay xuất ra dấu này) và báo cảnh báo D16 |
-| Dòng tiêu đề | Bắt buộc, là dòng đầu tiên không trống. Tên cột phải đúng như tài liệu nhưng không phân biệt chữ hoa, chữ thường (`Date` được hiểu là `date`). Thứ tự cột không quan trọng |
-| Cột thừa | Được phép, bị bỏ qua, báo cảnh báo D09 |
-| Ô chứa dấu phẩy | Đặt trong ngoặc kép theo chuẩn CSV, ví dụ `"Toán rời rạc, nâng cao"` |
-| Khoảng trắng | Bộ đọc cắt bỏ khoảng trắng ở đầu và cuối mỗi ô |
-| Ô trống | Coi là "không có giá trị". Cột bắt buộc mà để trống là lỗi D03 |
-| Dòng trống | Bị bỏ qua |
-| Số nguyên | Chỉ gồm chữ số, có thể có dấu trừ ở đầu. Không có phần thập phân, không có dấu phân cách hàng nghìn |
-| Ngày | Dạng `YYYY-MM-DD`, ví dụ `2026-12-14` |
-| Giá trị đúng/sai | `1` hoặc `0` (riêng file cấu hình JSON dùng `true`/`false`) |
+| Quy ước          | Nội dung                                                                                                                                                                   |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Mã hóa           | UTF-8, có hoặc không có BOM (Excel thường ghi kèm BOM)                                                                                                                     |
+| Dấu phân cách    | Dấu phẩy `,`. Bộ đọc cũng chấp nhận dấu chấm phẩy `;` (Excel trên máy cài tiếng Việt hay xuất ra dấu này) và báo cảnh báo D16                                              |
+| Dòng tiêu đề     | Bắt buộc, là dòng đầu tiên không trống. Tên cột phải đúng như tài liệu nhưng không phân biệt chữ hoa, chữ thường (`Date` được hiểu là `date`). Thứ tự cột không quan trọng |
+| Cột thừa         | Được phép, bị bỏ qua, báo cảnh báo D09                                                                                                                                     |
+| Ô chứa dấu phẩy  | Đặt trong ngoặc kép theo chuẩn CSV, ví dụ `"Toán rời rạc, nâng cao"`                                                                                                       |
+| Khoảng trắng     | Bộ đọc cắt bỏ khoảng trắng ở đầu và cuối mỗi ô                                                                                                                             |
+| Ô trống          | Coi là "không có giá trị". Cột bắt buộc mà để trống là lỗi D03                                                                                                             |
+| Dòng trống       | Bị bỏ qua                                                                                                                                                                  |
+| Số nguyên        | Chỉ gồm chữ số, có thể có dấu trừ ở đầu. Không có phần thập phân, không có dấu phân cách hàng nghìn                                                                        |
+| Ngày             | Dạng `YYYY-MM-DD`, ví dụ `2026-12-14`                                                                                                                                      |
+| Giá trị đúng/sai | `1` hoặc `0` (riêng file cấu hình JSON dùng `true`/`false`)                                                                                                                |
 
 ### 2.1. Mã định danh (ID)
 
@@ -63,14 +63,15 @@ Mỗi bảng dưới đây liệt kê các cột của một file. Cột "Bắt 
 
 Mỗi dòng là một ca có thể tổ chức thi. Ca nghỉ (ngày lễ, nghỉ nửa buổi) chỉ đơn giản là không có dòng tương ứng.
 
-| Cột | Kiểu | Bắt buộc | Mô tả |
-|---|---|---|---|
-| `date` | Ngày | Có | Ngày thi. Không được là Chủ nhật (lỗi D07) |
-| `period` | Số nguyên 1–4 | Có | Thứ tự ca trong ngày, theo khung giờ ở scope mục 4.2 |
+| Cột      | Kiểu          | Bắt buộc | Mô tả                                                |
+| -------- | ------------- | -------- | ---------------------------------------------------- |
+| `date`   | Ngày          | Có       | Ngày thi. Không được là Chủ nhật (lỗi D07)           |
+| `period` | Số nguyên 1–4 | Có       | Thứ tự ca trong ngày, theo khung giờ ở scope mục 4.2 |
 
 Khóa: cặp (`date`, `period`) không được lặp (lỗi D04).
 
 Ánh xạ sang mô hình:
+
 - $T$ là tập các dòng; $k(t)$ là `period`.
 - $D$ là tập các giá trị `date` khác nhau.
 - $Q$ (cặp ngày liên tiếp) gồm các cặp $(d, d')$ cùng thuộc $D$ và $d'$ là ngày ngay sau $d$ theo lịch. Vì Chủ nhật không được là ngày thi, Thứ 7 và Thứ 2 tuần sau không bao giờ thành cặp liên tiếp.
@@ -95,33 +96,33 @@ date,period
 
 ### 3.2. `rooms.csv`: phòng
 
-| Cột | Kiểu | Bắt buộc | Mô tả |
-|---|---|---|---|
-| `room_id` | ID | Có | Mã phòng, duy nhất |
-| `room_name` | Chuỗi | Không | Tên hiển thị, ví dụ "Phòng 101 nhà G2" |
-| `building` | Chuỗi | Không | Tòa nhà, chỉ để hiển thị |
-| `room_type` | `normal` hoặc `lab` | Có | Phòng thường hoặc phòng máy |
-| `seats` | Số nguyên ≥ 0 | Có với `normal`, trừ khi có `exam_capacity` | Số ghế |
-| `num_computers` | Số nguyên ≥ 0 | Có với `lab` | Số máy đang hoạt động |
-| `exam_capacity` | Số nguyên | Không | Ghi đè sức chứa khi thi |
+| Cột             | Kiểu                | Bắt buộc                                    | Mô tả                                  |
+| --------------- | ------------------- | ------------------------------------------- | -------------------------------------- |
+| `room_id`       | ID                  | Có                                          | Mã phòng, duy nhất                     |
+| `room_name`     | Chuỗi               | Không                                       | Tên hiển thị, ví dụ "Phòng 101 nhà G2" |
+| `building`      | Chuỗi               | Không                                       | Tòa nhà, chỉ để hiển thị               |
+| `room_type`     | `normal` hoặc `lab` | Có                                          | Phòng thường hoặc phòng máy            |
+| `seats`         | Số nguyên ≥ 0       | Có với `normal`, trừ khi có `exam_capacity` | Số ghế                                 |
+| `num_computers` | Số nguyên ≥ 0       | Có với `lab`                                | Số máy đang hoạt động                  |
+| `exam_capacity` | Số nguyên           | Không                                       | Ghi đè sức chứa khi thi                |
 
 Sức chứa khi thi $\kappa_r$ được tính như sau:
 
-| Trường hợp | $\kappa_r$ |
-|---|---|
-| Có `exam_capacity` | Lấy đúng giá trị `exam_capacity` |
+| Trường hợp                         | $\kappa_r$                                                                         |
+| ---------------------------------- | ---------------------------------------------------------------------------------- |
+| Có `exam_capacity`                 | Lấy đúng giá trị `exam_capacity`                                                   |
 | `normal`, không có `exam_capacity` | $\lfloor$ `seats` × `written_capacity_ratio` $\rfloor$, tỷ lệ mặc định 0,5 (mục 6) |
-| `lab`, không có `exam_capacity` | `num_computers` |
+| `lab`, không có `exam_capacity`    | `num_computers`                                                                    |
 
 Các trường hợp đặc biệt:
 
-| Trường hợp | Xử lý |
-|---|---|
-| Phòng `normal` thiếu cả `seats` lẫn `exam_capacity` | Lỗi D08 |
-| Phòng `lab` thiếu `num_computers` | Lỗi D08 |
-| Phòng `normal` có điền `num_computers` | Cảnh báo D14, bỏ qua cột này |
+| Trường hợp                                                                              | Xử lý                                  |
+| --------------------------------------------------------------------------------------- | -------------------------------------- |
+| Phòng `normal` thiếu cả `seats` lẫn `exam_capacity`                                     | Lỗi D08                                |
+| Phòng `lab` thiếu `num_computers`                                                       | Lỗi D08                                |
+| Phòng `normal` có điền `num_computers`                                                  | Cảnh báo D14, bỏ qua cột này           |
 | `exam_capacity` lớn hơn `seats` (phòng thường) hoặc lớn hơn `num_computers` (phòng máy) | Cảnh báo D13, vẫn dùng `exam_capacity` |
-| $\kappa_r \le 0$ sau khi tính | Cảnh báo P9, loại phòng khỏi mô hình |
+| $\kappa_r \le 0$ sau khi tính                                                           | Cảnh báo P9, loại phòng khỏi mô hình   |
 
 Ví dụ:
 
@@ -139,20 +140,20 @@ G2-LAB2,Phòng máy 2,G2,lab,,28,25
 
 Mỗi dòng là một môn thi. Các lớp học phần của cùng một học phần phải được gộp sẵn thành một dòng.
 
-| Cột | Kiểu | Bắt buộc | Mô tả |
-|---|---|---|---|
-| `course_id` | ID | Có | Mã môn, duy nhất |
-| `course_name` | Chuỗi | Không | Tên môn |
-| `exam_type` | `written` hoặc `computer` | Có | Thi viết hoặc thi trên máy |
-| `duration_min` | Số nguyên > 0 | Có | Thời lượng làm bài $\tau_c$ (phút) |
-| `max_sittings` | Số nguyên ≥ 1 | Không | Số lượt tối đa $L_c$ |
+| Cột            | Kiểu                      | Bắt buộc | Mô tả                              |
+| -------------- | ------------------------- | -------- | ---------------------------------- |
+| `course_id`    | ID                        | Có       | Mã môn, duy nhất                   |
+| `course_name`  | Chuỗi                     | Không    | Tên môn                            |
+| `exam_type`    | `written` hoặc `computer` | Có       | Thi viết hoặc thi trên máy         |
+| `duration_min` | Số nguyên > 0             | Có       | Thời lượng làm bài $\tau_c$ (phút) |
+| `max_sittings` | Số nguyên ≥ 1             | Không    | Số lượt tối đa $L_c$               |
 
 Giá trị mặc định của `max_sittings`:
 
-| `exam_type` | Mặc định |
-|---|---|
-| `written` | 1 (không chia lượt) |
-| `computer` | Theo `default_max_sittings_computer` trong cấu hình, mặc định 3 |
+| `exam_type` | Mặc định                                                        |
+| ----------- | --------------------------------------------------------------- |
+| `written`   | 1 (không chia lượt)                                             |
+| `computer`  | Theo `default_max_sittings_computer` trong cấu hình, mặc định 3 |
 
 Môn thi viết có `max_sittings` ≥ 2 được phép chia lượt; bộ đọc ghi thông tin P7.
 
@@ -160,14 +161,14 @@ Số sinh viên $n_c$ không có cột riêng mà được đếm từ `enrollme
 
 Các trường hợp đặc biệt:
 
-| Trường hợp | Xử lý |
-|---|---|
-| `duration_min` > 280 | Lỗi P1 |
-| `duration_min` ≤ 0 hoặc `max_sittings` ≤ 0 | Lỗi D03 |
-| Môn không có sinh viên nào đăng ký | Cảnh báo P2, bỏ môn khỏi mô hình |
-| Môn thi máy nhưng không còn phòng máy nào ($R_c = \emptyset$) | Lỗi P3 |
-| Môn không còn ca bắt đầu hợp lệ ($S_c = \emptyset$), ví dụ môn 2 ca trong khi không ngày nào có đủ cặp ca 1–2 hoặc 3–4 | Lỗi P4 |
-| $n_c > L_c \cdot \sum_{r \in R_c} \kappa_r$ | Lỗi P5 |
+| Trường hợp                                                                                                             | Xử lý                            |
+| ---------------------------------------------------------------------------------------------------------------------- | -------------------------------- |
+| `duration_min` > 280                                                                                                   | Lỗi P1                           |
+| `duration_min` ≤ 0 hoặc `max_sittings` ≤ 0                                                                             | Lỗi D03                          |
+| Môn không có sinh viên nào đăng ký                                                                                     | Cảnh báo P2, bỏ môn khỏi mô hình |
+| Môn thi máy nhưng không còn phòng máy nào ($R_c = \emptyset$)                                                          | Lỗi P3                           |
+| Môn không còn ca bắt đầu hợp lệ ($S_c = \emptyset$), ví dụ môn 2 ca trong khi không ngày nào có đủ cặp ca 1–2 hoặc 3–4 | Lỗi P4                           |
+| $n_c > L_c \cdot \sum_{r \in R_c} \kappa_r$                                                                            | Lỗi P5                           |
 
 Ví dụ:
 
@@ -184,10 +185,10 @@ INT3505,Khoa học dịch vụ,written,60,2
 
 ### 3.4. `enrollments.csv`: sinh viên đăng ký môn
 
-| Cột | Kiểu | Bắt buộc | Mô tả |
-|---|---|---|---|
-| `student_id` | ID | Có | Mã sinh viên |
-| `course_id` | ID | Có | Mã môn, phải có trong `courses.csv` (lỗi D05 nếu không) |
+| Cột          | Kiểu | Bắt buộc | Mô tả                                                   |
+| ------------ | ---- | -------- | ------------------------------------------------------- |
+| `student_id` | ID   | Có       | Mã sinh viên                                            |
+| `course_id`  | ID   | Có       | Mã môn, phải có trong `courses.csv` (lỗi D05 nếu không) |
 
 Tập sinh viên $I$ là tập các `student_id` xuất hiện trong file này; không có file danh sách sinh viên riêng. Một cặp (`student_id`, `course_id`) lặp lại thì chỉ giữ một dòng và báo cảnh báo P8.
 
@@ -200,11 +201,11 @@ student_id,course_id
 
 ### 3.5. `lecturers.csv`: giảng viên
 
-| Cột | Kiểu | Bắt buộc | Mô tả |
-|---|---|---|---|
-| `lecturer_id` | ID | Có | Mã giảng viên, duy nhất |
-| `lecturer_name` | Chuỗi | Không | Họ tên |
-| `is_proctor` | `0` hoặc `1` | Không, mặc định `1` | `1` nếu tham gia coi thi đợt này |
+| Cột             | Kiểu         | Bắt buộc            | Mô tả                            |
+| --------------- | ------------ | ------------------- | -------------------------------- |
+| `lecturer_id`   | ID           | Có                  | Mã giảng viên, duy nhất          |
+| `lecturer_name` | Chuỗi        | Không               | Họ tên                           |
+| `is_proctor`    | `0` hoặc `1` | Không, mặc định `1` | `1` nếu tham gia coi thi đợt này |
 
 Tập giám thị $G$ gồm những giảng viên có `is_proctor = 1`. Giảng viên bận gần hết đợt thi nên được đặt `is_proctor = 0`, nếu không mục tiêu công bằng A-S5 sẽ mất ý nghĩa (spec A.6).
 
@@ -221,18 +222,18 @@ GV03,Lê Văn Cường,0
 
 Chỉ dùng cho ràng buộc tùy chọn A-H10. Một giảng viên có thể dạy nhiều môn, một môn có thể có nhiều giảng viên.
 
-| Cột | Kiểu | Bắt buộc | Mô tả |
-|---|---|---|---|
-| `lecturer_id` | ID | Có | Phải có trong `lecturers.csv` |
-| `course_id` | ID | Có | Phải có trong `courses.csv` |
+| Cột           | Kiểu | Bắt buộc | Mô tả                         |
+| ------------- | ---- | -------- | ----------------------------- |
+| `lecturer_id` | ID   | Có       | Phải có trong `lecturers.csv` |
+| `course_id`   | ID   | Có       | Phải có trong `courses.csv`   |
 
-| Trường hợp | Xử lý |
-|---|---|
-| Thiếu file trong khi cấu hình bật `forbid_own_course` | Lỗi D11 |
-| Thiếu file và `forbid_own_course` tắt | Bình thường, không báo gì |
-| Có file nhưng `forbid_own_course` tắt | Vẫn đọc và kiểm tra hợp lệ, nhưng không dùng trong mô hình |
-| Dòng lặp | Chỉ giữ một dòng, không báo |
-| Tham chiếu giảng viên `is_proctor = 0` | Hợp lệ, không ảnh hưởng gì |
+| Trường hợp                                            | Xử lý                                                      |
+| ----------------------------------------------------- | ---------------------------------------------------------- |
+| Thiếu file trong khi cấu hình bật `forbid_own_course` | Lỗi D11                                                    |
+| Thiếu file và `forbid_own_course` tắt                 | Bình thường, không báo gì                                  |
+| Có file nhưng `forbid_own_course` tắt                 | Vẫn đọc và kiểm tra hợp lệ, nhưng không dùng trong mô hình |
+| Dòng lặp                                              | Chỉ giữ một dòng, không báo                                |
+| Tham chiếu giảng viên `is_proctor = 0`                | Hợp lệ, không ảnh hưởng gì                                 |
 
 ```csv
 lecturer_id,course_id
@@ -243,22 +244,22 @@ GV02,INT3306
 
 ### 3.7. `unavailability.csv`: ca bận của phòng và giảng viên (tùy chọn)
 
-| Cột | Kiểu | Bắt buộc | Mô tả |
-|---|---|---|---|
-| `resource_type` | `room` hoặc `lecturer` | Có | Loại đối tượng bận |
-| `resource_id` | ID | Có | `room_id` hoặc `lecturer_id`, tùy `resource_type` |
-| `date` | Ngày | Có | Ngày bận |
-| `period` | Số nguyên 1–4 | Không | Ca bận. Để trống nghĩa là bận cả ngày |
-| `note` | Chuỗi | Không | Lý do, chỉ để hiển thị |
+| Cột             | Kiểu                   | Bắt buộc | Mô tả                                             |
+| --------------- | ---------------------- | -------- | ------------------------------------------------- |
+| `resource_type` | `room` hoặc `lecturer` | Có       | Loại đối tượng bận                                |
+| `resource_id`   | ID                     | Có       | `room_id` hoặc `lecturer_id`, tùy `resource_type` |
+| `date`          | Ngày                   | Có       | Ngày bận                                          |
+| `period`        | Số nguyên 1–4          | Không    | Ca bận. Để trống nghĩa là bận cả ngày             |
+| `note`          | Chuỗi                  | Không    | Lý do, chỉ để hiển thị                            |
 
 Ánh xạ sang mô hình: dòng `room` tạo phần tử của $B^{R}_r$; dòng `lecturer` tạo phần tử của $B^{G}_g$.
 
-| Trường hợp | Xử lý |
-|---|---|
-| `resource_id` không tồn tại trong file tương ứng | Lỗi D05 |
-| Ngày hoặc ca không có trong `slots.csv` | Cảnh báo D10, bỏ qua dòng đó (ca đó vốn không dùng để thi) |
-| Dòng lặp, hoặc một dòng cả ngày trùng với dòng từng ca | Gộp lại, không báo |
-| Giảng viên `is_proctor = 0` có ca bận | Hợp lệ, không ảnh hưởng gì |
+| Trường hợp                                             | Xử lý                                                      |
+| ------------------------------------------------------ | ---------------------------------------------------------- |
+| `resource_id` không tồn tại trong file tương ứng       | Lỗi D05                                                    |
+| Ngày hoặc ca không có trong `slots.csv`                | Cảnh báo D10, bỏ qua dòng đó (ca đó vốn không dùng để thi) |
+| Dòng lặp, hoặc một dòng cả ngày trùng với dòng từng ca | Gộp lại, không báo                                         |
+| Giảng viên `is_proctor = 0` có ca bận                  | Hợp lệ, không ảnh hưởng gì                                 |
 
 ```csv
 resource_type,resource_id,date,period,note
@@ -269,20 +270,20 @@ lecturer,GV02,2026-12-16,1,
 
 ## 4. Bảng ánh xạ sang mô hình
 
-| Ký hiệu trong spec | Lấy từ |
-|---|---|
-| $T$, $k(t)$, $D$, $Q$ | `slots.csv` |
-| $R$, $R^{V}$, $R^{M}$ | `rooms.csv`, cột `room_type` (`normal` → $R^{V}$, `lab` → $R^{M}$), sau khi loại phòng P9 |
-| $\kappa_r$ | `rooms.csv`, theo bảng tính ở mục 3.2 |
-| $C$, $C^{V}$, $C^{M}$ | `courses.csv`, cột `exam_type` (`written` → $C^{V}$, `computer` → $C^{M}$), sau khi loại môn P2 |
-| $\tau_c$, $\ell_c$ | `courses.csv`, cột `duration_min` |
-| $L_c$ | `courses.csv`, cột `max_sittings` hoặc giá trị mặc định |
-| $C^{P}$, $C^{U}$ | Suy ra từ $L_c$ |
-| $I$, $I_c$, $C_i$, $n_c$ | `enrollments.csv` |
-| $G$ | `lecturers.csv`, những dòng `is_proctor = 1` |
-| $\Phi_g$ | `teaching.csv` |
-| $B^{R}_r$, $B^{G}_g$ | `unavailability.csv` |
-| $\nu$, $\theta$, $\omega_1..\omega_6$ | `config.json` |
+| Ký hiệu trong spec                    | Lấy từ                                                                                          |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| $T$, $k(t)$, $D$, $Q$                 | `slots.csv`                                                                                     |
+| $R$, $R^{V}$, $R^{M}$                 | `rooms.csv`, cột `room_type` (`normal` → $R^{V}$, `lab` → $R^{M}$), sau khi loại phòng P9       |
+| $\kappa_r$                            | `rooms.csv`, theo bảng tính ở mục 3.2                                                           |
+| $C$, $C^{V}$, $C^{M}$                 | `courses.csv`, cột `exam_type` (`written` → $C^{V}$, `computer` → $C^{M}$), sau khi loại môn P2 |
+| $\tau_c$, $\ell_c$                    | `courses.csv`, cột `duration_min`                                                               |
+| $L_c$                                 | `courses.csv`, cột `max_sittings` hoặc giá trị mặc định                                         |
+| $C^{P}$, $C^{U}$                      | Suy ra từ $L_c$                                                                                 |
+| $I$, $I_c$, $C_i$, $n_c$              | `enrollments.csv`                                                                               |
+| $G$                                   | `lecturers.csv`, những dòng `is_proctor = 1`                                                    |
+| $\Phi_g$                              | `teaching.csv`                                                                                  |
+| $B^{R}_r$, $B^{G}_g$                  | `unavailability.csv`                                                                            |
+| $\nu$, $\theta$, $\omega_1..\omega_6$ | `config.json`                                                                                   |
 
 ## 5. Mã thông báo khi đọc dữ liệu
 
@@ -294,42 +295,50 @@ Bộ đọc dữ liệu không dừng ở lỗi đầu tiên mà kiểm tra hế
 
 Mã D là lỗi định dạng dữ liệu (tài liệu này). Mã P là kiểm tra trước khi giải (spec A.8). Mã R là thông báo của bước hậu xử lý sau khi giải. Mã S là thông báo của solver. Mã N là chẩn đoán nguyên nhân khi vô nghiệm (spec A.8). Mã I là thông báo khi xếp lại có sự cố (spec A.14).
 
-| Mã | Mức | Nội dung |
-|---|---|---|
-| D01 | error | Thiếu file bắt buộc |
-| D02 | error | Thiếu cột bắt buộc |
-| D03 | error | Giá trị sai kiểu hoặc ngoài miền cho phép (ví dụ `period = 5`, `exam_type = oral`, số âm, cột bắt buộc để trống) |
-| D04 | error | Trùng khóa (trùng `room_id`, `course_id`, `lecturer_id`, hoặc trùng cặp `date`, `period` trong `slots.csv`) |
-| D05 | error | Tham chiếu tới mã không tồn tại |
-| D06 | error | Mã định danh chứa ký tự không hợp lệ |
-| D07 | error | Ngày thi là Chủ nhật |
-| D08 | error | Phòng thiếu dữ liệu sức chứa theo loại phòng |
-| D09 | warning | Cột không có trong tài liệu, bị bỏ qua |
-| D10 | warning | Ca bận nằm ngoài lịch thi, bị bỏ qua |
-| D11 | error | Bật `forbid_own_course` nhưng thiếu `teaching.csv` |
-| D12 | error hoặc warning | Cấu hình sai: giá trị sai là error; khóa lạ là warning, bị bỏ qua |
-| D13 | warning | `exam_capacity` lớn hơn số ghế hoặc số máy |
-| D14 | warning | Phòng thường có điền `num_computers`, bị bỏ qua |
-| D15 | error | Sau khi lọc không còn môn nào, phòng nào hoặc ca nào để xếp |
-| D16 | warning | File dùng dấu chấm phẩy làm dấu phân cách |
-| P1–P9 | theo spec A.8 | Kiểm tra trước khi giải |
-| R01 | info | Hậu xử lý: một phòng của lượt thi không có sinh viên nào (mục 7.3) |
-| S01 | warning | Solver không tự dừng ở giới hạn thời gian nên bị dừng cưỡng bức; trạng thái `UNKNOWN` |
-| S02 | error | Bộ giải bên ngoài (CBC) thoát bất thường; trạng thái `UNKNOWN` |
-| N01 | warning | Chẩn đoán: bỏ một nhóm ràng buộc (giám thị, A-H2 hoặc A-H6) thì xếp được lịch; kèm gợi ý sửa dữ liệu. Có thể có nhiều N01 |
-| N02 | warning | Chẩn đoán: không nhóm nào riêng lẻ đủ, nhưng bỏ cả ba nhóm thì xếp được lịch (nhiều nguyên nhân cùng lúc) |
-| N03 | warning | Chẩn đoán: bỏ cả ba nhóm vẫn vô nghiệm; nguyên nhân ở phòng và số lượt (A-H1, A-H3, A-H4, A-H5) |
-| N04 | info | Chẩn đoán: một lần thử hết giờ mà chưa kết luận được |
-| N05 | info | Chẩn đoán: tổng thời gian chẩn đoán |
-| I01 | error | Sự cố không hợp lệ: sai loại, mã phòng hoặc giảng viên không có trong dữ liệu, sai dạng ngày, ca ngoài 1–4 |
-| I02 | warning | Sự cố không ảnh hưởng gì (ngày hoặc ca không có trong lịch thi, hoặc giảng viên không coi thi), bị bỏ qua |
-| I03 | error | Không đọc được lịch cũ, lịch cũ không có lượt thi, hoặc lịch cũ không thuộc bộ dữ liệu này (khác môn, khác danh sách sinh viên, phòng hoặc ca lạ) |
+| Mã    | Mức                | Nội dung                                                                                                                                          |
+| ----- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D01   | error              | Thiếu file bắt buộc                                                                                                                               |
+| D02   | error              | Thiếu cột bắt buộc                                                                                                                                |
+| D03   | error              | Giá trị sai kiểu hoặc ngoài miền cho phép (ví dụ `period = 5`, `exam_type = oral`, số âm, cột bắt buộc để trống)                                  |
+| D04   | error              | Trùng khóa (trùng `room_id`, `course_id`, `lecturer_id`, hoặc trùng cặp `date`, `period` trong `slots.csv`)                                       |
+| D05   | error              | Tham chiếu tới mã không tồn tại                                                                                                                   |
+| D06   | error              | Mã định danh chứa ký tự không hợp lệ                                                                                                              |
+| D07   | error              | Ngày thi là Chủ nhật                                                                                                                              |
+| D08   | error              | Phòng thiếu dữ liệu sức chứa theo loại phòng                                                                                                      |
+| D09   | warning            | Cột không có trong tài liệu, bị bỏ qua                                                                                                            |
+| D10   | warning            | Ca bận nằm ngoài lịch thi, bị bỏ qua                                                                                                              |
+| D11   | error              | Bật `forbid_own_course` nhưng thiếu `teaching.csv`                                                                                                |
+| D12   | error hoặc warning | Cấu hình sai: giá trị sai là error; khóa lạ là warning, bị bỏ qua                                                                                 |
+| D13   | warning            | `exam_capacity` lớn hơn số ghế hoặc số máy                                                                                                        |
+| D14   | warning            | Phòng thường có điền `num_computers`, bị bỏ qua                                                                                                   |
+| D15   | error              | Sau khi lọc không còn môn nào, phòng nào hoặc ca nào để xếp                                                                                       |
+| D16   | warning            | File dùng dấu chấm phẩy làm dấu phân cách                                                                                                         |
+| P1–P9 | theo spec A.8      | Kiểm tra trước khi giải                                                                                                                           |
+| R01   | info               | Hậu xử lý: một phòng của lượt thi không có sinh viên nào (mục 7.3)                                                                                |
+| S01   | warning            | Solver không tự dừng ở giới hạn thời gian nên bị dừng cưỡng bức; trạng thái `UNKNOWN`                                                             |
+| S02   | error              | Bộ giải bên ngoài (CBC) thoát bất thường; trạng thái `UNKNOWN`                                                                                    |
+| S03   | warning            | Chiến lược `two_phase` hết thời gian trong quá trình xây dựng mô hình pha 1 hoặc trước khi bắt đầu phân công giám thị ở pha 2.                    |
+| S04   | warning            | Pha 2 không tìm được nghiệm phân công giám thị; hệ thống thử giải lại bằng chiến lược `single` với thời gian còn lại.                             |
+| S05   | info               | Cung cấp trạng thái giải của từng pha và tổng thời gian thực hiện chiến lược `two_phase`.                                                         |
+| N01   | warning            | Chẩn đoán: bỏ một nhóm ràng buộc (giám thị, A-H2 hoặc A-H6) thì xếp được lịch; kèm gợi ý sửa dữ liệu. Có thể có nhiều N01                         |
+| N02   | warning            | Chẩn đoán: không nhóm nào riêng lẻ đủ, nhưng bỏ cả ba nhóm thì xếp được lịch (nhiều nguyên nhân cùng lúc)                                         |
+| N03   | warning            | Chẩn đoán: bỏ cả ba nhóm vẫn vô nghiệm; nguyên nhân ở phòng và số lượt (A-H1, A-H3, A-H4, A-H5)                                                   |
+| N04   | info               | Chẩn đoán: một lần thử hết giờ mà chưa kết luận được                                                                                              |
+| N05   | info               | Chẩn đoán: tổng thời gian chẩn đoán                                                                                                               |
+| I01   | error              | Sự cố không hợp lệ: sai loại, mã phòng hoặc giảng viên không có trong dữ liệu, sai dạng ngày, ca ngoài 1–4                                        |
+| I02   | warning            | Sự cố không ảnh hưởng gì (ngày hoặc ca không có trong lịch thi, hoặc giảng viên không coi thi), bị bỏ qua                                         |
+| I03   | error              | Không đọc được lịch cũ, lịch cũ không có lượt thi, hoặc lịch cũ không thuộc bộ dữ liệu này (khác môn, khác danh sách sinh viên, phòng hoặc ca lạ) |
 
 Mỗi thông báo có dạng (cũng là dạng xuất hiện trong file kết quả, mục 7):
 
 ```json
-{"code": "D05", "level": "error", "file": "enrollments.csv", "line": 17,
- "message": "course_id 'INT9999' không có trong courses.csv"}
+{
+  "code": "D05",
+  "level": "error",
+  "file": "enrollments.csv",
+  "line": 17,
+  "message": "course_id 'INT9999' không có trong courses.csv"
+}
 ```
 
 Quy tắc tránh lỗi dây chuyền:
@@ -343,18 +352,18 @@ Quy tắc tránh lỗi dây chuyền:
 
 Mọi khóa đều có giá trị mặc định. File cấu hình có thể chỉ ghi những khóa muốn thay đổi; file rỗng `{}` nghĩa là dùng toàn bộ mặc định.
 
-| Khóa | Kiểu | Mặc định | Mô tả |
-|---|---|---|---|
-| `strategy` | `"single"` hoặc `"two_phase"` | `"single"` | Giải một lần hay hai pha (spec A.7) |
-| `time_limit_sec` | Số dương | `300` | Giới hạn thời gian. Với `two_phase` là tổng thời gian cả hai pha. Solver PuLP + CBC có thể chạy quá giới hạn này một chút; nếu vượt hạn cứng (giới hạn cộng thêm 30 giây hoặc 20%, lấy số lớn hơn) thì bị dừng với thông báo S01 |
-| `num_workers` | Số nguyên ≥ 1 | `8` | Số luồng CP-SAT. Không áp dụng cho CBC (CBC luôn chạy một luồng, xem `src/exam_solver_pulp.py`) |
-| `random_seed` | Số nguyên ≥ 0 | `0` | Hạt giống ngẫu nhiên của CP-SAT, để chạy lại cho cùng kết quả |
-| `proctors_per_room` | Số nguyên ≥ 1 | `2` | $\nu$ |
-| `forbid_own_course` | `true` hoặc `false` | `false` | $\theta$, bật A-H10 |
-| `written_capacity_ratio` | Số trong khoảng (0, 1] | `0.5` | Tỷ lệ sức chứa khi thi của phòng thường |
-| `default_max_sittings_computer` | Số nguyên ≥ 1 | `3` | $L_c$ mặc định của môn thi máy |
-| `weights` | Đối tượng | Xem dưới | Trọng số các ràng buộc mềm, số nguyên ≥ 0 |
-| `reschedule` | Đối tượng | Xem dưới | Chỉ dùng khi xếp lại có sự cố (spec A.14): `time_limit_sec` là giới hạn thời gian xếp lại; `weights` là trọng số phạt thay đổi A-R1..A-R4, số nguyên ≥ 0 |
+| Khóa                            | Kiểu                          | Mặc định   | Mô tả                                                                                                                                                                                                                            |
+| ------------------------------- | ----------------------------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `strategy`                      | `"single"` hoặc `"two_phase"` | `"single"` | Giải một lần hay hai pha (spec A.7)                                                                                                                                                                                              |
+| `time_limit_sec`                | Số dương                      | `300`      | Giới hạn thời gian. Với `two_phase` là tổng thời gian cả hai pha. Solver PuLP + CBC có thể chạy quá giới hạn này một chút; nếu vượt hạn cứng (giới hạn cộng thêm 30 giây hoặc 20%, lấy số lớn hơn) thì bị dừng với thông báo S01 |
+| `num_workers`                   | Số nguyên ≥ 1                 | `8`        | Số luồng CP-SAT. Không áp dụng cho CBC (CBC luôn chạy một luồng, xem `src/exam_solver_pulp.py`)                                                                                                                                  |
+| `random_seed`                   | Số nguyên ≥ 0                 | `0`        | Hạt giống ngẫu nhiên của CP-SAT, để chạy lại cho cùng kết quả                                                                                                                                                                    |
+| `proctors_per_room`             | Số nguyên ≥ 1                 | `2`        | $\nu$                                                                                                                                                                                                                            |
+| `forbid_own_course`             | `true` hoặc `false`           | `false`    | $\theta$, bật A-H10                                                                                                                                                                                                              |
+| `written_capacity_ratio`        | Số trong khoảng (0, 1]        | `0.5`      | Tỷ lệ sức chứa khi thi của phòng thường                                                                                                                                                                                          |
+| `default_max_sittings_computer` | Số nguyên ≥ 1                 | `3`        | $L_c$ mặc định của môn thi máy                                                                                                                                                                                                   |
+| `weights`                       | Đối tượng                     | Xem dưới   | Trọng số các ràng buộc mềm, số nguyên ≥ 0                                                                                                                                                                                        |
+| `reschedule`                    | Đối tượng                     | Xem dưới   | Chỉ dùng khi xếp lại có sự cố (spec A.14): `time_limit_sec` là giới hạn thời gian xếp lại; `weights` là trọng số phạt thay đổi A-R1..A-R4, số nguyên ≥ 0                                                                         |
 
 Trọng số mặc định (theo spec A.6). Khóa nào không ghi thì lấy mặc định của khóa đó:
 
@@ -368,10 +377,17 @@ Trọng số mặc định (theo spec A.6). Khóa nào không ghi thì lấy m�
   "forbid_own_course": false,
   "written_capacity_ratio": 0.5,
   "default_max_sittings_computer": 3,
-  "weights": {"A-S1": 100, "A-S2": 30, "A-S3": 50, "A-S4": 1, "A-S5": 20, "A-S6": 200},
+  "weights": {
+    "A-S1": 100,
+    "A-S2": 30,
+    "A-S3": 50,
+    "A-S4": 1,
+    "A-S5": 20,
+    "A-S6": 200
+  },
   "reschedule": {
     "time_limit_sec": 45,
-    "weights": {"A-R1": 1000, "A-R2": 100, "A-R3": 50, "A-R4": 20}
+    "weights": { "A-R1": 1000, "A-R2": 100, "A-R3": 50, "A-R4": 20 }
   }
 }
 ```
@@ -397,28 +413,28 @@ Trọng số bằng 0 nghĩa là tắt ràng buộc mềm đó. Lưu ý: ngay c�
 }
 ```
 
-| Trường | Kiểu | Mô tả |
-|---|---|---|
-| `meta` | Đối tượng | Thông tin lần chạy (mục 7.2) |
-| `status` | Chuỗi | Một trong: `OPTIMAL`, `FEASIBLE`, `INFEASIBLE`, `UNKNOWN`, `INPUT_ERROR` |
-| `objective` | Số nguyên hoặc `null` | Giá trị $Z$. `null` nếu không có lời giải |
-| `best_bound` | Số hoặc `null` | Cận dưới tốt nhất solver chứng minh được. Bằng `objective` khi `OPTIMAL` |
-| `solve_time_sec` | Số | Thời gian giải, không tính thời gian đọc dữ liệu |
-| `penalties` | Đối tượng hoặc `null` | Giá trị $P_1..P_6$ chưa nhân trọng số, khóa là mã ràng buộc mềm |
-| `kpi` | Đối tượng hoặc `null` | Mục 7.4 |
-| `sittings` | Mảng | Các lượt thi (mục 7.3). Mảng rỗng nếu không có lời giải |
-| `messages` | Mảng | Mọi thông báo D, P và thông báo của solver (mục 5) |
-| `violations` | Mảng | Vi phạm ràng buộc cứng do validator phát hiện. Phải rỗng với lời giải đúng |
+| Trường           | Kiểu                  | Mô tả                                                                      |
+| ---------------- | --------------------- | -------------------------------------------------------------------------- |
+| `meta`           | Đối tượng             | Thông tin lần chạy (mục 7.2)                                               |
+| `status`         | Chuỗi                 | Một trong: `OPTIMAL`, `FEASIBLE`, `INFEASIBLE`, `UNKNOWN`, `INPUT_ERROR`   |
+| `objective`      | Số nguyên hoặc `null` | Giá trị $Z$. `null` nếu không có lời giải                                  |
+| `best_bound`     | Số hoặc `null`        | Cận dưới tốt nhất solver chứng minh được. Bằng `objective` khi `OPTIMAL`   |
+| `solve_time_sec` | Số                    | Thời gian giải, không tính thời gian đọc dữ liệu                           |
+| `penalties`      | Đối tượng hoặc `null` | Giá trị $P_1..P_6$ chưa nhân trọng số, khóa là mã ràng buộc mềm            |
+| `kpi`            | Đối tượng hoặc `null` | Mục 7.4                                                                    |
+| `sittings`       | Mảng                  | Các lượt thi (mục 7.3). Mảng rỗng nếu không có lời giải                    |
+| `messages`       | Mảng                  | Mọi thông báo D, P và thông báo của solver (mục 5)                         |
+| `violations`     | Mảng                  | Vi phạm ràng buộc cứng do validator phát hiện. Phải rỗng với lời giải đúng |
 
 Ý nghĩa các trạng thái:
 
-| `status` | Khi nào | `sittings` |
-|---|---|---|
-| `OPTIMAL` | Lịch tối ưu theo hàm mục tiêu | Có |
-| `FEASIBLE` | Lịch hợp lệ, chưa chứng minh tối ưu (hết thời gian) | Có |
-| `INFEASIBLE` | Đã chứng minh không có lịch nào thỏa ràng buộc cứng | Rỗng |
-| `UNKNOWN` | Hết thời gian mà chưa tìm được lịch hợp lệ nào | Rỗng |
-| `INPUT_ERROR` | Dữ liệu có lỗi mức `error`, solver không chạy | Rỗng |
+| `status`      | Khi nào                                             | `sittings` |
+| ------------- | --------------------------------------------------- | ---------- |
+| `OPTIMAL`     | Lịch tối ưu theo hàm mục tiêu                       | Có         |
+| `FEASIBLE`    | Lịch hợp lệ, chưa chứng minh tối ưu (hết thời gian) | Có         |
+| `INFEASIBLE`  | Đã chứng minh không có lịch nào thỏa ràng buộc cứng | Rỗng       |
+| `UNKNOWN`     | Hết thời gian mà chưa tìm được lịch hợp lệ nào      | Rỗng       |
+| `INPUT_ERROR` | Dữ liệu có lỗi mức `error`, solver không chạy       | Rỗng       |
 
 ### 7.2. `meta`
 
@@ -471,14 +487,14 @@ Mỗi phần tử là một lượt thi. Mảng được sắp xếp theo `date`
 }
 ```
 
-| Trường | Mô tả |
-|---|---|
-| `sitting_id` | `<course_id>@<date>_<start_period>`. Duy nhất vì một môn không có hai lượt cùng ca bắt đầu |
-| `periods` | Các ca lượt thi chiếm: `[k]` hoặc `[k, k+1]` |
+| Trường                   | Mô tả                                                                                                                        |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| `sitting_id`             | `<course_id>@<date>_<start_period>`. Duy nhất vì một môn không có hai lượt cùng ca bắt đầu                                   |
+| `periods`                | Các ca lượt thi chiếm: `[k]` hoặc `[k, k+1]`                                                                                 |
 | `start_time`, `end_time` | Giờ bắt đầu ca đầu và giờ kết thúc ca cuối, theo scope mục 4.2. Đây là khung giờ giữ phòng, không phải giờ sinh viên nộp bài |
-| `num_students` | Số sinh viên của lượt |
-| `rooms[].students` | Danh sách mã sinh viên ngồi phòng đó, sắp tăng dần |
-| `rooms[].proctors` | Đúng `proctors_per_room` mã giảng viên, sắp tăng dần; với lượt 2 ca, giữ nguyên ở cả hai ca |
+| `num_students`           | Số sinh viên của lượt                                                                                                        |
+| `rooms[].students`       | Danh sách mã sinh viên ngồi phòng đó, sắp tăng dần                                                                           |
+| `rooms[].proctors`       | Đúng `proctors_per_room` mã giảng viên, sắp tăng dần; với lượt 2 ca, giữ nguyên ở cả hai ca                                  |
 
 Quy tắc chia sinh viên vào phòng (spec A.10), để mọi lần chạy cho cùng kết quả: sắp các phòng của lượt theo `exam_capacity` giảm dần, nếu bằng nhau thì theo `room_id` tăng dần; sắp sinh viên theo `student_id` tăng dần (so sánh chuỗi); lấp đầy lần lượt từng phòng.
 
@@ -488,19 +504,19 @@ Hệ quả là phòng cuối cùng có thể ít sinh viên. Phòng có 0 sinh v
 
 Định nghĩa chính xác các KPI trong scope mục 7:
 
-| Khóa | Định nghĩa |
-|---|---|
-| `hard_violations` | Số phần tử trong `violations` |
-| `students_multi_exam_day` | Số sinh viên có ít nhất một ngày bắt đầu từ 2 lượt thi trở lên |
-| `avg_gap_days` | Với mỗi sinh viên thi từ 2 lượt trở lên, tính trung bình khoảng cách (số ngày theo lịch) giữa các cặp lượt liên tiếp của sinh viên đó; sau đó lấy trung bình trên các sinh viên này, mỗi sinh viên có trọng số như nhau. Hai lượt cùng ngày có khoảng cách 0. `null` nếu không có sinh viên nào thi từ 2 lượt |
-| `min_gap_days` | Khoảng cách nhỏ nhất theo cùng cách tính. `null` trong cùng trường hợp |
-| `proctor_load_min`, `proctor_load_max` | Số ca coi thi ít nhất và nhiều nhất trong $G$ (lượt 2 ca tính là 2 ca) |
-| `proctor_load_range` | `proctor_load_max − proctor_load_min` |
-| `num_sittings` | Tổng số lượt thi, cũng là số đề phải chuẩn bị |
-| `room_utilization_normal` | Số cặp (phòng thường, ca) đang dùng chia cho số cặp (phòng thường, ca) không bận. `null` nếu mẫu số bằng 0 |
-| `room_utilization_lab` | Như trên, cho phòng máy |
-| `seat_fill_rate` | Tổng (số sinh viên × số ca) chia cho tổng (sức chứa phòng được dùng × số ca), tính trên mọi lượt. `null` nếu không có lượt nào |
-| `solve_time_sec` | Bằng `solve_time_sec` ở cấp trên |
+| Khóa                                   | Định nghĩa                                                                                                                                                                                                                                                                                                    |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `hard_violations`                      | Số phần tử trong `violations`                                                                                                                                                                                                                                                                                 |
+| `students_multi_exam_day`              | Số sinh viên có ít nhất một ngày bắt đầu từ 2 lượt thi trở lên                                                                                                                                                                                                                                                |
+| `avg_gap_days`                         | Với mỗi sinh viên thi từ 2 lượt trở lên, tính trung bình khoảng cách (số ngày theo lịch) giữa các cặp lượt liên tiếp của sinh viên đó; sau đó lấy trung bình trên các sinh viên này, mỗi sinh viên có trọng số như nhau. Hai lượt cùng ngày có khoảng cách 0. `null` nếu không có sinh viên nào thi từ 2 lượt |
+| `min_gap_days`                         | Khoảng cách nhỏ nhất theo cùng cách tính. `null` trong cùng trường hợp                                                                                                                                                                                                                                        |
+| `proctor_load_min`, `proctor_load_max` | Số ca coi thi ít nhất và nhiều nhất trong $G$ (lượt 2 ca tính là 2 ca)                                                                                                                                                                                                                                        |
+| `proctor_load_range`                   | `proctor_load_max − proctor_load_min`                                                                                                                                                                                                                                                                         |
+| `num_sittings`                         | Tổng số lượt thi, cũng là số đề phải chuẩn bị                                                                                                                                                                                                                                                                 |
+| `room_utilization_normal`              | Số cặp (phòng thường, ca) đang dùng chia cho số cặp (phòng thường, ca) không bận. `null` nếu mẫu số bằng 0                                                                                                                                                                                                    |
+| `room_utilization_lab`                 | Như trên, cho phòng máy                                                                                                                                                                                                                                                                                       |
+| `seat_fill_rate`                       | Tổng (số sinh viên × số ca) chia cho tổng (sức chứa phòng được dùng × số ca), tính trên mọi lượt. `null` nếu không có lượt nào                                                                                                                                                                                |
+| `solve_time_sec`                       | Bằng `solve_time_sec` ở cấp trên                                                                                                                                                                                                                                                                              |
 
 Thời gian xếp lại khi có sự cố (KPI cuối trong scope) không nằm trong file kết quả, mà được đo trong phần thực nghiệm.
 
@@ -509,8 +525,14 @@ Thời gian xếp lại khi có sự cố (KPI cuối trong scope) không nằm 
 Validator kiểm tra lời giải độc lập với solver (spec A.10) và ghi mỗi vi phạm thành một phần tử:
 
 ```json
-{"code": "A-H2", "message": "Sinh viên 22020001 thi INT2204 và INT2211 cùng ca 1 ngày 2026-12-14",
- "refs": {"student_id": "22020001", "sitting_ids": ["INT2204@2026-12-14_1", "INT2211@2026-12-14_1"]}}
+{
+  "code": "A-H2",
+  "message": "Sinh viên 22020001 thi INT2204 và INT2211 cùng ca 1 ngày 2026-12-14",
+  "refs": {
+    "student_id": "22020001",
+    "sitting_ids": ["INT2204@2026-12-14_1", "INT2211@2026-12-14_1"]
+  }
+}
 ```
 
 `code` là mã ràng buộc cứng trong scope. `refs` chứa các mã liên quan để giao diện có thể làm nổi bật.
@@ -528,7 +550,12 @@ Hàm `reschedule` trong `src/reschedule.py` (giao diện gọi hàm này) và l�
 Sự cố truyền vào hàm có dạng:
 
 ```json
-{"resource_type": "room", "resource_id": "G2-LAB1", "date": "2026-12-15", "period": 3}
+{
+  "resource_type": "room",
+  "resource_id": "G2-LAB1",
+  "date": "2026-12-15",
+  "period": 3
+}
 ```
 
 `period` là 1–4, hoặc `null` nghĩa là cả ngày.
@@ -538,24 +565,36 @@ Trường `reschedule`:
 ```json
 {
   "base_schedule": "toy_schedule.json",
-  "incidents": [{"resource_type": "room", "resource_id": "G2-LAB1", "date": "2026-12-15", "period": 3}],
-  "change_penalties": {"A-R1": 1, "A-R2": 0, "A-R3": 17, "A-R4": 6},
+  "incidents": [
+    {
+      "resource_type": "room",
+      "resource_id": "G2-LAB1",
+      "date": "2026-12-15",
+      "period": 3
+    }
+  ],
+  "change_penalties": { "A-R1": 1, "A-R2": 0, "A-R3": 17, "A-R4": 6 },
   "change_cost": 1970,
   "summary": {
-    "sittings_changed": 6, "sittings_moved": 1, "sittings_room_changed": 0,
-    "sittings_proctor_changed": 2, "sittings_removed": 0, "sittings_added": 0,
-    "students_affected": 11, "proctors_affected": 3
+    "sittings_changed": 6,
+    "sittings_moved": 1,
+    "sittings_room_changed": 0,
+    "sittings_proctor_changed": 2,
+    "sittings_removed": 0,
+    "sittings_added": 0,
+    "students_affected": 11,
+    "proctors_affected": 3
   }
 }
 ```
 
-| Khóa | Mô tả |
-|---|---|
-| `base_schedule` | Tên file lịch cũ |
-| `incidents` | Các sự cố đã áp dụng, đã chuẩn hóa |
-| `change_penalties` | $R_1..R_4$ (spec A.14), chưa nhân trọng số |
-| `change_cost` | $\sum_k \rho_k R_k$ |
-| `summary` | Số lượt bị đổi theo từng loại; số sinh viên có ngày, ca hoặc phòng thi bị đổi; số giám thị có tập ca coi thi bị đổi |
+| Khóa               | Mô tả                                                                                                               |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| `base_schedule`    | Tên file lịch cũ                                                                                                    |
+| `incidents`        | Các sự cố đã áp dụng, đã chuẩn hóa                                                                                  |
+| `change_penalties` | $R_1..R_4$ (spec A.14), chưa nhân trọng số                                                                          |
+| `change_cost`      | $\sum_k \rho_k R_k$                                                                                                 |
+| `summary`          | Số lượt bị đổi theo từng loại; số sinh viên có ngày, ca hoặc phòng thi bị đổi; số giám thị có tập ca coi thi bị đổi |
 
 Mỗi phần tử của `changes` là một lượt bị đổi:
 
@@ -563,10 +602,20 @@ Mỗi phần tử của `changes` là một lượt bị đổi:
 {
   "course_id": "INT3306",
   "kinds": ["time", "proctors"],
-  "old": {"sitting_id": "INT3306@2026-12-15_3", "date": "2026-12-15", "start_period": 3,
-          "rooms": ["G2-LAB1"], "proctors": {"G2-LAB1": ["GV01", "GV06"]}},
-  "new": {"sitting_id": "INT3306@2026-12-14_1", "date": "2026-12-14", "start_period": 1,
-          "rooms": ["G2-LAB1"], "proctors": {"G2-LAB1": ["GV04", "GV06"]}},
+  "old": {
+    "sitting_id": "INT3306@2026-12-15_3",
+    "date": "2026-12-15",
+    "start_period": 3,
+    "rooms": ["G2-LAB1"],
+    "proctors": { "G2-LAB1": ["GV01", "GV06"] }
+  },
+  "new": {
+    "sitting_id": "INT3306@2026-12-14_1",
+    "date": "2026-12-14",
+    "start_period": 1,
+    "rooms": ["G2-LAB1"],
+    "proctors": { "G2-LAB1": ["GV04", "GV06"] }
+  },
   "students_affected": 11
 }
 ```
