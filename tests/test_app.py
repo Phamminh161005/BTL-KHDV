@@ -1,5 +1,6 @@
 """Kiểm thử giao diện: xem kết quả (MANH-1), nhập dữ liệu + xếp lịch (MANH-2), so sánh + sự cố (MANH-3)."""
 import copy
+import csv
 import json
 import shutil
 import subprocess
@@ -12,7 +13,7 @@ import pytest
 from openpyxl import load_workbook
 from streamlit.testing.v1 import AppTest
 
-from app.app import DEFAULT_PATH, KPI_NOTES, _run_summary, calendar_rows, compare_schedules, export_excel
+from app.app import DEFAULT_PATH, KPI_NOTES, RESULT_COLUMNS, _run_summary, calendar_rows, compare_schedules, export_excel
 
 ROOT = Path(__file__).resolve().parents[1]
 APP = ROOT / "app" / "app.py"
@@ -28,6 +29,117 @@ def open_result(path):
 @pytest.fixture
 def toy():
     return json.loads(DEFAULT_PATH.read_text(encoding="utf-8"))
+
+
+def _write_results(folder, filename, rows, columns=None):
+    with (folder / filename).open("w", encoding="utf-8", newline="") as stream:
+        writer = csv.DictWriter(stream, fieldnames=columns or RESULT_COLUMNS[filename])
+        writer.writeheader()
+        writer.writerows(rows)
+
+
+def test_experiments_missing_files(tmp_path, monkeypatch):
+    monkeypatch.setenv("EXAM_APP_RESULTS_DIR", str(tmp_path))
+    app = AppTest.from_file(str(APP), default_timeout=15).run()
+    assert not app.exception
+    assert app.tabs[-1].label == "Kết quả thực nghiệm"
+    assert all(any(name in message.value for message in app.info)
+               for name in RESULT_COLUMNS)
+
+
+def test_experiments_charts_and_downloads(tmp_path, monkeypatch):
+    monkeypatch.setenv("EXAM_APP_RESULTS_DIR", str(tmp_path))
+    _write_results(tmp_path, "perf.csv", [
+        {"dataset": "toy", "solver": "cp-sat", "strategy": "single", "seed": seed,
+         "status": "OPTIMAL", "solve_time_sec": time, "objective": 100, "best_bound": 100, "gap": 0}
+        for seed, time in [(1, 10), (2, 20)]])
+    _write_results(tmp_path, "reschedule.csv", [
+        {"dataset": "toy", "scenario": "room", "total_time_sec": 42, "sittings_changed": 2,
+         "sittings_moved": 1, "students_affected": 30, "proctors_affected": 3}])
+    _write_results(tmp_path, "sensitivity.csv", [
+        {"experiment": "tradeoff", "dataset": "toy", "parameter": "A-S6", "value": 2,
+         "A-S1": 100, "A-S6": 20},
+        {"experiment": "weight", "dataset": "toy", "parameter": "A-S6", "value": 2,
+         "A-S1": 100, "A-S6": 20, "students_multi_exam_day": 4,
+         "avg_gap_days": 2, "proctor_load_range": 1, "num_sittings": 6,
+         "seat_fill_rate": 0.8, "solve_time_sec": 10}])
+    app = AppTest.from_file(str(APP), default_timeout=15).run()
+    assert not app.exception
+    assert app.tabs[-1].label == "Kết quả thực nghiệm"
+    assert len(app.get("vega_lite_chart")) >= 4
+    assert len([d for d in app.get("button") if d.label == "Tải bảng CSV"]) + len(app.get("download_button")) >= 3
+    assert any("gap" in frame.value.columns for frame in app.dataframe)
+
+
+def test_experiments_real_results_render():
+    """Đọc đúng các file trong experiments/results/ (cột thật của KHOE-4 và MINH-4) mà không báo lỗi."""
+    app = AppTest.from_file(str(APP), default_timeout=30).run()
+    assert not app.exception
+    assert not [w.value for w in app.warning if ".csv" in w.value]
+
+
+def test_experiments_time_limit_note_and_weight_table(tmp_path, monkeypatch):
+    monkeypatch.setenv("EXAM_APP_RESULTS_DIR", str(tmp_path))
+    _write_results(tmp_path, "perf.csv", [
+        {"dataset": "toy", "solver": "pulp", "strategy": "single", "seed": 0, "time_limit_sec": 300,
+         "status": "FEASIBLE", "solve_time_sec": 300.1, "objective": 2391},
+        {"dataset": "toy", "solver": "cp-sat", "strategy": "single", "seed": 0, "time_limit_sec": 300,
+         "status": "OPTIMAL", "solve_time_sec": 13, "objective": 2391}])
+    _write_results(tmp_path, "reschedule.csv", [])
+    _write_results(tmp_path, "sensitivity.csv", [
+        {"experiment": "weight", "dataset": "toy_gen", "parameter": "A-S1", "value": v, "seed": 0,
+         "objective": z, "A-S1": 0, "num_sittings": 30, "seat_fill_rate": 0.8, "solve_time_sec": 10}
+        for v, z in [(0.5, 7300), (2, 3650)]])
+    app = AppTest.from_file(str(APP), default_timeout=15).run()
+    assert not app.exception
+    notes = [c.value for c in app.caption if "Chạm giới hạn thời gian" in c.value]
+    assert len(notes) == 1 and "toy pulp/single" in notes[0] and "cp-sat" not in notes[0]
+    weight = next(f.value for f in app.dataframe if "A-S1" in f.value.columns and "seat_fill_rate" in f.value.columns)
+    assert "objective" not in weight.columns
+    # Biểu đồ thời gian giải + điểm phạt + 6 KPI (mỗi KPI một biểu đồ).
+    assert len(app.get("vega_lite_chart")) >= 8
+
+
+def test_experiments_tradeoff_seeds_quality_and_other(tmp_path, monkeypatch):
+    monkeypatch.setenv("EXAM_APP_RESULTS_DIR", str(tmp_path))
+    _write_results(tmp_path, "perf.csv", [])
+    _write_results(tmp_path, "reschedule.csv", [
+        {"dataset": "medium", "scenario": "room", "status": "FEASIBLE", "objective_before": 1000,
+         "objective_after": 1050, "total_time_sec": 42, "violations": 0},
+        {"dataset": "large", "scenario": "three", "status": "FEASIBLE", "objective_before": 1000,
+         "objective_after": 1500, "total_time_sec": 46, "violations": 0}])
+    _write_results(tmp_path, "sensitivity.csv", [
+        {"experiment": "tradeoff", "dataset": "medium", "parameter": "A-S6", "value": v, "seed": seed,
+         "A-S1": p1, "A-S6": p6}
+        for seed, v, p1, p6 in [(0, 0, 3, 22), (0, 800, 6, 18), (1, 0, 2, 22), (1, 800, 5, 7)]] + [
+        {"experiment": "noise", "dataset": "medium", "parameter": "random_seed", "value": 0, "seed": 0,
+         "status": "FEASIBLE", "objective": 12072}])
+    app = AppTest.from_file(str(APP), default_timeout=15).run()
+    assert not app.exception
+    tradeoff = next(c for c in app.get("vega_lite_chart") if "P6" in c.proto.spec)
+    spec = json.loads(tradeoff.proto.spec)
+    assert spec["layer"][0]["encoding"]["color"]["field"] == "Seed"
+    assert spec["layer"][0]["encoding"]["order"]["field"] == "Trọng số A-S6"
+    reschedule = next(f.value for f in app.dataframe if "Đạt chất lượng" in f.value.columns)
+    assert list(reschedule["Z tăng"]) == ["+5.0%", "+50.0%"]
+    assert list(reschedule["Đạt thời gian"]) == ["Đạt", "Đạt"]
+    assert list(reschedule["Đạt chất lượng"]) == ["Đạt", "Không"]
+    assert any(s.label == "Thí nghiệm" for s in app.selectbox)
+    assert any("objective" in f.value.columns and "seed" in f.value.columns and len(f.value) == 1
+               for f in app.dataframe)
+
+
+def test_experiments_bad_perf_columns_isolated(tmp_path, monkeypatch):
+    monkeypatch.setenv("EXAM_APP_RESULTS_DIR", str(tmp_path))
+    _write_results(tmp_path, "perf.csv", [], columns=["dataset"])
+    _write_results(tmp_path, "reschedule.csv", [{"dataset": "toy", "scenario": "room",
+                                                   "total_time_sec": 40}])
+    _write_results(tmp_path, "sensitivity.csv", [{"experiment": "tradeoff", "dataset": "toy",
+                                                    "value": 1, "A-S1": 2, "A-S6": 3}])
+    app = AppTest.from_file(str(APP), default_timeout=15).run()
+    assert not app.exception
+    assert any("perf.csv" in message.value and "thiếu cột" in message.value for message in app.warning)
+    assert len(app.get("vega_lite_chart")) >= 2
 
 
 # ---------------------------------------------------------------------------
