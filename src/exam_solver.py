@@ -22,7 +22,9 @@ CHANGE_KEYS = ("A-R1", "A-R2", "A-R3", "A-R4")
 
 
 def solve(instance: Instance, config: dict, *, base: Solution | None = None,
-          change_weights: dict | None = None, relax=frozenset(), optimize: bool = True) -> SolveResult:
+          change_weights: dict | None = None, relax=frozenset(), optimize: bool = True,
+          frozen=frozenset(), hint: Solution | None = None,
+          _deadline: float | None = None) -> SolveResult:
     """Giải bài toán A.
 
     Ba tham số tùy chọn chỉ dùng cho xếp lại và chẩn đoán; không truyền thì solver chạy như cũ:
@@ -30,16 +32,26 @@ def solve(instance: Instance, config: dict, *, base: Solution | None = None,
       dùng làm lời giải gợi ý (AddHint) và mục tiêu cộng thêm điểm phạt thay đổi A-R1..A-R4.
     - relax: tập con của RELAX_GROUPS, các nhóm ràng buộc cứng tạm bỏ (model_spec A.8).
     - optimize=False: chỉ tìm một lời giải hợp lệ bất kỳ, không tối ưu (dùng khi chẩn đoán).
+    - frozen: tập mã môn giữ nguyên như lịch cũ khi xếp lại (cần base): ca, phòng, sinh viên và giám thị của
+      các lượt thuộc những môn này bị cố định (model_spec A.14, xếp lại cục bộ).
+    - hint: lời giải gợi ý thay cho lịch cũ khi xếp lại (mặc định gợi ý bằng chính lịch cũ base).
     Khi có một trong các tham số này, solver luôn giải một lần (single), kể cả với strategy two_phase.
+    _deadline là deadline nội bộ dùng chung khi two_phase fallback sang single; không phải API người dùng.
     """
+    started_at = time.monotonic()
+    budget = max(0.0, float(config["time_limit_sec"]))
+    deadline = started_at + budget if _deadline is None else _deadline
     relax = frozenset(relax)
+    frozen = frozenset(frozen)
+    if frozen and base is None:
+        raise ValueError("frozen chỉ dùng khi xếp lại (cần lịch cũ base)")
     unknown = relax - set(RELAX_GROUPS)
     if unknown:
         raise ValueError(f"Nhóm ràng buộc không hỗ trợ: {sorted(unknown)}")
     if config["strategy"] not in ("single", "two_phase"):
         raise ValueError(f"Chiến lược không hỗ trợ: {config['strategy']}")
     if config["strategy"] == "two_phase" and base is None and not relax and optimize:
-        return _solve_two_phase(instance, config)
+        return _solve_two_phase(instance, config, started_at=started_at, deadline=deadline)
     relax_proctors = "proctors" in relax
     if base is not None and change_weights is None:
         change_weights = config["reschedule"]["weights"]
@@ -297,7 +309,9 @@ def solve(instance: Instance, config: dict, *, base: Solution | None = None,
     # A.14: xếp lại khi có sự cố. Phạt mỗi thay đổi so với lịch cũ và dùng lịch cũ làm lời giải gợi ý.
     change_expr = _change_terms(base, instance, x, u, q, w) if base is not None else {}
     if base is not None:
-        _add_hints(model, base, instance, x, u, q, w)
+        _add_hints(model, hint or base, instance, x, u, q, w)
+    if frozen:
+        _freeze(model, base, instance, frozen, cov, x, u, q, w)
 
     # A.6: cực tiểu tổng điểm phạt có trọng số, cấu hình có thể tắt trọng số.
     # A.14: khi xếp lại, cộng thêm điểm phạt thay đổi. optimize=False (chẩn đoán): chỉ tìm lời giải hợp lệ.
@@ -307,9 +321,19 @@ def solve(instance: Instance, config: dict, *, base: Solution | None = None,
             + sum(change_weights[name] * expr for name, expr in change_expr.items())
         )
 
+    # Giới hạn thời gian tính từ lúc bắt đầu dựng mô hình, không chỉ thời gian CP-SAT chạy.
+    # Đặc biệt khi two_phase fallback, deadline vẫn là deadline của lần giải ban đầu.
+    time_left = deadline - time.monotonic()
+    if time_left <= 0:
+        return SolveResult(
+            status="UNKNOWN",
+            solve_time_sec=time.monotonic() - started_at,
+            solver_name="OR-Tools CP-SAT",
+        )
+
     solver = cp_model.CpSolver()
     solver.parameters.log_search_progress = False
-    solver.parameters.max_time_in_seconds = float(config["time_limit_sec"])
+    solver.parameters.max_time_in_seconds = time_left
     solver.parameters.num_search_workers = int(config["num_workers"])
     solver.parameters.random_seed = int(config["random_seed"])
     result_status = solver.Solve(model)
@@ -324,11 +348,13 @@ def solve(instance: Instance, config: dict, *, base: Solution | None = None,
         cp_model.UNKNOWN: "UNKNOWN",
     }
     status = statuses.get(result_status, "UNKNOWN")
-    kwargs = dict(
-        status=status, solve_time_sec=solver.WallTime(), solver_name=solver_name
-    )
+    # optimize=False chỉ là phép kiểm tra khả thi; CP-SAT có thể trả OPTIMAL vì không có mục tiêu.
+    # Không được diễn giải OPTIMAL đó là tối ưu sáu điểm phạt của lịch thi.
+    if not optimize and status == "OPTIMAL":
+        status = "FEASIBLE"
+    kwargs = dict(status=status, solver_name=solver_name)
     if result_status not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
-        return SolveResult(**kwargs)
+        return SolveResult(**kwargs, solve_time_sec=time.monotonic() - started_at)
 
     sittings = []
     for c in sorted(courses):
@@ -382,6 +408,7 @@ def solve(instance: Instance, config: dict, *, base: Solution | None = None,
     best_bound = solver.BestObjectiveBound() if optimize and base is None else None
     return SolveResult(
         **kwargs,
+        solve_time_sec=time.monotonic() - started_at,
         objective=sum(
             config["weights"][name] * value for name, value in penalties.items()
         ),
@@ -436,14 +463,36 @@ def _add_hints(model: cp_model.CpModel, base: Solution, instance: Instance, x, u
             model.AddHint(var, 1 if k in keys else 0)
 
 
-def _solve_two_phase(instance: Instance, config: dict) -> SolveResult:
+def _freeze(model: cp_model.CpModel, base: Solution, instance: Instance, frozen: frozenset, cov,
+            x, u, q, w) -> None:
+    """Xếp lại cục bộ (A.14): mọi biến của các môn trong `frozen` nhận đúng giá trị của lịch cũ, kể cả giám thị
+    của các phòng-ca mà lượt đó chiếm. Lượt cũ dùng phòng hoặc giám thị vừa báo bận thì biến tương ứng không còn,
+    nên môn đó phải nằm ngoài `frozen` (nếu không mô hình vô nghiệm)."""
+    base_x, base_u, base_q, base_w = _base_keys(base, instance)
+    for (c, s), var in x.items():
+        if c in frozen:
+            model.Add(var == int((c, s) in base_x))
+    for (c, r, s), var in u.items():
+        if c in frozen:
+            model.Add(var == int((c, r, s) in base_u))
+    for (i, c, s), var in q.items():
+        if c in frozen:
+            model.Add(var == int((i, c, s) in base_q))
+    cells = {(r, t) for st in base.sittings if st.course_id in frozen
+             for r in st.rooms for t in cov.get((st.course_id, st.start), ())}
+    for (g, r, t), var in w.items():
+        if (r, t) in cells:
+            model.Add(var == int((g, r, t) in base_w))
+
+
+def _solve_two_phase(instance: Instance, config: dict, *, started_at: float,
+                     deadline: float) -> SolveResult:
     """Giải A.7: pha 1 xếp lịch/phòng/SV, pha 2 cố định lịch và phân giám thị.
 
     Giữ nguyên solver single ở trên. Cận dưới pha 1 hợp lệ cho toàn bài toán
     vì đã bỏ A-S5 (không âm, trọng số không âm) và nới lỏng A-H7/H8/H10.
     """
-    started_at = time.monotonic()
-    budget = float(config["time_limit_sec"])
+    budget = max(0.0, float(config["time_limit_sec"]))
     nu = int(config["proctors_per_room"])
     weights = config["weights"]
     courses, rooms, slots = instance.courses, instance.rooms, instance.slots
@@ -460,11 +509,12 @@ def _solve_two_phase(instance: Instance, config: dict) -> SolveResult:
         return time.monotonic() - started_at
 
     def remaining() -> float:
-        return max(0.0, budget - elapsed())
+        return max(0.0, deadline - time.monotonic())
 
     def configure(solver: cp_model.CpSolver, seconds: float) -> None:
         solver.parameters.log_search_progress = False
-        solver.parameters.max_time_in_seconds = max(0.001, float(seconds))
+        # Chỉ gọi khi seconds > 0; không tự nới thời gian vượt phần ngân sách còn lại.
+        solver.parameters.max_time_in_seconds = float(seconds)
         solver.parameters.num_search_workers = int(config["num_workers"])
         solver.parameters.random_seed = int(config["random_seed"])
 
@@ -645,7 +695,7 @@ def _solve_two_phase(instance: Instance, config: dict) -> SolveResult:
             elapsed(),
             solver_name=solver_name,
             messages=[
-                Message("K3-TIME", "warning", "Hết thời gian khi tạo mô hình pha 1")
+                Message("S03", "warning", "Hết thời gian khi tạo mô hình pha 1")
             ],
         )
     configure(phase1, phase1_seconds)
@@ -734,7 +784,7 @@ def _solve_two_phase(instance: Instance, config: dict) -> SolveResult:
             solver_name=solver_name,
             messages=[
                 Message(
-                    "K3-TIME", "warning", "Hết thời gian trước khi phân giám thị pha 2"
+                    "S03", "warning", "Hết thời gian trước khi phân giám thị pha 2"
                 )
             ],
         )
@@ -742,24 +792,21 @@ def _solve_two_phase(instance: Instance, config: dict) -> SolveResult:
     status2 = phase2.Solve(phase2_model)
     if status2 not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
         reason = statuses.get(status2, "UNKNOWN")
-        messages.append(
-            Message(
-                "K3-FALLBACK",
-                "warning",
-                f"Pha 2 {reason}; thử giải lại bằng single với thời gian còn lại",
+        # A.7: pha 2 không có nghiệm chưa chứng minh bài toán đầy đủ vô nghiệm.
+        # Giải single bằng cùng deadline để cả thời gian dựng mô hình fallback cũng nằm trong budget.
+        if remaining() > 0:
+            messages.append(
+                Message("S04", "warning", f"Pha 2 {reason}; chuyển sang single (fallback)")
             )
-        )
-        # A.7: nếu phân giám thị vô nghiệm trên lịch pha 1, chưa thể suy ra
-        # toàn bài toán vô nghiệm, vì pha 1 chưa xét lịch bận theo từng giám thị.
-        if remaining() > 0.05:
-            fallback_cfg = dict(config, strategy="single", time_limit_sec=remaining())
-            fallback = solve(instance, fallback_cfg)
+            fallback_cfg = dict(config, strategy="single")
+            fallback = solve(instance, fallback_cfg, _deadline=deadline)
             fallback.solve_time_sec = elapsed()
+            fallback.solver_name = f"{fallback.solver_name or 'OR-Tools CP-SAT'} (fallback từ two_phase)"
             fallback.messages = messages + fallback.messages
             return fallback
         messages.append(
             Message(
-                "K3-TIME", "warning", "Không còn thời gian để chạy single sau pha 2"
+                "S03", "warning", "Không còn thời gian để chạy single sau pha 2"
             )
         )
         return SolveResult(
@@ -805,15 +852,18 @@ def _solve_two_phase(instance: Instance, config: dict) -> SolveResult:
     objective = sum(weights[name] * value for name, value in penalties.items())
     messages.append(
         Message(
-            "K3-INFO",
+            "S05",
             "info",
             f"Hai pha: pha 1 {statuses[status1]}, pha 2 {statuses[status2]}; "
             f"thời gian tổng {elapsed():.2f}s",
         )
     )
-    # Dù hai pha đều OPTIMAL riêng lẻ cũng chưa chứng minh tối ưu toàn cục.
+    # Cận dưới pha 1 là cận dưới hợp lệ của bài toán đầy đủ (A-S5 >= 0).
+    # Chỉ chứng minh tối ưu toàn cục khi mục tiêu nguyên thực tế trùng cận dưới;
+    # pha 1/pha 2 OPTIMAL riêng lẻ KHÔNG đủ để kết luận tối ưu toàn cục.
+    proven_optimal = abs(float(objective) - phase1_bound) <= 1e-6
     return SolveResult(
-        status="FEASIBLE",
+        status="OPTIMAL" if proven_optimal else "FEASIBLE",
         solve_time_sec=elapsed(),
         objective=int(objective),
         best_bound=phase1_bound,

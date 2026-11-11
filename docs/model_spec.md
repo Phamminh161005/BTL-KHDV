@@ -389,7 +389,7 @@ Nếu mô hình đầy đủ chạy quá chậm với bộ `large`, dùng chiế
 
 Hai pha có thể cho lời giải kém hơn giải một lần, vì pha 1 không biết lịch bận của từng giám thị. Nếu pha 2 vô nghiệm (hiếm, chỉ xảy ra khi bật A-H10 hoặc khi ràng buộc giữ nguyên giám thị cho lượt 2 ca không thỏa được), quay lại giải một lần với giới hạn thời gian dài hơn. Khi viết báo cáo, so sánh hai cách này là một phần thực nghiệm tốt.
 
-Kết quả thử ở A.13 cho thấy phần giám thị làm thời gian chứng minh tối ưu tăng rõ rệt, kể cả với dữ liệu rất nhỏ. Lý do là các giám thị rảnh cùng lúc có thể đổi chỗ cho nhau mà không làm thay đổi giá trị mục tiêu, nên solver phải xét rất nhiều lời giải tương đương. Vì vậy khi cài đặt cần làm cả hai cách, và dự kiến dùng hai pha làm mặc định cho bộ `medium` và `large`. Quyết định cuối cùng dựa trên số đo thực nghiệm.
+Kết quả thử ở A.13 cho thấy phần giám thị làm thời gian chứng minh tối ưu tăng rõ rệt, kể cả với dữ liệu rất nhỏ. Lý do là các giám thị rảnh cùng lúc có thể đổi chỗ cho nhau mà không làm thay đổi giá trị mục tiêu, nên solver phải xét rất nhiều lời giải tương đương. Vì vậy khi cài đặt cần làm cả hai cách, và dự kiến dùng hai pha làm mặc định cho bộ `medium` và `large`. Số đo thực nghiệm ở A.13 xác nhận lựa chọn này.
 
 ### A.8. Kiểm tra dữ liệu trước khi giải
 
@@ -520,6 +520,42 @@ Ba vấn đề kỹ thuật của CBC phát hiện khi cài đặt, đã xử l�
 2. Khi CBC dừng do hết giờ mà đã có lời giải, `prob.status` của PuLP vẫn là "Optimal". Trạng thái được đọc từ `prob.sol_status`, nơi phân biệt được tối ưu (1) và chỉ khả thi (2).
 3. Với mô hình lớn, CBC không dừng đúng giới hạn thời gian vì chỉ kiểm tra giới hạn giữa các bước. Solver đặt thêm hạn cứng (giới hạn cộng 30 giây hoặc 20%, lấy số lớn hơn) và dừng CBC khi vượt quá.
 
+#### Kết quả thực nghiệm hiệu năng
+
+Thực nghiệm có hệ thống (KHOE-4, chi tiết ở `experiments/README.md`): 30 lần giải gồm CP-SAT `single` và `two_phase` trên `toy`, `toy_gen`, `medium`, `large`, cộng PuLP + CBC trên hai bộ nhỏ. Mỗi tổ hợp chạy 3 lần (CP-SAT với `random_seed` 0, 1, 2), giới hạn 300 giây, CP-SAT 8 luồng. Thêm 6 kịch bản xếp lại trên `medium` và `large`.
+
+Khoảng cách tới cận dưới:
+
+$$
+\text{gap} = \frac{Z - \max(B, 0)}{Z}
+$$
+
+với $Z$ là giá trị mục tiêu của lời giải và $B$ là cận dưới solver báo. Vì $Z \ge 0$ nên cận âm không cho thông tin gì hơn cận 0 và được thay bằng 0. Gap bằng 0 là đã chứng minh tối ưu; gap bằng 1 là chưa chứng minh được gì.
+
+<!-- RESULTS_BEGIN -->
+Kết quả dưới đây tổng hợp từ `experiments/results/perf.csv` và `experiments/results/reschedule.csv`. Chi tiết phương pháp và phân tích: [Báo cáo thực nghiệm](../experiments/README.md).
+
+| Dữ liệu | Chiến lược | Nghiệm hợp lệ / 3 | Z TB | Thời gian TB (s) | Gap TB |
+|---|---|---:|---:|---:|---:|
+| `medium` | `single` | 3/3 | 14994.7 | 300.7 | 1.000 |
+| `medium` | `two_phase` | 3/3 | 13050.3 | 240.8 | 1.000 |
+| `large` | `single` | 3/3 | 43494.0 | 302.1 | 1.000 |
+| `large` | `two_phase` | 3/3 | 38758.0 | 242.6 | 1.000 |
+
+Dấu «—» là thiếu giá trị, không phải 0. Cận dưới âm được kẹp về 0 vì Z không âm, nên gap = 1 nghĩa là chưa chứng minh được gì.
+
+- Medium: đề xuất `two_phase` (single 3/3 nghiệm hợp lệ, two_phase 3/3; Z TB 14994.7 / 13050.3; gap TB 1.000 / 1.000; thời gian TB 300.7s / 240.8s).
+- Large: đề xuất `two_phase` (single 3/3 nghiệm hợp lệ, two_phase 3/3; Z TB 43494.0 / 38758.0; gap TB 1.000 / 1.000; thời gian TB 302.1s / 242.6s).
+- Xếp lại trên large: đạt KPI dưới 60 giây trên cả ba kịch bản đã đo; giữ được chất lượng lịch ở cả ba kịch bản.
+<!-- RESULTS_END -->
+
+Kết luận:
+
+- `two_phase` tốt hơn `single` trên `medium` và `large`: cùng seed thì `two_phase` luôn cho Z thấp hơn (trung bình thấp hơn 13% trên `medium`, 11% trên `large`), dù chỉ dùng khoảng 240 trong 300 giây. Pha 1 không có biến giám thị nên nhỏ hơn và không bị các lời giải tương đương do đổi chỗ giám thị làm chậm (A.7). Đây là chiến lược khuyến nghị cho `medium` và `large`. Mặc định trong `configs/default.json` vẫn là `single`, vì với dữ liệu nhỏ `single` chứng minh được tối ưu.
+- Trên `medium` và `large`, cận dưới của cả hai chiến lược đều âm, nên gap bằng 1: không chứng minh được gì về chất lượng lời giải, và gap không dùng để so sánh hai chiến lược.
+- CP-SAT chứng minh tối ưu `toy` trong 4–14 giây và `toy_gen` trong 18–26 giây. CBC tìm được lời giải tốt cho hai bộ này nhưng chạy hết 300 giây mà không chứng minh được tối ưu, và một lần trên `toy_gen` dừng ở 3710 thay vì 3650. Nguyên nhân như đã nêu ở mục trên.
+- Xếp lại: lần đo đầu với cách cũ (A.14, chỉ gợi ý bằng lịch cũ) cho cả 6 kịch bản dưới 60 giây, nhưng ba sự cố cùng lúc trên `large` làm gần như cả lịch bị xếp lại (Z từ 37660 lên 108280, 999 trong 1000 sinh viên bị ảnh hưởng). Sau khi thêm bước xếp lại cục bộ (A.14), đo lại cả 6 kịch bản: 42–47 giây, Z tăng không quá 0,5%, 1–3 lượt thay đổi, không lượt nào dời ca. Trên cùng lịch nền và cùng ba sự cố, cách cũ đổi 77 lượt và ảnh hưởng 985 sinh viên, cách mới đổi 2 lượt và ảnh hưởng 83 sinh viên.
+
 ### A.14. Xếp lại khi có sự cố
 
 Bối cảnh: lịch thi đã công bố thì xảy ra sự cố, ví dụ một phòng hỏng máy hoặc một giảng viên bận đột xuất. Dịch vụ tốt cần lịch mới vẫn hợp lệ, xáo trộn càng ít càng tốt so với lịch cũ, và có trong vòng 1 phút (scope mục 7). Giải lại từ đầu không đạt yêu cầu này, vì solver không biết lịch cũ nên có thể ra một lịch khác hẳn.
@@ -563,8 +599,11 @@ Khi thử trên `toy`, với $\rho_3$ bằng 10, 30, 50 hoặc 100 thì số sin
 
 #### Cách giải
 
-- Luôn giải một lần (single), vì lời giải gợi ý cần đủ cả bốn nhóm biến. Giới hạn thời gian là `reschedule.time_limit_sec`, mặc định 45 giây, để tổng thời gian kể cả dựng mô hình dưới 1 phút với bộ `medium`.
-- Mọi biến $x$, $u$, $q$, $w$ được gợi ý (`AddHint` của CP-SAT) bằng giá trị trong lịch cũ. Lịch cũ chỉ vi phạm vài ràng buộc liên quan đến sự cố, nên CP-SAT sửa từ đó và tìm được lời giải tốt rất nhanh.
+- Luôn giải một lần (single), vì lời giải gợi ý cần đủ cả bốn nhóm biến. Giới hạn thời gian là `reschedule.time_limit_sec`, mặc định 45 giây, tính chung cho cả hai bước dưới đây và cả thời gian dựng mô hình, để tổng thời gian dưới 1 phút với bộ `large`.
+- Bước 1, xếp lại cục bộ. Gọi $C^{*}$ là tập môn có lượt trong lịch cũ không còn hợp lệ: lượt dùng một phòng, hoặc có một giám thị, đang bận ở một ca mà lượt đó chiếm (lịch bận đã gồm sự cố). Các môn ngoài phạm vi được cố định đúng như lịch cũ: mọi biến $x$, $u$, $q$ của môn đó, và mọi biến $w$ của các (phòng, ca) mà lượt của môn đó chiếm, đều bằng giá trị cũ. Phạm vi lần lượt là: $C^{*}$; $C^{*}$ cộng mọi môn có lượt vào ngày có sự cố hoặc ngày của các lượt trong $C^{*}$; toàn bộ lịch. Dừng ở phạm vi đầu tiên có lời giải. Mô hình còn rất ít biến tự do nên giải trong vài giây, và phần lịch không liên quan chắc chắn không bị xáo trộn.
+- Bước 2. Với thời gian còn lại, giải trên toàn lịch, gợi ý (`AddHint` của CP-SAT) bằng lời giải bước 1, hoặc bằng lịch cũ nếu bước 1 không có lời giải. Lời giải bước 2 chỉ được dùng khi hàm mục tiêu khi xếp lại (Z cộng điểm phạt thay đổi) thấp hơn bước 1. Vì vậy kết quả không bao giờ kém lời giải cục bộ, và khi giải được hết (ví dụ `toy`) vẫn đạt tối ưu trên toàn lịch.
+- Lý do có bước 1: chỉ dùng gợi ý thì khi lịch cũ vi phạm nhiều ràng buộc cùng lúc, CP-SAT có thể không sửa từ gợi ý được. Với ba sự cố cùng lúc trên `large`, trong 45 giây CP-SAT trả về một lịch đổi 77 lượt và ảnh hưởng 985 trong 1000 sinh viên (A.13).
+- Trạng thái: lời giải của bước 1 chỉ tối ưu trong phạm vi đã mở lại nên được báo `FEASIBLE`. Chỉ bước 2 mới có thể báo `OPTIMAL` hoặc kết luận `INFEASIBLE`. Các bước được ghi trong thông báo I04.
 - Lịch cũ phải khớp dữ liệu: cùng môn, cùng danh sách sinh viên, cùng phòng và ca. Thêm môn hoặc thêm sinh viên sau khi công bố lịch nằm ngoài phạm vi của phiên bản này.
 - Nếu vô nghiệm (ví dụ sự cố làm mất phòng máy duy nhất), chạy chẩn đoán như ở A.8.
 
@@ -585,6 +624,8 @@ Kết quả đo (8 luồng, cấu hình mặc định). Lịch cũ của `toy` l
 | `toy` | Không có sự cố | `OPTIMAL`, lịch giữ nguyên | 0,2 giây |
 | `medium` | Phòng máy E3-LAB2 hỏng ca 1 ngày 14/12, phòng G2-103 hỏng cả ngày 14/12 | `FEASIBLE`, không vi phạm, 2 lượt đổi phòng, không lượt nào dời ca, 68 sinh viên và 5 giám thị bị ảnh hưởng, $Z$ giữ 11586 | 45 giây (tổng 50 giây) |
 | `medium` | Giảng viên GV01 bận cả ngày 14/12 | `OPTIMAL`, không vi phạm, chỉ đổi giám thị, $Z$ giữ 11586 | 39 giây (tổng 43 giây) |
+
+Hai dòng `medium` ở bảng trên được đo trước khi có bước 1. Kết quả đo sau khi có bước 1, trên `medium` và `large`, nằm ở `experiments/README.md` (mục 5 và 6.4).
 
 ---
 
