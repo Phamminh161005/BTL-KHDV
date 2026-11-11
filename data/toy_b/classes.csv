@@ -1,0 +1,11 @@
+class_id,class_name,course_id,needs_lab,size,sessions_per_week,lecturer_id
+INT2204-LT,Lập trình hướng đối tượng (lý thuyết),INT2204,0,55,2,GV01
+INT2204-TH1,Lập trình hướng đối tượng (thực hành 1),INT2204,1,18,1,GV04
+INT2204-TH2,Lập trình hướng đối tượng (thực hành 2),INT2204,1,14,1,GV04
+INT2211-LT,Cơ sở dữ liệu (lý thuyết),INT2211,0,35,2,GV02
+INT2211-TH,Cơ sở dữ liệu (thực hành),INT2211,1,15,2,GV02
+MAT1099,Toán rời rạc,MAT1099,0,50,3,GV03
+INT3306-TH,Phát triển ứng dụng Web (thực hành),INT3306,1,12,4,GV05
+INT3505,Khoa học dịch vụ,INT3505,0,30,1,GV06
+ELT2035,Tín hiệu và hệ thống (lớp học bù),ELT2035,0,40,7,GV07
+INT3505-TH,Khoa học dịch vụ (thực hành),INT3505,1,15,1,GV06

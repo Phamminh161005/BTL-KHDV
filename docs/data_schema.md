@@ -846,8 +846,8 @@ Kết quả xếp lại khi có sự cố (spec B.9) ghi vào `output/<tên bộ
 
 | Bộ | Lớp | Phòng (phòng máy) | Nhóm | Mục đích |
 |---|---|---|---|---|
-| `toy_b` | khoảng 8 | 3 (1) | 2–3 | Kiểm thử, có đáp án tham chiếu (spec B.12) |
+| `toy_b` | 10 | 4 (2) | 3 | Viết tay, kiểm thử, có đáp án tham chiếu 355 (spec B.12, `data/toy_b/README.md`) |
 | `medium_b` | khoảng 60 | 10 (3) | khoảng 8 | Demo |
 | `large_b` | khoảng 120 | 15 (4) | khoảng 16 | Đo thời gian giải |
 
-Phòng và giảng viên dùng chung với `toy`, `medium`, `large` của bài toán A để đúng tinh thần "dùng lại dữ liệu của A" (scope mục 1). Số lớp được ước lượng từ số học phần ở scope mục 3: mỗi học phần một lớp lý thuyết, học phần có thực hành thêm 1–2 lớp thực hành.
+`medium_b` và `large_b` dùng chung phòng và giảng viên với `medium`, `large` của bài toán A để đúng tinh thần "dùng lại dữ liệu của A" (scope mục 1). Riêng `toy_b` thêm một phòng máy G2-LAB2 vào 3 phòng của `toy`: với 1 phòng máy, ngưỡng dự phòng mỗi ca là ⌊0,85 × 1⌋ = 0 nên B-S4 không kiểm thử được. Số lớp được ước lượng từ số học phần ở scope mục 3: mỗi học phần một lớp lý thuyết, học phần có thực hành thêm 1–2 lớp thực hành.

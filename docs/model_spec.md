@@ -861,11 +861,11 @@ Thông báo dùng lại mã N01–N05 như bài toán A.
 
 ### B.8. Chiến lược giải và hậu xử lý
 
-Giải toàn bộ mô hình một lần bằng CP-SAT, cùng giới hạn thời gian và cùng bốn trạng thái như A.7. Không cần chiến lược hai pha vì mô hình nhỏ. Ước lượng giới hạn trên của số biến $y$, với 24 ca:
+Giải toàn bộ mô hình một lần bằng CP-SAT, cùng giới hạn thời gian và cùng bốn trạng thái như A.7. Không cần chiến lược hai pha vì mô hình nhỏ. Ước lượng giới hạn trên của số biến $y$ (số lớp × số phòng × số ca; 24 ca, riêng `toy_b` 22 ca):
 
 | Bộ dữ liệu | Lớp | Phòng | Biến $y$ (xấp xỉ, trước khi lọc theo loại và sức chứa) |
 |---|---|---|---|
-| `toy` | 8 | 3 | 600 |
+| `toy_b` | 10 | 4 | 880 (thực tế 303, B.12) |
 | `medium` | 60 | 10 | 14 nghìn |
 | `large` | 120 | 15 | 43 nghìn |
 
@@ -923,4 +923,23 @@ Cách giải giống A.14: bước 1 chỉ mở lại các lớp có buổi khô
 
 ### B.12. Kiểm chứng đặc tả
 
-Chưa làm. Khi có bộ dữ liệu `toy_b` (data_schema mục 9), sẽ kiểm chứng giống A.13: một bản cài đặt thử theo đúng các công thức B.4 đến B.6, một bộ kiểm tra viết độc lập, các kịch bản vô nghiệm cho từng mã PB, và các lời giải cố ý làm hỏng để bộ kiểm tra phải phát hiện. Giá trị mục tiêu tối ưu trên `toy_b` sẽ được ghi ở đây làm đáp án tham chiếu cho kiểm thử, như 2391 của bài toán A.
+Kiểm chứng giống A.13: một bản cài đặt thử với OR-Tools CP-SAT 9.15, viết đúng theo các công thức B.3 đến B.7, cùng một bộ kiểm tra viết độc lập. Bộ kiểm tra tự đọc file CSV, không dùng lại công thức của mô hình, mà soát lịch trực tiếp theo luật trong scope (đếm số lớp theo từng phòng và ca, từng giảng viên và ca, từng nhóm và ca), rồi tự tính lại các điểm phạt.
+
+Dữ liệu thử là bộ `data/toy_b` (mô tả trong `data/toy_b/README.md`): 10 lớp, 4 phòng (2 phòng máy), 3 nhóm sinh viên, 22 ca, có phòng bận, giảng viên bận và ca giảng viên không muốn dạy. Mỗi lớp được chọn để kiểm thử một tình huống.
+
+| Kịch bản | Kết quả mong đợi | Kết quả |
+|---|---|---|
+| `toy_b`, trọng số mặc định, chạy 3 lần | Tối ưu, không vi phạm | `OPTIMAL`, $Z$ = 355 cả 3 lần, dưới 0,1 giây; không vi phạm; điểm phạt tính lại độc lập khớp với solver |
+| 6 biến thể vô nghiệm: lớp lý thuyết hoặc lớp thực hành không vừa phòng nào, giảng viên gần như bận cả tuần, giảng viên quá tải, nhóm quá tải, quá nhiều buổi thực hành | Kiểm tra trước phát hiện đúng mã; mô hình vô nghiệm | Phát hiện đúng PB1 (2 biến thể), PB2, PB3, PB4, PB5; cả 6 biến thể mô hình đều `INFEASIBLE` |
+| Hệ số sử dụng phòng máy cả tuần 0,875 | Cảnh báo PB7, vẫn có lịch, $P^{B}_4 > 0$ | PB7; `OPTIMAL`, không vi phạm, $P^{B}_4$ = 17 |
+| Cố ý làm hỏng lời giải tối ưu theo 7 cách, mỗi cách vi phạm một ràng buộc từ B-H1 đến B-H7 | Bộ kiểm tra phải phát hiện | 7/7 phát hiện đúng mã |
+| Tăng $\beta_2$ lên 150 (đắt hơn một buổi thừa trong ngày) | Không dạy vào ca GV05 không muốn, chấp nhận dồn buổi | $P^{B}_2$ từ 1 xuống 0, $P^{B}_3$ từ 2 lên 3 |
+| Tắt B-S4 ($\beta_4 = 0$) | Solver không còn chừa phòng máy dự phòng | $P^{B}_4$ từ 1 lên 2: có ca dùng cả hai phòng máy |
+| 8 bộ ngẫu nhiên (12 lớp, giảng viên và nhóm ngẫu nhiên) | Không vi phạm | 6 bộ `OPTIMAL`, không vi phạm, điểm phạt khớp; 2 bộ còn lại bị PB3 phát hiện trước khi giải và mô hình cũng `INFEASIBLE` |
+| Lớp ELT2035 (7 buổi) và INT3306-TH (6 buổi) cùng nhóm, hai giảng viên đều chỉ rảnh Thứ 2–4 (12 ca) | Qua mọi kiểm tra PB nhưng vô nghiệm; chẩn đoán chỉ ra nguyên nhân | Không mã PB nào báo lỗi; `INFEASIBLE`. Bỏ nhóm giảng viên hoặc bỏ B-H7 thì có lịch, bỏ phòng bận thì vẫn vô nghiệm, tức chẩn đoán báo hai N01 |
+
+Đáp án tham chiếu: trên `data/toy_b` với trọng số mặc định, giá trị mục tiêu tối ưu là 355 ($P^{B}_1$ = 75, $P^{B}_2$ = 1, $P^{B}_3$ = 2, $P^{B}_4$ = 1). Kiểm thử của `room_solver.py` dùng con số này, như 2391 của bài toán A.
+
+Mô hình trên `toy_b` có 303 biến $y$, ít hơn nhiều so với giới hạn trên 10 × 4 × 22 = 880, vì mỗi lớp chỉ có biến với phòng đúng loại, đủ chỗ và ca không bận.
+
+Phần xếp lại khi có sự cố (B.9) chưa được kiểm chứng bằng bản cài đặt thử; sẽ kiểm chứng khi cài đặt, dựa trên code xếp lại của bài toán A.
