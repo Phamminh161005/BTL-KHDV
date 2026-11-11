@@ -25,7 +25,9 @@ if str(ROOT) not in sys.path:
 import streamlit as st
 from openpyxl import Workbook
 
+from experiments.update_report import QUALITY_RATIO, SLA_SECONDS, resch_quality_ok, resch_time_ok
 from src.config import load_config
+
 DEFAULT_RESULT_PATH = ROOT / "tests" / "reference" / "toy_schedule.json"
 DATA_DIR = Path(os.environ.get("EXAM_APP_DATA_DIR", ROOT / "data"))
 CONFIGS_DIR = ROOT / "configs"
@@ -848,7 +850,15 @@ def _reschedule_summary(schedule, out_path):
 RESULT_COLUMNS = {
     "perf.csv": "dataset,solver,strategy,seed,time_limit_sec,status,objective,best_bound,gap,solve_time_sec,violations,num_sittings,students_multi_exam_day,proctor_load_range".split(","),
     "reschedule.csv": "dataset,scenario,incidents,status,objective_before,objective_after,solve_time_sec,total_time_sec,sittings_changed,sittings_moved,students_affected,proctors_affected,violations".split(","),
-    "sensitivity.csv": "experiment,parameter,value,dataset,status,objective,A-S1,A-S2,A-S3,A-S4,A-S5,A-S6,students_multi_exam_day,avg_gap_days,proctor_load_range,num_sittings,seat_fill_rate,solve_time_sec".split(","),
+    "sensitivity.csv": "experiment,parameter,value,dataset,strategy,seed,status,objective,A-S1,A-S2,A-S3,A-S4,A-S5,A-S6,students_multi_exam_day,avg_gap_days,proctor_load_range,num_sittings,seat_fill_rate,solve_time_sec,sittings_moved,students_affected,change_cost,A-R1,A-R2,A-R3,A-R4".split(","),
+}
+PENALTY_COLUMNS = ["A-S1", "A-S2", "A-S3", "A-S4", "A-S5", "A-S6"]
+# Các thí nghiệm độ nhạy không có biểu đồ riêng: hiện bảng với những cột có ý nghĩa cho từng thí nghiệm.
+OTHER_EXPERIMENTS = {
+    "noise": ("Nhiễu theo seed (cùng trọng số mặc định)", ["seed", "status", "objective", *PENALTY_COLUMNS, "solve_time_sec"]),
+    "param": ("Đổi tham số cấu hình", ["parameter", "value", "seed", "status", "objective", *PENALTY_COLUMNS, "solve_time_sec"]),
+    "time_limit": ("Tăng giới hạn thời gian", ["value", "seed", "status", "objective", *PENALTY_COLUMNS, "solve_time_sec"]),
+    "reschedule_weight": ("Trọng số chi phí thay đổi khi xếp lại", ["parameter", "value", "status", "objective", "change_cost", "A-R1", "A-R2", "A-R3", "A-R4", "sittings_moved", "students_affected"]),
 }
 
 
@@ -869,7 +879,8 @@ def _read_experiment(filename):
 
 
 def _number(row, column):
-    value = row[column].strip()
+    # Dòng CSV thiếu ô thì DictReader trả về None: coi như ô trống.
+    value = (row.get(column) or "").strip()
     return float(value) if value else None
 
 
@@ -915,7 +926,8 @@ def _perf_results():
             st.bar_chart(chart, x="Bộ dữ liệu", y="Giây (trung bình seed)", color="Cách giải")
         else:
             st.info("Không có thời gian giải hợp lệ để vẽ biểu đồ.")
-        columns = ["dataset", "solver", "strategy", "seed", "status", "objective", "best_bound", "gap"]
+        columns = ["dataset", "solver", "strategy", "seed", "time_limit_sec", "status", "objective",
+                   "best_bound", "gap", "solve_time_sec"]
         st.caption("Mục tiêu, cận dưới và gap theo từng seed; chỉ thời gian giải của lịch hợp lệ được tính trung bình.")
         _experiment_table(rows, columns, "perf-hien-thi.csv", "download_perf")
     except (ValueError, TypeError) as exc:
@@ -938,11 +950,21 @@ def _reschedule_results():
                 {"mark": {"type": "rule", "color": "#c0392b", "strokeDash": [6, 4]},
                  "encoding": {"y": {"datum": 60}}}
             ]}, width="stretch")
-            st.caption("Đường đỏ: KPI xếp lại dưới 60 giây.")
+            st.caption(f"Đường đỏ: KPI xếp lại dưới {SLA_SECONDS} giây.")
         else:
             st.info("Không có thời gian xếp lại để vẽ biểu đồ.")
-        _experiment_table(rows, ["dataset", "scenario", "total_time_sec", "sittings_changed",
-                                 "sittings_moved", "students_affected", "proctors_affected"],
+        # Cùng tiêu chí với experiments/update_report.py: đạt thời gian và đạt chất lượng được xét riêng.
+        shown = []
+        for row in rows:
+            before, after = _number(row, "objective_before"), _number(row, "objective_after")
+            increase = f"{(after - before) / before:+.1%}" if before and after is not None else ""
+            shown.append({**row, "Z tăng": increase,
+                          "Đạt thời gian": "Đạt" if resch_time_ok(row) else "Không",
+                          "Đạt chất lượng": "Đạt" if resch_quality_ok(row) else "Không"})
+        st.caption(f"Đạt chất lượng: lịch mới hợp lệ và Z không tăng quá {QUALITY_RATIO - 1:.0%} so với lịch cũ.")
+        _experiment_table(shown, ["dataset", "scenario", "status", "objective_before", "objective_after", "Z tăng",
+                                  "total_time_sec", "sittings_changed", "sittings_moved", "students_affected",
+                                  "proctors_affected", "Đạt thời gian", "Đạt chất lượng"],
                           "reschedule-hien-thi.csv", "download_reschedule")
     except (ValueError, TypeError) as exc:
         st.warning(f"Dữ liệu reschedule.csv không hợp lệ: {exc}")
@@ -960,48 +982,73 @@ def _sensitivity_results():
     selected = st.selectbox("Bộ dữ liệu độ nhạy", datasets, key="sensitivity_dataset")
     rows = [row for row in rows if row["dataset"] == selected]
     try:
-        tradeoff = [row for row in rows if row["experiment"] == "tradeoff"]
-        points = [{"P1": _number(row, "A-S1"), "P6": _number(row, "A-S6"),
-                   "Trọng số A-S6": row["value"]} for row in tradeoff]
-        points = sorted((p for p in points if p["P1"] is not None and p["P6"] is not None),
-                        key=lambda p: p["P1"])
-        st.markdown("#### Đánh đổi P1 - P6")
-        if points:
-            st.vega_lite_chart({"data": {"values": points}, "layer": [
-                {"mark": {"type": "line", "point": True}, "encoding": {
-                    "x": {"field": "P1", "type": "quantitative"},
-                    "y": {"field": "P6", "type": "quantitative"},
-                    "tooltip": [{"field": "Trọng số A-S6"}, {"field": "P1"}, {"field": "P6"}]}},
-                {"mark": {"type": "text", "dy": -12}, "encoding": {
-                    "x": {"field": "P1", "type": "quantitative"},
-                    "y": {"field": "P6", "type": "quantitative"},
-                    "text": {"field": "Trọng số A-S6"}}}
-            ]}, width="stretch")
-        else:
-            st.info("Không có điểm tradeoff P1/P6 để vẽ biểu đồ.")
-        _experiment_table(tradeoff, RESULT_COLUMNS["sensitivity.csv"], "tradeoff-hien-thi.csv", "download_tradeoff")
-
-        st.markdown("#### Thay đổi hệ số nhân")
-        weights = sorted({row["parameter"] for row in rows if row["experiment"] == "weight"})
-        if not weights:
-            st.info("Không có thực nghiệm weight để vẽ biểu đồ.")
-            return
-        weight = st.selectbox("Trọng số cần xem", weights, key="sensitivity_weight")
-        chosen = [row for row in rows if row["experiment"] == "weight" and row["parameter"] == weight]
-        penalties = ["A-S1", "A-S2", "A-S3", "A-S4", "A-S5", "A-S6"]
-        kpis = ["students_multi_exam_day", "avg_gap_days", "proctor_load_range",
-                "num_sittings", "seat_fill_rate", "solve_time_sec"]
-        plotted = [{"Hệ số nhân": _number(row, "value"),
-                    **{column: _number(row, column) for column in penalties + kpis}} for row in chosen]
-        plotted.sort(key=lambda row: row["Hệ số nhân"] if row["Hệ số nhân"] is not None else float("inf"))
-        if plotted and all(row["Hệ số nhân"] is not None for row in plotted):
-            st.caption("Điểm phạt (chưa nhân trọng số)")
-            st.line_chart(plotted, x="Hệ số nhân", y=penalties)
-            st.caption("Các KPI theo hệ số nhân")
-            st.line_chart(plotted, x="Hệ số nhân", y=kpis)
-        _experiment_table(chosen, RESULT_COLUMNS["sensitivity.csv"], "weight-hien-thi.csv", "download_weight")
+        _tradeoff_chart([row for row in rows if row["experiment"] == "tradeoff"])
+        _weight_charts(rows)
+        _other_experiments(rows)
     except (ValueError, TypeError) as exc:
         st.warning(f"Dữ liệu sensitivity.csv không hợp lệ: {exc}")
+
+
+def _tradeoff_chart(tradeoff):
+    # Mỗi seed là một đường riêng, nối các điểm theo thứ tự trọng số A-S6 tăng dần (không trộn các seed).
+    points = [{"P1": _number(row, "A-S1"), "P6": _number(row, "A-S6"), "Seed": row.get("seed") or "0",
+               "Trọng số A-S6": _number(row, "value")} for row in tradeoff]
+    points = sorted((p for p in points if None not in (p["P1"], p["P6"], p["Trọng số A-S6"])),
+                    key=lambda p: (p["Seed"], p["Trọng số A-S6"]))
+    st.markdown("#### Đánh đổi P1 - P6")
+    if points:
+        encoding = {"x": {"field": "P1", "type": "quantitative"},
+                    "y": {"field": "P6", "type": "quantitative"},
+                    "color": {"field": "Seed", "type": "nominal"}}
+        st.vega_lite_chart({"data": {"values": points}, "layer": [
+            {"mark": {"type": "line", "point": True}, "encoding": {
+                **encoding, "order": {"field": "Trọng số A-S6", "type": "quantitative"},
+                "tooltip": [{"field": "Seed"}, {"field": "Trọng số A-S6"}, {"field": "P1"}, {"field": "P6"}]}},
+            {"mark": {"type": "text", "dy": -12}, "encoding": {**encoding, "text": {"field": "Trọng số A-S6"}}}
+        ]}, width="stretch")
+        st.caption("Nhãn trên điểm là trọng số A-S6; mỗi màu là một seed.")
+    else:
+        st.info("Không có điểm tradeoff P1/P6 để vẽ biểu đồ.")
+    _experiment_table(tradeoff, RESULT_COLUMNS["sensitivity.csv"], "tradeoff-hien-thi.csv", "download_tradeoff")
+
+
+def _weight_charts(rows):
+    st.markdown("#### Thay đổi hệ số nhân")
+    weights = sorted({row["parameter"] for row in rows if row["experiment"] == "weight"})
+    if not weights:
+        st.info("Không có thực nghiệm weight để vẽ biểu đồ.")
+        return
+    weight = st.selectbox("Trọng số cần xem", weights, key="sensitivity_weight")
+    chosen = [row for row in rows if row["experiment"] == "weight" and row["parameter"] == weight]
+    # Hệ số 1 (trọng số mặc định) không chạy lại: lấy dòng noise cùng seed 0 làm điểm gốc.
+    baseline = [dict(row, value="1") for row in rows
+                if row["experiment"] == "noise" and (row.get("seed") or "0") == "0"][:1]
+    kpis = ["students_multi_exam_day", "avg_gap_days", "proctor_load_range", "num_sittings", "seat_fill_rate"]
+    plotted = [{"Hệ số nhân": _number(row, "value"),
+                **{column: _number(row, column) for column in PENALTY_COLUMNS + kpis + ["solve_time_sec"]}}
+               for row in chosen + baseline]
+    plotted.sort(key=lambda row: row["Hệ số nhân"] if row["Hệ số nhân"] is not None else float("inf"))
+    if plotted and all(row["Hệ số nhân"] is not None for row in plotted):
+        st.caption("Điểm phạt (chưa nhân trọng số)" + ("; hệ số 1 lấy từ thí nghiệm noise seed 0" if baseline else ""))
+        st.line_chart(plotted, x="Hệ số nhân", y=PENALTY_COLUMNS)
+        st.caption("Các KPI theo hệ số nhân")
+        st.line_chart(plotted, x="Hệ số nhân", y=kpis)
+        st.caption("Thời gian giải (giây)")
+        st.line_chart(plotted, x="Hệ số nhân", y="solve_time_sec")
+    table = sorted(chosen + baseline, key=lambda row: _number(row, "value") or 0.0)
+    _experiment_table(table, RESULT_COLUMNS["sensitivity.csv"], "weight-hien-thi.csv", "download_weight")
+
+
+def _other_experiments(rows):
+    present = [name for name in OTHER_EXPERIMENTS if any(row["experiment"] == name for row in rows)]
+    if not present:
+        return
+    st.markdown("#### Các thí nghiệm khác")
+    name = st.selectbox("Thí nghiệm", present, format_func=lambda n: f"{n}: {OTHER_EXPERIMENTS[n][0]}",
+                        key="sensitivity_other")
+    _experiment_table([row for row in rows if row["experiment"] == name], OTHER_EXPERIMENTS[name][1],
+                      f"{name}-hien-thi.csv", f"download_{name}")
+    st.caption("Kết luận của từng thí nghiệm: experiments/README.md, mục 7.")
 
 
 def page_experiments():

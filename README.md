@@ -71,9 +71,11 @@ Giao diện có năm tab:
   Nếu không xếp lại được, giao diện hiện nguyên nhân và kết quả chẩn đoán.
 - Kết quả thực nghiệm: đọc `perf.csv`, `reschedule.csv`, `sensitivity.csv` trong `experiments/results/`
   (có thể đổi qua `EXAM_APP_RESULTS_DIR`). Biểu đồ thời gian giải trung bình theo seed và bảng mục tiêu/cận dưới/gap
-  lọc theo bộ dữ liệu; thời gian xếp lại theo kịch bản với ngưỡng 60 giây; đường đánh đổi P1/P6 và độ nhạy
-  điểm phạt, KPI theo hệ số nhân của trọng số đã chọn. Mỗi bảng đang xem có nút tải CSV; file thiếu hoặc sai cột
-  chỉ báo lỗi trong phần tương ứng.
+  lọc theo bộ dữ liệu; thời gian xếp lại theo kịch bản với ngưỡng 60 giây, kèm mức tăng Z và đánh giá đạt thời gian,
+  đạt chất lượng (Z không tăng quá 10%) theo cùng tiêu chí với `experiments/update_report.py`; đường đánh đổi P1/P6,
+  mỗi seed một đường; độ nhạy điểm phạt, KPI theo hệ số nhân của trọng số đã chọn (hệ số 1 lấy từ thí nghiệm noise
+  seed 0); bảng cho các thí nghiệm noise, param, time_limit, reschedule_weight. Mỗi bảng đang xem có nút tải CSV;
+  file thiếu hoặc sai cột chỉ báo lỗi trong phần tương ứng.
 
 Phần xem kết quả:
 

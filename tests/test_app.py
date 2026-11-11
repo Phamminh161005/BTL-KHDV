@@ -71,6 +71,42 @@ def test_experiments_charts_and_downloads(tmp_path, monkeypatch):
     assert any("gap" in frame.value.columns for frame in app.dataframe)
 
 
+def test_experiments_real_results_render():
+    """Đọc đúng các file trong experiments/results/ (cột thật của KHOE-4 và MINH-4) mà không báo lỗi."""
+    app = AppTest.from_file(str(APP), default_timeout=30).run()
+    assert not app.exception
+    assert not [w.value for w in app.warning if ".csv" in w.value]
+
+
+def test_experiments_tradeoff_seeds_quality_and_other(tmp_path, monkeypatch):
+    monkeypatch.setenv("EXAM_APP_RESULTS_DIR", str(tmp_path))
+    _write_results(tmp_path, "perf.csv", [])
+    _write_results(tmp_path, "reschedule.csv", [
+        {"dataset": "medium", "scenario": "room", "status": "FEASIBLE", "objective_before": 1000,
+         "objective_after": 1050, "total_time_sec": 42, "violations": 0},
+        {"dataset": "large", "scenario": "three", "status": "FEASIBLE", "objective_before": 1000,
+         "objective_after": 1500, "total_time_sec": 46, "violations": 0}])
+    _write_results(tmp_path, "sensitivity.csv", [
+        {"experiment": "tradeoff", "dataset": "medium", "parameter": "A-S6", "value": v, "seed": seed,
+         "A-S1": p1, "A-S6": p6}
+        for seed, v, p1, p6 in [(0, 0, 3, 22), (0, 800, 6, 18), (1, 0, 2, 22), (1, 800, 5, 7)]] + [
+        {"experiment": "noise", "dataset": "medium", "parameter": "random_seed", "value": 0, "seed": 0,
+         "status": "FEASIBLE", "objective": 12072}])
+    app = AppTest.from_file(str(APP), default_timeout=15).run()
+    assert not app.exception
+    tradeoff = next(c for c in app.get("vega_lite_chart") if "P6" in c.proto.spec)
+    spec = json.loads(tradeoff.proto.spec)
+    assert spec["layer"][0]["encoding"]["color"]["field"] == "Seed"
+    assert spec["layer"][0]["encoding"]["order"]["field"] == "Trọng số A-S6"
+    reschedule = next(f.value for f in app.dataframe if "Đạt chất lượng" in f.value.columns)
+    assert list(reschedule["Z tăng"]) == ["+5.0%", "+50.0%"]
+    assert list(reschedule["Đạt thời gian"]) == ["Đạt", "Đạt"]
+    assert list(reschedule["Đạt chất lượng"]) == ["Đạt", "Không"]
+    assert any(s.label == "Thí nghiệm" for s in app.selectbox)
+    assert any("objective" in f.value.columns and "seed" in f.value.columns and len(f.value) == 1
+               for f in app.dataframe)
+
+
 def test_experiments_bad_perf_columns_isolated(tmp_path, monkeypatch):
     monkeypatch.setenv("EXAM_APP_RESULTS_DIR", str(tmp_path))
     _write_results(tmp_path, "perf.csv", [], columns=["dataset"])
