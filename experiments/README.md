@@ -43,7 +43,7 @@ Ba kịch bản được kiểm tra:
 
 Phòng, giám thị và thời điểm sự cố được chọn từ lịch thực tế, theo quy tắc xác định để có thể tái lập.
 
-Mỗi kịch bản được đo một lần, tổng cộng 6 lần xếp lại. Việc xếp lại sử dụng `src.reschedule.reschedule`, với chiến lược `single` và giới hạn solver theo `configs/default.json` (hiện là 45 giây).
+Mỗi kịch bản được đo một lần, tổng cộng 6 lần xếp lại. Việc xếp lại sử dụng `src.reschedule.reschedule`, với chiến lược `single` và giới hạn solver theo `configs/default.json` (hiện là 45 giây), giải hai bước: xếp lại cục bộ rồi giải trên toàn lịch (mục 6.4, model_spec A.14).
 
 `total_time_sec` đo từ ngay trước lúc gọi hàm `reschedule` đến khi hàm trả kết quả, bao gồm đọc dữ liệu, dựng mô hình, giải, hậu xử lý và ghi lịch ra JSON. Thời gian tạo lịch ban đầu không tính vào phép đo xếp lại.
 
@@ -87,7 +87,7 @@ Nên chạy `perf.py` trước để script xếp lại dùng cùng lịch nền
 
 ## 4. Môi trường thực nghiệm
 
-Thông tin máy được ghi tại `output/perf/machine.json` và cập nhật tự động vào đây sau khi chạy `experiments/update_report.py`.
+Thông tin máy được ghi tại `output/perf/machine.json` và cập nhật tự động vào đây sau khi chạy `experiments/update_report.py`. Đây là máy đo `perf.csv`; `reschedule.csv` được đo lại trên một máy khác (mục 6.4).
 
 <!-- EXPERIMENT_MACHINE_BEGIN -->
 - CPU: 11th Gen Intel(R) Core(TM) i5-11400H @ 2.70GHz (12 luồng logic)
@@ -138,14 +138,14 @@ Hai tiêu chí được đánh giá riêng. Thời gian: có lịch hợp lệ v
 
 | Bộ dữ liệu | Kịch bản | Trạng thái | Tổng thời gian (s) | Z trước → sau | Lượt thay đổi / dời ca | SV bị ảnh hưởng | Thời gian | Chất lượng |
 |---|---|---|---:|---:|---:|---:|---|---|
-| medium | room_one_period | OPTIMAL | 23.534 | 12268 → 12268 (+0.0%) | 1 / 0 | 25 | ĐẠT | ĐẠT |
-| medium | lecturer_whole_day | OPTIMAL | 24.778 | 12268 → 12308 (+0.3%) | 2 / 0 | 0 | ĐẠT | ĐẠT |
-| medium | three_simultaneous | OPTIMAL | 25.105 | 12268 → 12268 (+0.0%) | 6 / 0 | 64 | ĐẠT | ĐẠT |
-| large | room_one_period | FEASIBLE | 46.144 | 37660 → 37688 (+0.1%) | 1 / 0 | 14 | ĐẠT | ĐẠT |
-| large | lecturer_whole_day | FEASIBLE | 46.080 | 37660 → 37660 (+0.0%) | 3 / 0 | 0 | ĐẠT | ĐẠT |
-| large | three_simultaneous | FEASIBLE | 46.193 | 37660 → 108280 (+187.5%) | 98 / 39 | 999 | ĐẠT | KHÔNG ĐẠT |
+| medium | room_one_period | FEASIBLE | 42.551 | 12507 → 12507 (+0.0%) | 1 / 0 | 27 | ĐẠT | ĐẠT |
+| medium | lecturer_whole_day | FEASIBLE | 44.064 | 12507 → 12507 (+0.0%) | 1 / 0 | 0 | ĐẠT | ĐẠT |
+| medium | three_simultaneous | FEASIBLE | 45.744 | 12507 → 12527 (+0.2%) | 3 / 0 | 56 | ĐẠT | ĐẠT |
+| large | room_one_period | FEASIBLE | 46.083 | 42246 → 42262 (+0.0%) | 1 / 0 | 16 | ĐẠT | ĐẠT |
+| large | lecturer_whole_day | FEASIBLE | 43.597 | 42246 → 42246 (+0.0%) | 2 / 0 | 0 | ĐẠT | ĐẠT |
+| large | three_simultaneous | FEASIBLE | 47.169 | 42246 → 42432 (+0.4%) | 2 / 0 | 83 | ĐẠT | ĐẠT |
 
-Kết luận xếp lại trên large: đạt KPI dưới 60 giây trên cả ba kịch bản đã đo; chưa giữ được chất lượng lịch ở `three_simultaneous`.
+Kết luận xếp lại trên large: đạt KPI dưới 60 giây trên cả ba kịch bản đã đo; giữ được chất lượng lịch ở cả ba kịch bản.
 
 Giới hạn: mỗi cấu hình solver được đo với ba seed; mỗi kịch bản xếp lại chỉ đo một lần. Kết quả phụ thuộc môi trường máy và dữ liệu thực nghiệm.
 <!-- EXPERIMENT_RESULTS_END -->
@@ -190,15 +190,31 @@ Mặc định trong `configs/default.json` vẫn là `single`: các kiểm thử
 
 ### 6.4. Xếp lại khi có sự cố
 
-Thời gian: cả 6 kịch bản có lịch hợp lệ trong dưới 60 giây. `medium` mất 23–25 giây và đạt `OPTIMAL`. `large` mất khoảng 46 giây và chỉ đạt `FEASIBLE`: solver chạy hết giới hạn 45 giây của `reschedule.time_limit_sec`. Nghĩa là trên `large`, KPI dưới 60 giây được bảo đảm bằng giới hạn thời gian, không phải vì solver giải xong nhanh.
+Lần đo đầu tiên (máy của Khỏe, lịch nền `large` có Z = 37660) dùng cách xếp lại cũ: giải trên toàn lịch, chỉ dùng lịch cũ làm gợi ý. Cả 6 kịch bản đều dưới 60 giây, nhưng kịch bản ba sự cố cùng lúc trên `large` cho lịch gần như mới hoàn toàn: Z tăng từ 37660 lên 108280, 98 lượt thay đổi, 39 lượt dời ca, 999 trong 1000 sinh viên bị ảnh hưởng.
 
-Chất lượng: 5/6 kịch bản giữ lịch gần lịch cũ: Z tăng không quá 0,3%, chỉ 1–6 lượt thay đổi, không lượt nào bị dời ca. Kịch bản ba sự cố cùng lúc trên `large` không đạt: Z tăng từ 37660 lên 108280 (+188%), 98 lượt thay đổi, 39 lượt dời ca và 999 trong 1000 sinh viên bị ảnh hưởng. Trên thực tế, gần như cả lịch bị xếp lại. Giả thuyết, chưa kiểm chứng: khi lịch cũ vi phạm nhiều ràng buộc cùng lúc, CP-SAT không sửa được từ gợi ý (hint) và trong 45 giây chỉ tìm được một lời giải xa lịch cũ.
+Vì vậy cách xếp lại được sửa thành hai bước (model_spec A.14):
 
-Hướng xử lý: chỉ cho thay đổi các lượt liên quan đến sự cố (các lượt dùng phòng hoặc giám thị bị sự cố, hoặc cùng ngày với sự cố) và cố định phần còn lại. Mô hình khi đó nhỏ hơn nhiều; nếu vô nghiệm thì mới mở rộng phạm vi. Việc này cần sửa `src/reschedule.py` và đo lại kịch bản trên, nên để thành việc riêng.
+1. Xếp lại cục bộ: chỉ mở lại các môn có lượt dùng phòng hoặc giám thị vừa báo bận, các môn khác giữ nguyên như lịch cũ. Nếu vô nghiệm thì mở rộng sang các môn thi cùng ngày với sự cố, cuối cùng là toàn bộ lịch.
+2. Với thời gian còn lại, giải trên toàn lịch với lời giải bước 1 làm gợi ý. Lời giải bước 2 chỉ được dùng khi tổng Z + chi phí thay đổi thấp hơn.
+
+Bảng ở mục 5 là kết quả đo lại sau khi sửa, trên máy của Minh (Intel Core i7-1165G7, 8 luồng logic, 15,8 GB RAM, Python 3.12.10). Lịch nền được tạo lại bằng `two_phase` seed 0 trên máy này (`medium` Z = 12507, `large` Z = 42246), nên sự cố được chọn khác với lần đo đầu.
+
+So sánh trên cùng lịch nền và cùng ba sự cố của `large` (phòng E3-LAB2 ca 1, phòng G2-103 ca 1, giảng viên GV01 cả ngày 14/12):
+
+| Cách xếp lại | Lượt thay đổi (dời ca) | SV bị ảnh hưởng | Z | Tổng Z + chi phí thay đổi | Thời gian |
+|---|---|---|---|---|---|
+| Cũ: toàn lịch, gợi ý bằng lịch cũ | 77 (27) | 985 | 42246 → 59094 | 90894 | 46 giây |
+| Mới, riêng bước 1 | 2 (0) | 83 | 42246 → 42432 | 42792 | 12 giây |
+
+Bước 1 mở lại 2 trong 60 môn, nên mô hình còn rất ít biến tự do và CP-SAT chứng minh được tối ưu trong phạm vi đó. Trên `medium`, hai cách cho cùng một lịch (3 lượt thay đổi, 56 sinh viên), nhưng bước 1 xong trong 9,5 giây so với 38 giây của cách cũ. Trên `toy`, bước 2 tìm được lời giải tốt hơn lời giải cục bộ và chứng minh tối ưu, nên kết quả giống hệt cách cũ.
+
+Sau khi sửa, cả 6 kịch bản đạt cả hai tiêu chí: 42–47 giây, Z tăng không quá 0,5%, 1–3 lượt thay đổi, không lượt nào bị dời ca. Ở cả 6 kịch bản, bước 2 không tìm được lời giải tốt hơn bước 1 trong thời gian còn lại. Tổng thời gian vẫn gần 45 giây vì bước 2 chạy hết phần thời gian còn lại, dù lời giải cuối cùng đã có sau 10–12 giây. Trạng thái được báo là `FEASIBLE`, vì lời giải cục bộ chỉ chứng minh tối ưu trong phạm vi đã mở lại.
+
+Hướng cải tiến: trả lời giải bước 1 cho người dùng ngay, rồi để bước 2 chạy tiếp và chỉ thông báo khi tìm được lịch tốt hơn.
 
 ### 6.5. Giới hạn
 
-Các kết quả được đo trên một cấu hình máy, mỗi kịch bản xếp lại chỉ chạy một lần. Vì vậy chúng phản ánh hiệu năng của các lần chạy đã đo, không phải bảo đảm cho mọi dữ liệu và môi trường triển khai.
+`perf.csv` được đo trên máy của Khỏe (mục 4), `reschedule.csv` trên máy của Minh (mục 6.4); mỗi kịch bản xếp lại chỉ chạy một lần. Vì vậy chúng phản ánh hiệu năng của các lần chạy đã đo, không phải bảo đảm cho mọi dữ liệu và môi trường triển khai.
 
 ## 7. Độ nhạy trọng số (MINH-4)
 

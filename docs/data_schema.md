@@ -327,6 +327,7 @@ Mã D là lỗi định dạng dữ liệu (tài liệu này). Mã P là kiểm 
 | I01 | error | Sự cố không hợp lệ: sai loại, mã phòng hoặc giảng viên không có trong dữ liệu, sai dạng ngày, ca ngoài 1–4 |
 | I02 | warning | Sự cố không ảnh hưởng gì (ngày hoặc ca không có trong lịch thi, hoặc giảng viên không coi thi), bị bỏ qua |
 | I03 | error | Không đọc được lịch cũ, lịch cũ không có lượt thi, hoặc lịch cũ không thuộc bộ dữ liệu này (khác môn, khác danh sách sinh viên, phòng hoặc ca lạ) |
+| I04 | info hoặc warning | Xếp lại: phạm vi cục bộ đã dùng (số môn mở lại), các phạm vi phải mở rộng, và bước giải trên toàn lịch có tìm được lời giải tốt hơn không (spec A.14). Mức warning khi hết thời gian mà chưa có lời giải |
 
 Mỗi thông báo có dạng (cũng là dạng xuất hiện trong file kết quả, mục 7):
 

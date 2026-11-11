@@ -1,7 +1,7 @@
 dataset,scenario,incidents,status,objective_before,objective_after,solve_time_sec,total_time_sec,sittings_changed,sittings_moved,students_affected,proctors_affected,violations
-medium,room_one_period,room:G2-102:2026-12-14:1,OPTIMAL,12268,12268,22.464,23.534,1,0,25,2,0
-medium,lecturer_whole_day,lecturer:GV04:2026-12-14:*,OPTIMAL,12268,12308,24.734,24.778,2,0,0,3,0
-medium,three_simultaneous,room:G2-102:2026-12-14:1;lecturer:GV04:2026-12-14:*;room:G2-103:2026-12-14:1,OPTIMAL,12268,12268,25.059,25.105,6,0,64,6,0
-large,room_one_period,room:E3-LAB2:2026-12-14:1,FEASIBLE,37660,37688,46.034,46.144,1,0,14,4,0
-large,lecturer_whole_day,lecturer:GV02:2026-12-14:*,FEASIBLE,37660,37660,45.977,46.08,3,0,0,2,0
-large,three_simultaneous,room:E3-LAB2:2026-12-14:1;lecturer:GV02:2026-12-14:*;room:G2-103:2026-12-14:1,FEASIBLE,37660,108280,46.072,46.193,98,39,999,36,0
+medium,room_one_period,room:E3-LAB2:2026-12-14:1,FEASIBLE,12507,12507,42.469,42.551,1,0,27,3,0
+medium,lecturer_whole_day,lecturer:GV01:2026-12-14:*,FEASIBLE,12507,12507,43.641,44.064,1,0,0,2,0
+medium,three_simultaneous,room:E3-LAB2:2026-12-14:1;lecturer:GV01:2026-12-14:*;room:G2-104:2026-12-14:3,FEASIBLE,12507,12527,45.688,45.744,3,0,56,7,0
+large,room_one_period,room:E3-LAB2:2026-12-14:1,FEASIBLE,42246,42262,45.953,46.083,1,0,16,2,0
+large,lecturer_whole_day,lecturer:GV01:2026-12-14:*,FEASIBLE,42246,42246,43.516,43.597,2,0,0,2,0
+large,three_simultaneous,room:E3-LAB2:2026-12-14:1;lecturer:GV01:2026-12-14:*;room:G2-103:2026-12-14:1,FEASIBLE,42246,42432,47.047,47.169,2,0,83,8,0

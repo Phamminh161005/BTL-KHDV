@@ -23,6 +23,7 @@ CHANGE_KEYS = ("A-R1", "A-R2", "A-R3", "A-R4")
 
 def solve(instance: Instance, config: dict, *, base: Solution | None = None,
           change_weights: dict | None = None, relax=frozenset(), optimize: bool = True,
+          frozen=frozenset(), hint: Solution | None = None,
           _deadline: float | None = None) -> SolveResult:
     """Giải bài toán A.
 
@@ -31,6 +32,9 @@ def solve(instance: Instance, config: dict, *, base: Solution | None = None,
       dùng làm lời giải gợi ý (AddHint) và mục tiêu cộng thêm điểm phạt thay đổi A-R1..A-R4.
     - relax: tập con của RELAX_GROUPS, các nhóm ràng buộc cứng tạm bỏ (model_spec A.8).
     - optimize=False: chỉ tìm một lời giải hợp lệ bất kỳ, không tối ưu (dùng khi chẩn đoán).
+    - frozen: tập mã môn giữ nguyên như lịch cũ khi xếp lại (cần base): ca, phòng, sinh viên và giám thị của
+      các lượt thuộc những môn này bị cố định (model_spec A.14, xếp lại cục bộ).
+    - hint: lời giải gợi ý thay cho lịch cũ khi xếp lại (mặc định gợi ý bằng chính lịch cũ base).
     Khi có một trong các tham số này, solver luôn giải một lần (single), kể cả với strategy two_phase.
     _deadline là deadline nội bộ dùng chung khi two_phase fallback sang single; không phải API người dùng.
     """
@@ -38,6 +42,9 @@ def solve(instance: Instance, config: dict, *, base: Solution | None = None,
     budget = max(0.0, float(config["time_limit_sec"]))
     deadline = started_at + budget if _deadline is None else _deadline
     relax = frozenset(relax)
+    frozen = frozenset(frozen)
+    if frozen and base is None:
+        raise ValueError("frozen chỉ dùng khi xếp lại (cần lịch cũ base)")
     unknown = relax - set(RELAX_GROUPS)
     if unknown:
         raise ValueError(f"Nhóm ràng buộc không hỗ trợ: {sorted(unknown)}")
@@ -302,7 +309,9 @@ def solve(instance: Instance, config: dict, *, base: Solution | None = None,
     # A.14: xếp lại khi có sự cố. Phạt mỗi thay đổi so với lịch cũ và dùng lịch cũ làm lời giải gợi ý.
     change_expr = _change_terms(base, instance, x, u, q, w) if base is not None else {}
     if base is not None:
-        _add_hints(model, base, instance, x, u, q, w)
+        _add_hints(model, hint or base, instance, x, u, q, w)
+    if frozen:
+        _freeze(model, base, instance, frozen, cov, x, u, q, w)
 
     # A.6: cực tiểu tổng điểm phạt có trọng số, cấu hình có thể tắt trọng số.
     # A.14: khi xếp lại, cộng thêm điểm phạt thay đổi. optimize=False (chẩn đoán): chỉ tìm lời giải hợp lệ.
@@ -452,6 +461,28 @@ def _add_hints(model: cp_model.CpModel, base: Solution, instance: Instance, x, u
     for keys, variables in ((base_x, x), (base_u, u), (base_q, q), (base_w, w)):
         for k, var in variables.items():
             model.AddHint(var, 1 if k in keys else 0)
+
+
+def _freeze(model: cp_model.CpModel, base: Solution, instance: Instance, frozen: frozenset, cov,
+            x, u, q, w) -> None:
+    """Xếp lại cục bộ (A.14): mọi biến của các môn trong `frozen` nhận đúng giá trị của lịch cũ, kể cả giám thị
+    của các phòng-ca mà lượt đó chiếm. Lượt cũ dùng phòng hoặc giám thị vừa báo bận thì biến tương ứng không còn,
+    nên môn đó phải nằm ngoài `frozen` (nếu không mô hình vô nghiệm)."""
+    base_x, base_u, base_q, base_w = _base_keys(base, instance)
+    for (c, s), var in x.items():
+        if c in frozen:
+            model.Add(var == int((c, s) in base_x))
+    for (c, r, s), var in u.items():
+        if c in frozen:
+            model.Add(var == int((c, r, s) in base_u))
+    for (i, c, s), var in q.items():
+        if c in frozen:
+            model.Add(var == int((i, c, s) in base_q))
+    cells = {(r, t) for st in base.sittings if st.course_id in frozen
+             for r in st.rooms for t in cov.get((st.course_id, st.start), ())}
+    for (g, r, t), var in w.items():
+        if (r, t) in cells:
+            model.Add(var == int((g, r, t) in base_w))
 
 
 def _solve_two_phase(instance: Instance, config: dict, *, started_at: float,

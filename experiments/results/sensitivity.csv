@@ -48,12 +48,6 @@ param,forbid_own_course,True,medium,two_phase,0,FEASIBLE,12910,9,227,20,180,1,20
 param,proctors_per_room,3,medium,two_phase,0,FEASIBLE,15924,29,262,19,194,1,20,29,2.695,1,50,0.9351,242.172,,,,,,,
 param,forbid_own_course,True,medium,two_phase,1,FEASIBLE,13992,27,210,20,172,1,19,27,2.791,1,49,0.942,242.047,,,,,,,
 param,proctors_per_room,3,medium,two_phase,1,FEASIBLE,18867,44,327,21,187,1,17,44,2.726,1,47,0.9373,242.062,,,,,,,
-reschedule_weight,A-R1,200,toy,single,0,OPTIMAL,2601,5,47,1,41,0,3,5,1.857,0,8,0.7887,0.359,1,11,1170,1,0,17,6
-reschedule_weight,A-R1,1000,toy,single,0,OPTIMAL,2601,5,47,1,41,0,3,5,1.857,0,8,0.7887,0.298,1,11,1970,1,0,17,6
-reschedule_weight,A-R1,5000,toy,single,0,OPTIMAL,2601,5,47,1,41,0,3,4,1.857,0,8,0.7887,0.276,1,11,5970,1,0,17,6
-reschedule_weight,A-R3,10,toy,single,0,OPTIMAL,2601,5,47,1,41,0,3,3,1.857,0,8,0.7887,0.477,1,11,1290,1,0,17,6
-reschedule_weight,A-R3,50,toy,single,0,OPTIMAL,2601,5,47,1,41,0,3,5,1.857,0,8,0.7887,0.298,1,11,1970,1,0,17,6
-reschedule_weight,A-R3,200,toy,single,0,OPTIMAL,3021,11,41,1,41,0,3,9,1.857,0,8,0.7887,0.249,1,11,3320,1,0,11,6
 noise,random_seed,2,medium,two_phase,2,FEASIBLE,15291,29,224,21,201,1,22,29,2.818,1,52,0.9329,242.265,,,,,,,
 tradeoff,A-S6,0,medium,two_phase,2,FEASIBLE,9880,9,262,18,200,1,22,9,2.736,1,52,0.9332,241.985,,,,,,,
 tradeoff,A-S6,200,medium,two_phase,2,FEASIBLE,15291,29,224,21,201,1,22,29,2.818,1,52,0.9329,242.265,,,,,,,
@@ -64,3 +58,9 @@ param,proctors_per_room,3,medium,two_phase,2,FEASIBLE,17125,29,297,18,195,1,21,2
 time_limit,time_limit_sec,900,medium,two_phase,0,FEASIBLE,12075,2,219,18,185,1,21,2,2.856,1,51,0.9379,722.297,,,,,,,
 time_limit,time_limit_sec,900,medium,two_phase,1,FEASIBLE,11082,5,179,20,192,1,20,5,2.86,1,50,0.9357,722.391,,,,,,,
 time_limit,time_limit_sec,900,medium,two_phase,2,FEASIBLE,15453,29,237,21,173,1,21,29,2.802,1,51,0.9417,722.0,,,,,,,
+reschedule_weight,A-R1,200,toy,single,0,OPTIMAL,2601,5,47,1,41,0,3,5,1.857,0,8,0.7887,0.422,1,11,1170,1,0,17,6
+reschedule_weight,A-R1,1000,toy,single,0,OPTIMAL,2601,5,47,1,41,0,3,5,1.857,0,8,0.7887,0.375,1,11,1970,1,0,17,6
+reschedule_weight,A-R1,5000,toy,single,0,OPTIMAL,2601,5,47,1,41,0,3,4,1.857,0,8,0.7887,0.375,1,11,5970,1,0,17,6
+reschedule_weight,A-R3,10,toy,single,0,OPTIMAL,2601,5,47,1,41,0,3,5,1.857,0,8,0.7887,0.531,1,11,1290,1,0,17,6
+reschedule_weight,A-R3,50,toy,single,0,OPTIMAL,2601,5,47,1,41,0,3,5,1.857,0,8,0.7887,0.375,1,11,1970,1,0,17,6
+reschedule_weight,A-R3,200,toy,single,0,OPTIMAL,3021,11,41,1,41,0,3,9,1.857,0,8,0.7887,0.375,1,11,3320,1,0,11,6

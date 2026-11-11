@@ -18,7 +18,7 @@ import sys
 from typing import Optional
 
 from src.data_loader import load_instance
-from src.instance import Instance, Message, Sitting, Solution
+from src.instance import Instance, Message, Sitting, Solution, SolveResult
 from src.schedule import build_schedule, write_schedule
 
 PERIODS = (1, 2, 3, 4)
@@ -132,6 +132,43 @@ def base_solution(instance: Instance, base: dict, messages: list[Message]) -> Op
     return Solution(sittings, proctoring)
 
 
+# ---------------------------------------------------------------- phạm vi xếp lại
+
+def conflicting_courses(instance: Instance, base: Solution) -> set[str]:
+    """Các môn có lượt trong lịch cũ không còn hợp lệ sau sự cố: dùng phòng đang bận, hoặc có giám thị đang bận,
+    ở một ca mà lượt đó chiếm. Lịch bận lúc này đã gồm cả sự cố (apply_incidents)."""
+    hit = set()
+    for st in base.sittings:
+        cells = [(r, t) for r in st.rooms for t in instance.covered(st.course_id, st.start)]
+        if any(t in instance.rooms[r].busy for r, t in cells):
+            hit.add(st.course_id)
+        elif any(t in instance.lecturers[g].busy for r, t in cells for g in base.proctoring.get((r, t), [])):
+            hit.add(st.course_id)
+    return hit
+
+
+def reschedule_scopes(instance: Instance, base: Solution, incidents: list[dict]) -> list[tuple[str, set[str]]]:
+    """Các phạm vi xếp lại, từ hẹp đến rộng (model_spec A.14). Mỗi phạm vi là tập môn được thay đổi; các môn còn
+    lại giữ nguyên như lịch cũ. Phạm vi hẹp vô nghiệm thì mới mở rộng.
+
+    1. Các môn bị sự cố chạm vào.
+    2. Thêm mọi môn có lượt thi vào ngày có sự cố hoặc ngày của các lượt bị chạm vào.
+    3. Toàn bộ lịch.
+    """
+    everything = set(instance.courses)
+    touched = conflicting_courses(instance, base)
+    days = {dt.date.fromisoformat(inc["date"]) for inc in incidents}
+    days |= {st.start[0] for st in base.sittings if st.course_id in touched}
+    same_day = touched | {st.course_id for st in base.sittings if st.start[0] in days}
+    scopes, seen = [], []
+    for label, free in (("các môn bị sự cố chạm vào", touched), ("các môn thi cùng ngày với sự cố", same_day),
+                        ("toàn bộ lịch", everything)):
+        if free not in seen:
+            scopes.append((label, free))
+            seen.append(free)
+    return scopes
+
+
 # ---------------------------------------------------------------- so sánh hai lịch
 
 def _placements(schedule: dict):
@@ -234,6 +271,65 @@ def diff_schedules(old: dict, new: dict) -> tuple[list[dict], dict]:
 
 # ---------------------------------------------------------------- xếp lại
 
+def _total_cost(result, weights: dict) -> int:
+    """Hàm mục tiêu khi xếp lại (A.14): Z cộng chi phí thay đổi."""
+    return result.objective + sum(weights[k] * v for k, v in (result.change_penalties or {}).items())
+
+
+def _solve_in_scopes(instance: Instance, config: dict, base: Solution, incidents: list[dict], solve):
+    """Xếp lại hai bước trong cùng giới hạn reschedule.time_limit_sec (model_spec A.14).
+
+    Bước 1, xếp lại cục bộ: giải lần lượt từ phạm vi hẹp đến rộng, các môn ngoài phạm vi giữ nguyên như lịch cũ,
+    dừng ở phạm vi đầu tiên có lời giải. Bước này nhỏ nên nhanh, và bảo đảm không xáo trộn phần lịch không liên quan.
+    Bước 2: với thời gian còn lại, giải trên toàn lịch, lấy lời giải bước 1 làm gợi ý; giữ lời giải bước 2 chỉ khi
+    tổng Z + chi phí thay đổi thấp hơn. Chỉ lời giải trên toàn lịch mới được báo OPTIMAL hoặc INFEASIBLE."""
+    import time
+
+    weights = config["reschedule"]["weights"]
+    started = time.monotonic()
+    deadline = started + float(config["time_limit_sec"])
+    scopes = reschedule_scopes(instance, base, incidents)
+    everything = frozenset(instance.courses)
+    notes, local, label, free = [], None, None, set()
+    for label, free in scopes:
+        if free == everything:
+            break
+        local = solve(instance, config, base=base, change_weights=weights, frozen=everything - free,
+                      _deadline=deadline)
+        if local.status in ("OPTIMAL", "FEASIBLE"):
+            notes.append(Message("I04", "info", f"Bước 1, xếp lại cục bộ trong phạm vi {label}: mở lại "
+                                                f"{len(free)}/{len(everything)} môn, tổng chi phí "
+                                                f"{_total_cost(local, weights)}"))
+            break
+        notes.append(Message("I04", "info", f"Bước 1: phạm vi {label} ({len(free)} môn) không xếp được "
+                                            f"({local.status}); mở rộng phạm vi"))
+        local = None
+        if time.monotonic() >= deadline:
+            break
+
+    result = None
+    if time.monotonic() < deadline:
+        result = solve(instance, config, base=base, change_weights=weights,
+                       hint=local.solution if local else None, _deadline=deadline)
+    if local is not None:
+        if result is not None and result.status in ("OPTIMAL", "FEASIBLE") \
+                and _total_cost(result, weights) < _total_cost(local, weights):
+            notes.append(Message("I04", "info", f"Bước 2, giải trên toàn lịch: tổng chi phí giảm xuống "
+                                                f"{_total_cost(result, weights)}, dùng lời giải này"))
+        else:
+            notes.append(Message("I04", "info", "Bước 2, giải trên toàn lịch: không tìm được lời giải tốt hơn, "
+                                                "giữ lời giải cục bộ"))
+            local.status = "FEASIBLE"     # chỉ tối ưu trong phạm vi cục bộ
+            result = local
+    elif result is None:
+        # Hết thời gian trước khi giải được trên toàn lịch; phạm vi hẹp vô nghiệm không chứng minh được gì.
+        result = SolveResult(status="UNKNOWN", solve_time_sec=0.0)
+        notes.append(Message("I04", "warning", "Hết thời gian xếp lại trước khi tìm được lời giải"))
+    result.messages = notes + result.messages
+    result.solve_time_sec = time.monotonic() - started
+    return result
+
+
 def reschedule(data_dir: str, base_schedule_path: str, incidents: list[dict], config_path: Optional[str] = None,
                out_path: Optional[str] = None) -> dict:
     """Xếp lại lịch cũ sau sự cố và trả về nội dung schedule.json của lịch mới (data_schema mục 7.6).
@@ -264,7 +360,7 @@ def reschedule(data_dir: str, base_schedule_path: str, incidents: list[dict], co
     result = None
     if not has_error:
         config["time_limit_sec"] = config["reschedule"]["time_limit_sec"]
-        result = solve(instance, config, base=base, change_weights=config["reschedule"]["weights"])
+        result = _solve_in_scopes(instance, config, base, applied, solve)
         if result.status == "INFEASIBLE":
             result.messages += diagnose(instance, config)
     schedule = build_schedule(instance if not has_error else None, config, messages, result, dataset)
