@@ -12,7 +12,7 @@ Bài tập lớn môn Khoa học Dịch vụ. Hệ thống dùng mô hình quy h
 | Tài liệu | Nội dung |
 |---|---|
 | [docs/scope.md](docs/scope.md) | Phạm vi đề tài, giả định, ràng buộc, KPI |
-| [docs/model_spec.md](docs/model_spec.md) | Đặc tả mô hình toán (bài toán A; bài toán B sẽ bổ sung) |
+| [docs/model_spec.md](docs/model_spec.md) | Đặc tả mô hình toán (bài toán A và B) |
 | [docs/data_schema.md](docs/data_schema.md) | Định dạng dữ liệu đầu vào, cấu hình và file kết quả |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Quy ước làm việc nhóm: nhánh, commit, Pull Request |
 
@@ -130,7 +130,7 @@ thư mục tạm (biến môi trường `EXAM_APP_DATA_DIR`, `EXAM_APP_OUTPUT_DI
 | `generator.py` | Hoàn chỉnh, có kiểm thử; dữ liệu sinh sẵn (seed 1) trong `data/toy_gen`, `data/medium`, `data/large` |
 | `exam_solver.py` | Chiến lược `single` hoàn chỉnh, có kiểm thử: trên `toy` đạt `OPTIMAL` 2391 trong khoảng 20 giây. Chiến lược `two_phase` hoàn chỉnh (KHOE-3), trên `toy` đạt 2391 trong khoảng 7 giây |
 | `exam_solver_pulp.py` | Hoàn chỉnh, có kiểm thử. Trên `toy` tìm được lời giải tối ưu 2391 nhưng không chứng minh được tối ưu trong vài phút (model_spec A.13) |
-| `room_solver.py` | Chờ spec bài toán B (Minh viết spec, Khỏe cài đặt) |
+| `room_solver.py` | Spec bài toán B đã có (model_spec mục B, data_schema mục 9); chờ cài đặt (Khỏe) |
 | `app/app.py` | Xem và so sánh lịch, kiểm tra dữ liệu, chạy solver (CP-SAT/PuLP), khai báo sự cố và xếp lại; biểu đồ và bảng CSV thực nghiệm; có AppTest |
 
 ## Phân công

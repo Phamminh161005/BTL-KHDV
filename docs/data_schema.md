@@ -2,7 +2,7 @@
 
 Tài liệu này quy định dữ liệu đầu vào, file cấu hình và file kết quả của hệ thống. Đây là "hợp đồng" giữa các thành viên: script sinh dữ liệu phải ghi đúng định dạng này, `data_loader.py` và solver đọc đúng định dạng này, giao diện chỉ đọc file kết quả theo định dạng này.
 
-Phiên bản hiện tại dành cho bài toán A (lịch thi). Các file và cột riêng của bài toán B sẽ được bổ sung ở phiên bản sau (xem mục 9); những gì đã quy định ở đây sẽ được giữ nguyên.
+Mục 1 đến 8 dành cho bài toán A (lịch thi). Mục 9 dành cho bài toán B (lịch phòng học/phòng máy theo tuần); bài toán B dùng lại các quy ước chung của bài toán A và không thay đổi những gì đã quy định cho A.
 
 Mọi ký hiệu toán học ($\kappa_r$, $L_c$, ...) tham chiếu đến `docs/model_spec.md`.
 
@@ -586,11 +586,268 @@ Các lượt được ghép theo từng môn: trước hết ghép lượt cùng
 - Không cho phép cấu hình giờ của từng ca, vì khung giờ đã chốt trong scope mục 4.2.
 - Không quy định cách lưu lịch sử nhiều lần chạy; mỗi lần chạy ghi đè `output/<tên bộ dữ liệu>/schedule.json`. Phần thực nghiệm tự đặt tên file kết quả riêng.
 
-## 9. Sẽ bổ sung cho bài toán B
+## 9. Bài toán B: lịch phòng học/phòng máy theo tuần
 
-Dự kiến thêm, không thay đổi những gì đã có ở trên:
+Mục này quy định dữ liệu của bài toán B (spec mục B). Mọi quy ước chung ở mục 2 (mã hóa, dấu phân cách, ID, ô trống...) và cách báo thông báo ở mục 5 giữ nguyên. Những gì đã quy định cho bài toán A không thay đổi.
 
-- File lớp học phần cho bài toán B: số buổi mỗi tuần, sĩ số, cần phòng máy hay không, giảng viên phụ trách, khóa và ngành, có phải môn bắt buộc không.
-- File nguyện vọng giờ dạy của giảng viên (B-S2).
-- Lịch tuần của bài toán B dùng lại khung 4 ca/ngày nhưng theo thứ trong tuần thay vì ngày cụ thể.
-- Thêm `problem: "B"` trong `meta` và các khóa trọng số `B-S1` đến `B-S4` trong cấu hình.
+### 9.1. Tổ chức thư mục
+
+```
+data/
+└── <tên bộ dữ liệu>/          ví dụ: toy_b, medium_b, large_b
+    ├── week_slots.csv         bắt buộc
+    ├── rooms.csv              bắt buộc, cùng định dạng mục 3.2
+    ├── lecturers.csv          bắt buộc, cùng định dạng mục 3.5
+    ├── classes.csv            bắt buộc
+    ├── class_groups.csv       tùy chọn
+    ├── week_unavailability.csv  tùy chọn
+    └── preferences.csv        tùy chọn
+output/
+└── <tên bộ dữ liệu>/
+    └── timetable.json         kết quả xếp lịch học
+```
+
+Bộ đọc biết đang giải bài toán nào nhờ khóa `problem` trong cấu hình (mục 9.8), không đoán theo tên file. Vì tên file của hai bài toán không trùng nhau (trừ `rooms.csv` và `lecturers.csv` dùng chung), một thư mục có thể chứa cả dữ liệu A lẫn dữ liệu B; khi đó hai bài toán dùng chung danh sách phòng và giảng viên.
+
+### 9.2. `week_slots.csv`: các ca học dùng được trong tuần
+
+| Cột | Kiểu | Bắt buộc | Mô tả |
+|---|---|---|---|
+| `weekday` | Số nguyên 2–7 | Có | Thứ trong tuần: 2 là Thứ 2, ..., 7 là Thứ 7. Không có Chủ nhật |
+| `period` | Số nguyên 1–4 | Có | Ca trong ngày, theo khung giờ scope mục 4.2 |
+
+Khóa: cặp (`weekday`, `period`) không được lặp (lỗi D04). `weekday` ngoài 2–7 là lỗi D03.
+
+Ánh xạ sang mô hình: $T$ là tập các dòng; $W$ là tập các giá trị `weekday` khác nhau; $T_d$ là các dòng có `weekday` bằng $d$. Ca không dùng (ví dụ chiều Thứ 7 khoa không xếp lịch) chỉ đơn giản là không có dòng.
+
+```csv
+weekday,period
+2,1
+2,2
+2,3
+2,4
+7,1
+7,2
+```
+
+### 9.3. `rooms.csv` và `lecturers.csv`
+
+Cùng định dạng mục 3.2 và 3.5, có thể dùng chung file với bài toán A. Khác biệt khi đọc cho bài toán B:
+
+| File | Khác biệt |
+|---|---|
+| `rooms.csv` | Sức chứa khi học $\sigma_r$ là `seats` với phòng `normal`, `num_computers` với phòng `lab`. Cột `exam_capacity` và tỷ lệ `written_capacity_ratio` không dùng. Phòng `normal` thiếu `seats` là lỗi D08, kể cả khi có `exam_capacity`. Phòng có $\sigma_r = 0$ bị loại, cảnh báo P9 |
+| `lecturers.csv` | Cột `is_proctor` không dùng. Giảng viên không dạy lớp nào vẫn hợp lệ, chỉ không xuất hiện trong mô hình |
+
+### 9.4. `classes.csv`: lớp học phần
+
+Mỗi dòng là một lớp học phần. Lý thuyết và thực hành của cùng một học phần là hai dòng riêng (scope mục 4.4).
+
+| Cột | Kiểu | Bắt buộc | Mô tả |
+|---|---|---|---|
+| `class_id` | ID | Có | Mã lớp, duy nhất |
+| `class_name` | Chuỗi | Không | Tên hiển thị |
+| `course_id` | ID | Không | Mã học phần, chỉ để hiển thị và gom các lớp cùng học phần. Không bắt buộc có trong `courses.csv` |
+| `needs_lab` | `0` hoặc `1` | Có | `1` nếu lớp phải học phòng máy ($K^{M}$), `0` nếu học phòng thường ($K^{V}$) |
+| `size` | Số nguyên ≥ 1 | Có | Sĩ số dự kiến $n_k$ |
+| `sessions_per_week` | Số nguyên ≥ 1 | Có | Số buổi mỗi tuần $h_k$; mỗi buổi chiếm 1 ca |
+| `lecturer_id` | ID | Có | Giảng viên dạy lớp, phải có trong `lecturers.csv` (lỗi D05 nếu không) |
+
+| Trường hợp | Xử lý |
+|---|---|
+| `size` hoặc `sessions_per_week` ≤ 0 | Lỗi D03 |
+| Không phòng nào đúng loại và đủ chỗ | Lỗi PB1 |
+| `sessions_per_week` lớn hơn số ngày trong `week_slots.csv` | Thông tin PB6 |
+
+```csv
+class_id,class_name,course_id,needs_lab,size,sessions_per_week,lecturer_id
+INT2204-LT,Lập trình hướng đối tượng (lý thuyết),INT2204,0,80,2,GV01
+INT2204-TH1,Lập trình hướng đối tượng (thực hành 1),INT2204,1,30,1,GV04
+INT2204-TH2,Lập trình hướng đối tượng (thực hành 2),INT2204,1,30,1,GV04
+INT2211-LT,Cơ sở dữ liệu (lý thuyết),INT2211,0,60,2,GV02
+```
+
+### 9.5. `class_groups.csv`: lớp bắt buộc của từng nhóm sinh viên (tùy chọn)
+
+Mỗi dòng nói lớp `class_id` là lớp bắt buộc của nhóm `group_id`. Một lớp có thể bắt buộc với nhiều nhóm (ví dụ môn chung của hai ngành), một nhóm có nhiều lớp bắt buộc. Lớp không có dòng nào là lớp tự chọn.
+
+| Cột | Kiểu | Bắt buộc | Mô tả |
+|---|---|---|---|
+| `class_id` | ID | Có | Phải có trong `classes.csv` |
+| `group_id` | ID | Có | Mã nhóm, ghép khóa và ngành, ví dụ `K67-CN`. Nhóm đông phải tách lớp thì mỗi phần là một nhóm riêng, ví dụ `K67-CN1` (spec B.2) |
+
+Ánh xạ: $H$ là tập các `group_id`; $K_h$ là các `class_id` cùng `group_id` $h$. Không có file thì $H = \emptyset$ và B-H7 không có ràng buộc nào. Dòng lặp chỉ giữ một dòng, không báo.
+
+```csv
+class_id,group_id
+INT2204-LT,K67-CN1
+INT2204-LT,K67-CN2
+INT2204-TH1,K67-CN1
+INT2204-TH2,K67-CN2
+INT2211-LT,K67-CN1
+INT2211-LT,K67-CN2
+INT2211-LT,K67-KHMT
+```
+
+Ở ví dụ trên, khóa K67 ngành CN được tách làm hai nhóm K67-CN1 và K67-CN2 vì lớp thực hành chỉ chứa được một nửa. Hai nhóm học chung lớp lý thuyết INT2204-LT, mỗi nhóm học một lớp thực hành riêng. Kết quả: INT2204-TH1 và INT2204-TH2 được phép trùng ca với nhau (khác nhóm), nhưng không lớp nào được trùng ca với INT2204-LT hay INT2211-LT. INT2211-LT còn là lớp bắt buộc của ngành KHMT.
+
+Một khóa của một ngành chỉ dùng một cách chia nhóm: hoặc một nhóm `K67-CN`, hoặc các nhóm `K67-CN1`, `K67-CN2`, không dùng lẫn cả hai. Bộ đọc không tự suy ra quan hệ giữa các mã nhóm, nên bộ sinh dữ liệu phải ghi lớp chung cho từng nhóm như ví dụ.
+
+### 9.6. `week_unavailability.csv`: ca bận trong tuần (tùy chọn)
+
+Giống mục 3.7 nhưng theo thứ trong tuần thay vì ngày cụ thể. Ca bận lặp lại mọi tuần.
+
+| Cột | Kiểu | Bắt buộc | Mô tả |
+|---|---|---|---|
+| `resource_type` | `room` hoặc `lecturer` | Có | Loại đối tượng bận |
+| `resource_id` | ID | Có | `room_id` hoặc `lecturer_id` |
+| `weekday` | Số nguyên 2–7 | Có | Thứ bận |
+| `period` | Số nguyên 1–4 | Không | Ca bận. Để trống nghĩa là bận cả ngày |
+| `note` | Chuỗi | Không | Lý do, chỉ để hiển thị |
+
+Ánh xạ: dòng `room` tạo phần tử của $B^{R}_r$; dòng `lecturer` tạo phần tử của $B^{G}_g$. Các trường hợp đặc biệt xử lý như mục 3.7 (D05, D10, gộp dòng lặp).
+
+```csv
+resource_type,resource_id,weekday,period,note
+room,G2-LAB1,6,4,Bảo trì định kỳ
+lecturer,GV01,3,,Họp bộ môn
+```
+
+### 9.7. `preferences.csv`: ca giảng viên không muốn dạy (tùy chọn)
+
+Mỗi dòng là một ca giảng viên không muốn dạy (B-S2). Khác ca bận ở mục 9.6: ca bận là cấm tuyệt đối, ca không muốn dạy chỉ bị phạt khi xếp vào.
+
+| Cột | Kiểu | Bắt buộc | Mô tả |
+|---|---|---|---|
+| `lecturer_id` | ID | Có | Phải có trong `lecturers.csv` |
+| `weekday` | Số nguyên 2–7 | Có | Thứ |
+| `period` | Số nguyên 1–4 | Không | Ca. Để trống nghĩa là cả ngày |
+| `note` | Chuỗi | Không | Chỉ để hiển thị |
+
+Ánh xạ: tạo phần tử của $A_g$. Ca vừa có trong `preferences.csv` vừa bận trong `week_unavailability.csv` thì coi là bận, không báo. Ca không có trong `week_slots.csv` báo cảnh báo D10 và bị bỏ qua.
+
+Chỉ ghi nhận ca không muốn dạy, không ghi ca muốn dạy. Lý do: một danh sách "không muốn" đủ để viết thành điểm phạt tuyến tính; danh sách "muốn" chỉ là phần bù của nó.
+
+```csv
+lecturer_id,weekday,period,note
+GV01,7,,Không dạy Thứ 7
+GV02,2,1,
+```
+
+### 9.8. Cấu hình
+
+Thêm các khóa sau vào `config.json` (mục 6). Bài toán A bỏ qua các khóa của B và ngược lại.
+
+| Khóa | Kiểu | Mặc định | Mô tả |
+|---|---|---|---|
+| `problem` | `"A"` hoặc `"B"` | `"A"` | Bài toán cần giải |
+| `lab_reserve_ratio` | Số trong khoảng (0, 1] | `0.85` | $\rho$ của B-S4 |
+| `weights` | Đối tượng | | Thêm các khóa `B-S1` đến `B-S4`, mặc định `{"B-S1": 1, "B-S2": 50, "B-S3": 100, "B-S4": 30}` (spec B.6) |
+| `reschedule.weights` | Đối tượng | | Thêm `B-R1`, `B-R2`, mặc định `{"B-R1": 100, "B-R2": 20}` (spec B.9) |
+
+Với bài toán B, `strategy` luôn là `single`; cấu hình `two_phase` là lỗi D12. Các khóa `proctors_per_room`, `forbid_own_course`, `written_capacity_ratio`, `default_max_sittings_computer` không dùng.
+
+### 9.9. Bảng ánh xạ sang mô hình
+
+| Ký hiệu trong spec | Lấy từ |
+|---|---|
+| $T$, $W$, $T_d$ | `week_slots.csv` |
+| $R$, $R^{V}$, $R^{M}$, $\sigma_r$ | `rooms.csv`, theo mục 9.3 |
+| $K$, $K^{M}$, $K^{V}$, $n_k$, $h_k$, $g(k)$ | `classes.csv` |
+| $G$, $K_g$ | Các `lecturer_id` xuất hiện trong `classes.csv` |
+| $H$, $K_h$ | `class_groups.csv` |
+| $B^{R}_r$, $B^{G}_g$ | `week_unavailability.csv` |
+| $A_g$ | `preferences.csv` |
+| $\rho$, $\beta_1..\beta_4$, $\gamma_1, \gamma_2$ | `config.json` |
+
+### 9.10. Mã thông báo
+
+Dùng lại toàn bộ mã D, S, N, I ở mục 5 với cùng ý nghĩa; thông báo ghi đúng tên file của bài toán B. Mã P của bài toán A không dùng, trừ P9 (phòng có sức chứa 0). Thêm các mã kiểm tra trước khi giải của bài toán B:
+
+| Mã | Mức | Nội dung |
+|---|---|---|
+| PB1 | error | Lớp không có phòng nào đúng loại và đủ chỗ |
+| PB2 | error | Lớp có ít ca dùng được hơn số buổi mỗi tuần (sau khi trừ ca bận của giảng viên và của mọi phòng phù hợp) |
+| PB3 | error | Giảng viên dạy nhiều buổi hơn số ca rảnh trong tuần |
+| PB4 | error | Nhóm sinh viên có nhiều buổi bắt buộc hơn số ca trong tuần |
+| PB5 | error | Tổng số buổi cần phòng máy (hoặc phòng thường) lớn hơn tổng số cặp (phòng, ca) không bận của loại đó |
+| PB6 | info | Lớp có số buổi mỗi tuần lớn hơn số ngày học, B-S3 không thể bằng 0 |
+| PB7 | warning | Hệ số sử dụng phòng máy cả tuần lớn hơn `lab_reserve_ratio`, không thể chừa phòng máy dự phòng ở mọi ca |
+
+### 9.11. File kết quả `timetable.json`
+
+Cùng cấu trúc tổng thể với mục 7.1, thay `sittings` bằng `sessions`:
+
+```json
+{
+  "meta": {"problem": "B", "dataset": "toy_b", "created_at": "...", "solver": "OR-Tools CP-SAT 9.15",
+           "strategy": "single", "config": { ... }},
+  "status": "OPTIMAL",
+  "objective": 412,
+  "best_bound": 412,
+  "solve_time_sec": 1.2,
+  "penalties": {"B-S1": 262, "B-S2": 1, "B-S3": 0, "B-S4": 2},
+  "kpi": { ... },
+  "sessions": [ ... ],
+  "messages": [ ... ],
+  "violations": [ ... ]
+}
+```
+
+Các trường `status`, `objective`, `best_bound`, `solve_time_sec`, `messages`, `violations` có cùng ý nghĩa như mục 7.1. `penalties` có các khóa `B-S1` đến `B-S4`. Các con số ở ví dụ chỉ minh họa định dạng.
+
+Mỗi phần tử của `sessions` là một buổi học. Mảng sắp theo `weekday`, rồi `period`, rồi `room_id`.
+
+```json
+{
+  "session_id": "INT2204-LT@T2_1",
+  "class_id": "INT2204-LT",
+  "class_name": "Lập trình hướng đối tượng (lý thuyết)",
+  "course_id": "INT2204",
+  "needs_lab": false,
+  "weekday": 2,
+  "period": 1,
+  "start_time": "07:00",
+  "end_time": "09:30",
+  "room_id": "G2-101",
+  "room_capacity": 90,
+  "size": 80,
+  "lecturer_id": "GV01",
+  "groups": ["K67-CN1", "K67-CN2"]
+}
+```
+
+| Trường | Mô tả |
+|---|---|
+| `session_id` | `<class_id>@T<weekday>_<period>`. Duy nhất vì một lớp không có hai buổi cùng ca |
+| `room_capacity` | $\sigma_r$ |
+| `groups` | Các nhóm có lớp này là lớp bắt buộc, sắp tăng dần. Mảng rỗng với lớp tự chọn |
+
+`kpi` của bài toán B:
+
+| Khóa | Định nghĩa |
+|---|---|
+| `hard_violations` | Số phần tử trong `violations` |
+| `room_utilization_normal` | Số cặp (phòng thường, ca) đang dùng chia cho số cặp (phòng thường, ca) không bận. `null` nếu mẫu số bằng 0 |
+| `room_utilization_lab` | Như trên, cho phòng máy. Đây là hệ số sử dụng phòng máy cả tuần, so với mục tiêu 60–85% ở scope mục 7 |
+| `lab_peak_utilization` | Giá trị lớn nhất theo ca của (số phòng máy đang dùng / $m_t$), bỏ qua ca có $m_t = 0$ |
+| `slots_without_lab_reserve` | Số ca có $v_t > 0$, tức không còn phòng máy dự phòng theo ngưỡng $\rho$ |
+| `seat_fill_rate` | Tổng sĩ số chia cho tổng sức chứa, tính trên mọi buổi. `null` nếu không có buổi nào |
+| `preference_violations` | Số buổi xếp vào ca giảng viên không muốn dạy, bằng $P^{B}_2$ |
+| `classes_same_day` | Số lớp có ít nhất một ngày học từ 2 buổi trở lên |
+| `group_max_sessions_per_day` | Số buổi bắt buộc nhiều nhất của một nhóm trong một ngày. `null` nếu không có nhóm |
+| `solve_time_sec` | Bằng `solve_time_sec` ở cấp trên |
+
+`violations` có cùng dạng mục 7.5, `code` là mã B-H1 đến B-H7, `refs` chứa `class_id`, `room_id`, `lecturer_id`, `group_id` hoặc `session_ids` tùy vi phạm.
+
+Kết quả xếp lại khi có sự cố (spec B.9) ghi vào `output/<tên bộ dữ liệu>/retimetable.json`, theo cùng quy tắc mục 7.6, với các khác biệt: sự cố dùng `weekday` thay cho `date`; `change_penalties` có khóa `B-R1`, `B-R2`; `summary` gồm `sessions_moved`, `sessions_room_changed`, `sessions_added`, `classes_affected`, `lecturers_affected`; mỗi phần tử của `changes` là một buổi bị đổi, `kinds` là `time`, `rooms` hoặc `added`.
+
+### 9.12. Bộ dữ liệu
+
+| Bộ | Lớp | Phòng (phòng máy) | Nhóm | Mục đích |
+|---|---|---|---|---|
+| `toy_b` | khoảng 8 | 3 (1) | 2–3 | Kiểm thử, có đáp án tham chiếu (spec B.12) |
+| `medium_b` | khoảng 60 | 10 (3) | khoảng 8 | Demo |
+| `large_b` | khoảng 120 | 15 (4) | khoảng 16 | Đo thời gian giải |
+
+Phòng và giảng viên dùng chung với `toy`, `medium`, `large` của bài toán A để đúng tinh thần "dùng lại dữ liệu của A" (scope mục 1). Số lớp được ước lượng từ số học phần ở scope mục 3: mỗi học phần một lớp lý thuyết, học phần có thực hành thêm 1–2 lớp thực hành.

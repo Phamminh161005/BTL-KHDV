@@ -2,7 +2,7 @@
 
 Tài liệu này viết các quy tắc trong `docs/scope.md` thành mô hình quy hoạch nguyên tuyến tính (ILP). Code solver, validator và chương mô hình trong báo cáo đều phải bám đúng tài liệu này. Mỗi ràng buộc mang đúng mã đã đặt trong scope (A-H1, A-S1, ...).
 
-Phiên bản hiện tại mới có bài toán A (lịch thi). Bài toán B (lịch phòng học/phòng máy) sẽ được bổ sung ở phiên bản sau, theo cùng cách trình bày.
+Tài liệu gồm hai phần: bài toán A (lịch thi) và bài toán B (lịch phòng học/phòng máy theo tuần). Bài toán B trình bày theo cùng cách với bài toán A và dùng lại các quy ước của A khi có thể.
 
 
 ---
@@ -631,4 +631,296 @@ Hai dòng `medium` ở bảng trên được đo trước khi có bước 1. K�
 
 ## B. Bài toán lịch phòng học/phòng máy
 
-Sẽ bổ sung ở phiên bản sau.
+### B.1. Ý tưởng chính
+
+Mô hình trả lời một câu hỏi: mỗi buổi học của mỗi lớp học phần diễn ra ở ca nào trong tuần, tại phòng nào.
+
+So với bài toán A, bài toán B đơn giản hơn nhiều:
+
+- Không có sinh viên cụ thể. Lịch học được xếp trước khi sinh viên đăng ký, nên trùng lịch được kiểm tra theo nhóm sinh viên (khóa và ngành), không theo từng người (scope mục 4.4).
+- Không có giám thị. Giảng viên của mỗi lớp đã biết trước, mô hình chỉ cần đảm bảo giảng viên không dạy hai nơi cùng lúc.
+- Mỗi buổi chiếm đúng 1 ca và 1 phòng. Không có buổi 2 ca, không chia lớp ra nhiều phòng.
+
+Vì vậy chỉ cần một nhóm biến chính: lớp $k$ có học ở phòng $r$, ca $t$ hay không. Các buổi của cùng một lớp không được đánh số "buổi 1, buổi 2" mà chỉ hỏi "lớp có học ở ca $t$ hay không", cùng lý do như A.1: không sinh ra lời giải đối xứng.
+
+Phần dùng lại từ bài toán A: khung 4 ca/ngày (scope mục 4.2), file phòng và file giảng viên, cách trình bày mô hình, trạng thái lời giải, cách báo lỗi, validator độc lập, chẩn đoán khi vô nghiệm và cách xếp lại khi có sự cố.
+
+### B.2. Tập hợp và chỉ số
+
+| Ký hiệu | Ý nghĩa |
+|---|---|
+| $W$ | Tập ngày học trong tuần (Thứ 2 đến Thứ 7), chỉ số $d$ |
+| $T$ | Tập các ca học dùng được trong tuần, chỉ số $t$. Tối đa 6 × 4 = 24 ca |
+| $T_d \subseteq T$ | Các ca thuộc ngày $d$ |
+| $K$ | Tập lớp học phần, chỉ số $k$. Lớp lý thuyết và lớp thực hành của cùng một học phần là hai lớp khác nhau |
+| $K^{M}, K^{V}$ | Lớp cần phòng máy, lớp học phòng thường. $K = K^{M} \cup K^{V}$, hai tập không giao nhau |
+| $R$ | Tập phòng, chỉ số $r$ |
+| $R^{V}, R^{M}$ | Phòng thường, phòng máy, như bài toán A |
+| $R_k$ | Phòng phù hợp với lớp $k$: đúng loại và đủ chỗ (xem B.3) |
+| $G$ | Tập giảng viên có ít nhất một lớp, chỉ số $g$ |
+| $K_g \subseteq K$ | Các lớp do giảng viên $g$ dạy |
+| $H$ | Tập nhóm sinh viên, chỉ số $h$. Mỗi nhóm là một khóa của một ngành, ví dụ K67 ngành Công nghệ thông tin |
+| $K_h \subseteq K$ | Các lớp bắt buộc của nhóm $h$ |
+
+Một nhóm sinh viên học chung mọi lớp bắt buộc của mình. Nếu một khóa của một ngành đông đến mức phải tách thành nhiều lớp song song, mỗi phần tách ra là một nhóm riêng (ví dụ K67-CN1 và K67-CN2), và mỗi nhóm được gắn với lớp song song mà nhóm đó học.
+
+### B.3. Tham số
+
+| Ký hiệu | Ý nghĩa | Ghi chú |
+|---|---|---|
+| $n_k$ | Sĩ số dự kiến của lớp $k$ | Số nguyên $\ge 1$ |
+| $h_k$ | Số buổi mỗi tuần của lớp $k$ | Số nguyên $\ge 1$ |
+| $g(k)$ | Giảng viên dạy lớp $k$ | Mỗi lớp đúng một giảng viên |
+| $\sigma_r$ | Sức chứa khi học của phòng $r$ | Số ghế với phòng thường, số máy đang hoạt động với phòng máy. Khác $\kappa_r$ của bài toán A: khi học không cần ngồi giãn cách |
+| $B^{R}_r \subseteq T$ | Các ca trong tuần phòng $r$ bận (bảo trì, sự kiện định kỳ) | |
+| $B^{G}_g \subseteq T$ | Các ca trong tuần giảng viên $g$ bận | |
+| $A_g \subseteq T$ | Các ca giảng viên $g$ không muốn dạy | Nguyện vọng, dùng cho B-S2. Khác $B^{G}_g$: ca bận là cấm, ca không muốn chỉ bị phạt |
+| $\rho$ | Ngưỡng sử dụng phòng máy | Mặc định 0,85 (B-S4) |
+| $\beta_1, \dots, \beta_4$ | Trọng số các ràng buộc mềm | Số nguyên, xem B.6 |
+
+Từ các tham số trên, định nghĩa các tập dẫn xuất:
+
+- Phòng phù hợp với lớp $k$, gồm cả B-H3 (đủ chỗ) và B-H4 (đúng loại):
+
+$$
+R_k =
+\begin{cases}
+\{\, r \in R^{M} : \sigma_r \ge n_k \,\} & \text{nếu } k \in K^{M} \\
+\{\, r \in R^{V} : \sigma_r \ge n_k \,\} & \text{nếu } k \in K^{V}
+\end{cases}
+$$
+
+- Ca lớp $k$ có thể học ở phòng $r$, gồm B-H5 (ca bận của giảng viên) và B-H6 (ca bận của phòng):
+
+$$
+T_{k,r} = T \setminus \big( B^{R}_r \cup B^{G}_{g(k)} \big)
+$$
+
+- Số phòng máy dùng được ở ca $t$, và số phòng máy tối đa nên dùng ở ca đó:
+
+$$
+m_t = \big\lvert \{\, r \in R^{M} : t \notin B^{R}_r \,\} \big\rvert, \qquad \bar{m}_t = \lfloor \rho \, m_t \rfloor
+$$
+
+Lớp học phòng thường không được xếp vào phòng máy, dù phòng máy còn trống. Lý do: phòng máy là nguồn lực khan hiếm, có kỹ thuật viên phụ trách và cần thời gian bảo trì (scope mục 2). Nếu nhóm muốn cho phép, chỉ cần đổi định nghĩa $R_k$ của $K^{V}$ thành $R^{V} \cup R^{M}$; các công thức còn lại giữ nguyên.
+
+### B.4. Biến quyết định
+
+| Biến | Miền | Ý nghĩa |
+|---|---|---|
+| $y_{k,r,t}$ | $\{0,1\}$, với $k \in K,\ r \in R_k,\ t \in T_{k,r}$ | Bằng 1 nếu lớp $k$ có một buổi học ở phòng $r$, ca $t$ |
+| $e_{k,d}$ | Số nguyên $\ge 0$ | Biến phụ cho B-S3 |
+| $v_t$ | Số nguyên $\ge 0$ | Biến phụ cho B-S4 |
+
+Biến $y$ chỉ được tạo với phòng phù hợp và ca không bận. Vì vậy B-H3, B-H4, B-H6 và phần "không xếp vào ca bận" của B-H5 được đảm bảo ngay từ cách khai báo biến.
+
+Biểu thức dùng để viết gọn:
+
+- Lớp $k$ có học ở ca $t$ hay không:
+
+$$
+z_{k,t} = \sum_{r \in R_k : t \in T_{k,r}} y_{k,r,t}
+$$
+
+- Số phòng máy đang dùng ở ca $t$:
+
+$$
+M_t = \sum_{k \in K^{M}} \ \sum_{r \in R_k : t \in T_{k,r}} y_{k,r,t}
+$$
+
+### B.5. Ràng buộc cứng
+
+#### B-H1. Đủ số buổi mỗi tuần
+
+$$
+\sum_{r \in R_k} \ \sum_{t \in T_{k,r}} y_{k,r,t} = h_k \qquad \forall k \in K
+$$
+
+#### B-H2. Mỗi phòng, mỗi ca tối đa một lớp
+
+$$
+\sum_{k \in K : r \in R_k,\ t \in T_{k,r}} y_{k,r,t} \le 1 \qquad \forall r \in R,\ t \in T
+$$
+
+#### B-H3. Đủ chỗ, và B-H4. Lớp thực hành vào phòng máy
+
+Đảm bảo bằng miền của biến $y$: $y_{k,r,t}$ chỉ tồn tại khi $r \in R_k$, tức phòng đúng loại và $\sigma_r \ge n_k$.
+
+#### B-H5. Giảng viên không dạy hai lớp cùng ca, không dạy vào ca bận
+
+$$
+\sum_{k \in K_g} z_{k,t} \le 1 \qquad \forall g \in G,\ t \in T
+$$
+
+Phần ca bận được đảm bảo bằng miền của biến: $T_{k,r}$ đã loại $B^{G}_{g(k)}$.
+
+Vì mỗi lớp chỉ có một giảng viên, ràng buộc này cũng suy ra $z_{k,t} \le 1$: một lớp không có hai buổi cùng ca ở hai phòng khác nhau. Không cần viết riêng ràng buộc đó.
+
+#### B-H6. Không xếp vào ca phòng đã báo bận
+
+Đảm bảo bằng miền của biến: $T_{k,r}$ đã loại $B^{R}_r$.
+
+#### B-H7. Các lớp bắt buộc của cùng một nhóm không trùng ca
+
+$$
+\sum_{k \in K_h} z_{k,t} \le 1 \qquad \forall h \in H,\ t \in T
+$$
+
+Chỉ áp dụng cho lớp bắt buộc. Lớp tự chọn không gắn với nhóm nào nên có thể trùng ca với lớp bắt buộc; sinh viên chọn lớp tự chọn sau khi đã có lịch.
+
+### B.6. Ràng buộc mềm và hàm mục tiêu
+
+#### B-S1. Lãng phí chỗ
+
+Số chỗ trống của mỗi buổi học:
+
+$$
+P^{B}_1 = \sum_{k \in K} \ \sum_{r \in R_k} \ \sum_{t \in T_{k,r}} (\sigma_r - n_k) \, y_{k,r,t}
+$$
+
+Hệ số $\sigma_r - n_k \ge 0$ nhờ định nghĩa $R_k$, và là hằng số, nên không cần biến phụ.
+
+#### B-S2. Tôn trọng nguyện vọng giờ dạy của giảng viên
+
+Số buổi xếp vào ca giảng viên không muốn dạy:
+
+$$
+P^{B}_2 = \sum_{k \in K} \ \sum_{t \in A_{g(k)}} z_{k,t}
+$$
+
+#### B-S3. Các buổi của cùng một lớp không nằm cùng ngày
+
+$$
+e_{k,d} \ge \sum_{t \in T_d} z_{k,t} - 1, \quad e_{k,d} \ge 0 \qquad \forall k \in K,\ d \in W
+$$
+
+$$
+P^{B}_3 = \sum_{k \in K} \sum_{d \in W} e_{k,d}
+$$
+
+$e_{k,d}$ là số buổi "thừa" của lớp $k$ trong ngày $d$, cách đếm giống A-S1. Lớp có $h_k$ lớn hơn số ngày học được bắt buộc phải có ít nhất $h_k - \lvert W \rvert$ buổi thừa. Phần này là hằng số với mọi lời giải nên không ảnh hưởng đến việc chọn lịch; bước kiểm tra trước báo thông tin PB6 (B.7).
+
+#### B-S4. Giữ hệ số sử dụng phòng máy không quá $\rho$
+
+Ở mỗi ca, số phòng máy đang dùng không nên vượt $\bar{m}_t = \lfloor \rho \, m_t \rfloor$:
+
+$$
+v_t \ge M_t - \bar{m}_t, \quad v_t \ge 0 \qquad \forall t \in T
+$$
+
+$$
+P^{B}_4 = \sum_{t \in T} v_t
+$$
+
+Ràng buộc được tính theo từng ca, không theo tổng cả tuần. Lý do: tổng số buổi cần phòng máy trong tuần $\sum_{k \in K^{M}} h_k$ đã cố định theo dữ liệu, nên hệ số sử dụng tính trên cả tuần là hằng số, mô hình không thay đổi được. Điều mô hình thay đổi được là dàn đều các buổi thực hành sang các ca khác nhau, để ca nào cũng còn phòng máy trống. Đó cũng là ý nghĩa "dự phòng" trong scope: khi một phòng máy hỏng ở ca $t$, lớp của phòng đó có thể chuyển sang phòng máy còn trống ngay trong ca $t$ mà không phải dời giờ (B.9).
+
+Ví dụ: có 4 phòng máy thì $\bar{m}_t = \lfloor 3{,}4 \rfloor = 3$, tức mỗi ca nên chừa ít nhất 1 phòng máy. Có 1 phòng máy thì $\bar{m}_t = 0$, mọi buổi thực hành đều bị phạt; vì số buổi thực hành cố định nên phần phạt này là hằng số.
+
+Hệ số sử dụng tính trên cả tuần vẫn được báo trong KPI, và được kiểm tra trước khi giải (PB7 ở B.7).
+
+#### Hàm mục tiêu
+
+$$
+\min \ Z^{B} = \beta_1 P^{B}_1 + \beta_2 P^{B}_2 + \beta_3 P^{B}_3 + \beta_4 P^{B}_4
+$$
+
+Trọng số mặc định, số nguyên:
+
+| Trọng số | Giá trị | Đơn vị của $P^{B}_k$ | Lý do |
+|---|---|---|---|
+| $\beta_1$ (B-S1) | 1 | Chỗ trống × buổi | Đơn vị nhỏ nhất, dùng làm mốc, như A-S4 |
+| $\beta_2$ (B-S2) | 50 | Buổi vào ca giảng viên không muốn dạy | Chỉ chấp nhận khi đổi lại tiết kiệm được ít nhất 50 chỗ trống |
+| $\beta_3$ (B-S3) | 100 | Buổi thừa trong ngày của một lớp | Ảnh hưởng tới cả lớp sinh viên và giảng viên, nên nặng hơn B-S2 |
+| $\beta_4$ (B-S4) | 30 | Phòng máy dùng vượt ngưỡng ở một ca | Mất dự phòng ở một ca, ngang 30 chỗ trống |
+
+Cách đọc: xếp hai buổi của một lớp vào cùng ngày (tốn 100) chỉ đáng khi tránh được hai buổi dạy vào ca giảng viên không muốn (2 × 50). Các trọng số này là điểm khởi đầu; phần thực nghiệm phân tích độ nhạy như bài toán A.
+
+### B.7. Kiểm tra dữ liệu trước khi giải
+
+Các kiểm tra sau chạy trước khi dựng mô hình. Mã PB để không nhầm với mã P của bài toán A.
+
+| Mã | Điều kiện | Mức độ |
+|---|---|---|
+| PB1 | Có lớp $R_k = \emptyset$: không phòng nào đúng loại và đủ chỗ | Lỗi, dừng |
+| PB2 | Có lớp có ít hơn $h_k$ ca dùng được, tức $\lvert \bigcup_{r \in R_k} T_{k,r} \rvert < h_k$ | Lỗi, dừng |
+| PB3 | Có giảng viên dạy nhiều buổi hơn số ca rảnh: $\sum_{k \in K_g} h_k > \lvert T \setminus B^{G}_g \rvert$ | Lỗi, dừng |
+| PB4 | Có nhóm có nhiều buổi bắt buộc hơn số ca: $\sum_{k \in K_h} h_k > \lvert T \rvert$ | Lỗi, dừng |
+| PB5 | Tổng số buổi cần phòng máy lớn hơn tổng số (phòng máy, ca) không bận; tương tự với phòng thường | Lỗi, dừng |
+| PB6 | Có lớp $h_k > \lvert W \rvert$ | Thông tin: B-S3 không thể bằng 0 với lớp này |
+| PB7 | Hệ số sử dụng phòng máy cả tuần, $\sum_{k \in K^{M}} h_k \big/ \sum_{t \in T} m_t$, lớn hơn $\rho$ | Cảnh báo: không thể chừa phòng máy dự phòng ở mọi ca, $P^{B}_4$ chắc chắn lớn hơn 0 |
+
+Cũng như A.8, các kiểm tra này là điều kiện cần, chưa phải điều kiện đủ. Khi CP-SAT trả về `INFEASIBLE`, chạy chẩn đoán với ba nhóm ràng buộc được thử bỏ:
+
+| Nhóm | Ràng buộc bị bỏ | Nếu bỏ nhóm này mà có lịch, nghĩa là |
+|---|---|---|
+| Giảng viên | B-H5, kể cả ca bận của giảng viên | Giảng viên dạy quá nhiều lớp hoặc bận quá nhiều ca |
+| Nhóm sinh viên | B-H7 | Một nhóm có quá nhiều lớp bắt buộc so với số ca, khi tính cả các ràng buộc khác |
+| Phòng bận | B-H6 | Phòng bận quá nhiều ca |
+
+Thông báo dùng lại mã N01–N05 như bài toán A.
+
+### B.8. Chiến lược giải và hậu xử lý
+
+Giải toàn bộ mô hình một lần bằng CP-SAT, cùng giới hạn thời gian và cùng bốn trạng thái như A.7. Không cần chiến lược hai pha vì mô hình nhỏ. Ước lượng giới hạn trên của số biến $y$, với 24 ca:
+
+| Bộ dữ liệu | Lớp | Phòng | Biến $y$ (xấp xỉ, trước khi lọc theo loại và sức chứa) |
+|---|---|---|---|
+| `toy` | 8 | 3 | 600 |
+| `medium` | 60 | 10 | 14 nghìn |
+| `large` | 120 | 15 | 43 nghìn |
+
+Số biến thật nhỏ hơn nhiều, vì mỗi lớp chỉ có biến với phòng đúng loại và đủ chỗ. Ví dụ lớp thực hành chỉ có biến với 3–4 phòng máy.
+
+Hậu xử lý đơn giản hơn A.10, vì không có sinh viên cụ thể và không có giám thị:
+
+1. Mỗi biến $y_{k,r,t} = 1$ thành một buổi học trong file kết quả (data_schema mục 9).
+2. Tính KPI.
+3. Chạy validator độc lập: kiểm tra lại B-H1 đến B-H7 trên lịch cuối cùng, báo vi phạm theo mã.
+
+### B.9. Xếp lại khi có sự cố
+
+Dùng cùng cách tiếp cận như A.14. Có hai loại sự cố:
+
+- Phòng hoặc giảng viên bận thêm một ca hoặc cả một ngày trong tuần, có dạng một dòng của file ca bận tuần. Sự cố được thêm vào $B^{R}_r$ hoặc $B^{G}_g$.
+- Thêm lớp mới, đúng mục "thêm lớp → xếp lại" trong scope mục 5. Lớp mới có trong dữ liệu nhưng không có trong lịch cũ.
+
+Gọi $\bar{Y}$ là tập các bộ $(k, r, t)$ có $y_{k,r,t} = 1$ trong lịch cũ, và $\bar{T}_k$ là tập ca học cũ của lớp $k$. Biến không còn tồn tại được coi là bằng 0.
+
+| Mã | Đếm | Công thức |
+|---|---|---|
+| B-R1 | Buổi học cũ bị dời sang ca khác | $R^{B}_1 = \sum_{k} \sum_{t \in \bar{T}_k} (1 - z_{k,t})$ |
+| B-R2 | Buổi học cũ giữ ca nhưng đổi phòng | $R^{B}_2 = \sum_{(k,r,t) \in \bar{Y}} (z_{k,t} - y_{k,r,t})$ |
+
+Mỗi số hạng của $R^{B}_2$ bằng 0 hoặc 1 vì $y_{k,r,t} \le z_{k,t} \le 1$. Buổi bị dời ca đã tính ở B-R1 nên không bị tính thêm ở B-R2. Lớp mới không có buổi cũ nên không bị phạt thay đổi.
+
+Hàm mục tiêu khi xếp lại là $Z^{B} + \gamma_1 R^{B}_1 + \gamma_2 R^{B}_2$, mặc định $\gamma_1 = 100$, $\gamma_2 = 20$. Dời ca phải báo cho cả lớp và giảng viên, có thể làm trùng với lịch khác của sinh viên; đổi phòng chỉ cần báo địa điểm mới.
+
+Cách giải giống A.14: bước 1 chỉ mở lại các lớp có buổi không còn hợp lệ (và lớp mới), các lớp khác cố định như lịch cũ; nếu không có lời giải thì mở rộng sang các lớp cùng ngày, rồi toàn bộ lịch. Bước 2 giải trên toàn lịch với gợi ý từ bước 1 và chỉ dùng khi tốt hơn. Nhờ B-S4, thường có phòng máy trống ngay trong ca bị ảnh hưởng nên lớp chỉ phải đổi phòng.
+
+### B.10. Đối chiếu với 10 quy tắc lập mô hình của Daskin
+
+| Quy tắc | Áp dụng trong mô hình |
+|---|---|
+| 1. Định nghĩa rõ mọi tập hợp bằng lời | Bảng B.2 |
+| 2. Tách bạch tập hợp, đầu vào, biến quyết định | Ba bảng riêng B.2, B.3, B.4 |
+| 3. Có chỉ số trong ký hiệu thì có trong lời định nghĩa | Mọi ký hiệu có chỉ số đều nêu chỉ số trong cột ý nghĩa |
+| 4. Không để chỉ số lơ lửng trong hàm mục tiêu | Mọi chỉ số trong $P^{B}_1, \dots, P^{B}_4$ đều nằm dưới một dấu tổng |
+| 5. Mục tiêu và mỗi ràng buộc chứa biến quyết định | Đã kiểm tra từng công thức |
+| 6. Mọi nhóm biến phải liên kết với nhau | $e$ và $v$ nối với $y$ qua $z_{k,t}$ và $M_t$ |
+| 7. Mỗi chỉ số hoặc lấy tổng hoặc "với mọi", không cả hai | Đã kiểm tra từng công thức |
+| 8. Giữ mô hình tuyến tính | Mọi ràng buộc tuyến tính; hệ số chỗ trống $\sigma_r - n_k$ là hằng số |
+| 9. Tránh big-M | Không dùng |
+| 10. Tách nhỏ ràng buộc | B-H5 và B-H7 viết cho từng (giảng viên hoặc nhóm, ca) thay vì gộp theo ngày |
+
+### B.11. Những điều mô hình cố ý không xét
+
+- Không kiểm tra trùng lịch theo từng sinh viên, và không xét lớp tự chọn trùng ca với lớp bắt buộc (scope mục 4.4).
+- Không bắt các buổi của một lớp học cùng một phòng. Lớp có thể học các buổi khác nhau ở các phòng khác nhau, miễn đúng loại và đủ chỗ.
+- Không xét buổi học dài hơn 1 ca. Lớp thực hành cần 2 ca liền nhau được khai báo bằng 2 buổi; mô hình có thể xếp hai buổi này ở hai ngày khác nhau.
+- Không giới hạn số buổi dạy của một giảng viên trong một ngày.
+- Không xét thời gian di chuyển giữa các tòa nhà của sinh viên và giảng viên.
+- Lịch tuần lặp lại giống nhau cả học kỳ; không xét tuần nghỉ lễ hay tuần thi giữa kỳ.
+
+### B.12. Kiểm chứng đặc tả
+
+Chưa làm. Khi có bộ dữ liệu `toy_b` (data_schema mục 9), sẽ kiểm chứng giống A.13: một bản cài đặt thử theo đúng các công thức B.4 đến B.6, một bộ kiểm tra viết độc lập, các kịch bản vô nghiệm cho từng mã PB, và các lời giải cố ý làm hỏng để bộ kiểm tra phải phát hiện. Giá trị mục tiêu tối ưu trên `toy_b` sẽ được ghi ở đây làm đáp án tham chiếu cho kiểm thử, như 2391 của bài toán A.
