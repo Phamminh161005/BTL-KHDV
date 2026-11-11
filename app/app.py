@@ -853,6 +853,14 @@ RESULT_COLUMNS = {
     "sensitivity.csv": "experiment,parameter,value,dataset,strategy,seed,status,objective,A-S1,A-S2,A-S3,A-S4,A-S5,A-S6,students_multi_exam_day,avg_gap_days,proctor_load_range,num_sittings,seat_fill_rate,solve_time_sec,sittings_moved,students_affected,change_cost,A-R1,A-R2,A-R3,A-R4".split(","),
 }
 PENALTY_COLUMNS = ["A-S1", "A-S2", "A-S3", "A-S4", "A-S5", "A-S6"]
+WEIGHT_KPI_LABELS = {
+    "students_multi_exam_day": "SV thi từ 2 môn trong một ngày",
+    "avg_gap_days": "Khoảng cách trung bình giữa hai môn (ngày)",
+    "proctor_load_range": "Chênh lệch số buổi coi thi",
+    "num_sittings": "Số ca thi",
+    "seat_fill_rate": "Tỷ lệ lấp chỗ",
+    "solve_time_sec": "Thời gian giải (giây)",
+}
 # Các thí nghiệm độ nhạy không có biểu đồ riêng: hiện bảng với những cột có ý nghĩa cho từng thí nghiệm.
 OTHER_EXPERIMENTS = {
     "noise": ("Nhiễu theo seed (cùng trọng số mặc định)", ["seed", "status", "objective", *PENALTY_COLUMNS, "solve_time_sec"]),
@@ -899,6 +907,13 @@ def _experiment_table(rows, columns, filename, key):
     _csv_download(rows, columns, filename, key)
 
 
+def _hit_time_limit(row):
+    """Lời giải FEASIBLE mà thời gian giải đạt ít nhất 75% giới hạn: solver dừng vì hết giờ. Ngưỡng 75% để tính cả
+    two_phase, vốn dừng ở khoảng 80% giới hạn (pha 1 dùng tối đa 80% thời gian)."""
+    time, limit = _number(row, "solve_time_sec"), _number(row, "time_limit_sec")
+    return row["status"].upper() == "FEASIBLE" and None not in (time, limit) and time >= 0.75 * limit
+
+
 def _perf_results():
     st.subheader("Hiệu năng giải lịch")
     rows = _read_experiment("perf.csv")
@@ -911,7 +926,7 @@ def _perf_results():
     selected = st.selectbox("Bộ dữ liệu hiệu năng", ["Tất cả"] + datasets, key="perf_dataset")
     rows = [row for row in rows if selected == "Tất cả" or row["dataset"] == selected]
     try:
-        groups = {}
+        groups, timed_out = {}, set()
         for row in rows:
             if row["status"].upper() not in ("OPTIMAL", "FEASIBLE"):
                 continue
@@ -919,11 +934,17 @@ def _perf_results():
             if time is not None:
                 key = (row["dataset"], row["solver"], row["strategy"])
                 groups.setdefault(key, []).append(time)
+                if _hit_time_limit(row):
+                    timed_out.add(key)
         chart = [{"Bộ dữ liệu": ds, "Cách giải": f"{solver} / {strategy}",
                   "Giây (trung bình seed)": statistics.mean(times)}
                  for (ds, solver, strategy), times in sorted(groups.items())]
         if chart:
             st.bar_chart(chart, x="Bộ dữ liệu", y="Giây (trung bình seed)", color="Cách giải")
+            if timed_out:
+                names = ", ".join(f"{ds} {solver}/{strategy}" for ds, solver, strategy in sorted(timed_out))
+                st.caption(f"Chạm giới hạn thời gian (dừng vì hết giờ, không phải giải xong): {names}. "
+                           "two_phase dừng ở khoảng 80% giới hạn vì pha 1 dùng tối đa 80% thời gian.")
         else:
             st.info("Không có thời gian giải hợp lệ để vẽ biểu đồ.")
         columns = ["dataset", "solver", "strategy", "seed", "time_limit_sec", "status", "objective",
@@ -1031,12 +1052,19 @@ def _weight_charts(rows):
     if plotted and all(row["Hệ số nhân"] is not None for row in plotted):
         st.caption("Điểm phạt (chưa nhân trọng số)" + ("; hệ số 1 lấy từ thí nghiệm noise seed 0" if baseline else ""))
         st.line_chart(plotted, x="Hệ số nhân", y=PENALTY_COLUMNS)
-        st.caption("Các KPI theo hệ số nhân")
-        st.line_chart(plotted, x="Hệ số nhân", y=kpis)
-        st.caption("Thời gian giải (giây)")
-        st.line_chart(plotted, x="Hệ số nhân", y="solve_time_sec")
+        # Mỗi KPI một biểu đồ nhỏ: các KPI có thang đo rất khác nhau (số ca ~30, tỷ lệ lấp chỗ ~0,8).
+        st.caption("Các KPI theo hệ số nhân (mỗi KPI một thang đo riêng)")
+        grid = st.columns(3)
+        for index, column in enumerate(kpis + ["solve_time_sec"]):
+            with grid[index % 3]:
+                st.caption(WEIGHT_KPI_LABELS[column])
+                st.line_chart(plotted, x="Hệ số nhân", y=column, height=180)
     table = sorted(chosen + baseline, key=lambda row: _number(row, "value") or 0.0)
-    _experiment_table(table, RESULT_COLUMNS["sensitivity.csv"], "weight-hien-thi.csv", "download_weight")
+    st.caption("Bảng không có cột objective: với hệ số nhỏ hơn 1 các trọng số khác được nhân lên để giữ số nguyên "
+               "(experiments/sensitivity.py), nên Z giữa các dòng không so sánh trực tiếp được. "
+               "Hãy so điểm phạt A-S1 đến A-S6.")
+    _experiment_table(table, [c for c in RESULT_COLUMNS["sensitivity.csv"] if c != "objective"],
+                      "weight-hien-thi.csv", "download_weight")
 
 
 def _other_experiments(rows):

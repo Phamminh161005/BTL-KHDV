@@ -78,6 +78,28 @@ def test_experiments_real_results_render():
     assert not [w.value for w in app.warning if ".csv" in w.value]
 
 
+def test_experiments_time_limit_note_and_weight_table(tmp_path, monkeypatch):
+    monkeypatch.setenv("EXAM_APP_RESULTS_DIR", str(tmp_path))
+    _write_results(tmp_path, "perf.csv", [
+        {"dataset": "toy", "solver": "pulp", "strategy": "single", "seed": 0, "time_limit_sec": 300,
+         "status": "FEASIBLE", "solve_time_sec": 300.1, "objective": 2391},
+        {"dataset": "toy", "solver": "cp-sat", "strategy": "single", "seed": 0, "time_limit_sec": 300,
+         "status": "OPTIMAL", "solve_time_sec": 13, "objective": 2391}])
+    _write_results(tmp_path, "reschedule.csv", [])
+    _write_results(tmp_path, "sensitivity.csv", [
+        {"experiment": "weight", "dataset": "toy_gen", "parameter": "A-S1", "value": v, "seed": 0,
+         "objective": z, "A-S1": 0, "num_sittings": 30, "seat_fill_rate": 0.8, "solve_time_sec": 10}
+        for v, z in [(0.5, 7300), (2, 3650)]])
+    app = AppTest.from_file(str(APP), default_timeout=15).run()
+    assert not app.exception
+    notes = [c.value for c in app.caption if "Chạm giới hạn thời gian" in c.value]
+    assert len(notes) == 1 and "toy pulp/single" in notes[0] and "cp-sat" not in notes[0]
+    weight = next(f.value for f in app.dataframe if "A-S1" in f.value.columns and "seat_fill_rate" in f.value.columns)
+    assert "objective" not in weight.columns
+    # Biểu đồ thời gian giải + điểm phạt + 6 KPI (mỗi KPI một biểu đồ).
+    assert len(app.get("vega_lite_chart")) >= 8
+
+
 def test_experiments_tradeoff_seeds_quality_and_other(tmp_path, monkeypatch):
     monkeypatch.setenv("EXAM_APP_RESULTS_DIR", str(tmp_path))
     _write_results(tmp_path, "perf.csv", [])
