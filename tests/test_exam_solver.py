@@ -4,8 +4,9 @@
 tính bằng bản cài đặt thử của spec và xác nhận bằng validator độc lập (tests/reference/toy_schedule.json).
 Lịch tối ưu có thể khác nhau giữa các lần chạy, nhưng giá trị mục tiêu tối ưu là duy nhất.
 
-Các ca kiểm thử tự bỏ qua (skip) khi solver chưa được cài đặt.
+Yêu cầu các solver đã được cài đặt đầy đủ; lỗi triển khai phải làm test thất bại.
 """
+
 import os
 
 import pytest
@@ -20,60 +21,91 @@ REFERENCE_OBJECTIVE = 2391
 
 def _solve(strategy):
     from src.exam_solver import solve
-    loaded = load_instance(os.path.join(ROOT, "data", "toy"), os.path.join(ROOT, "configs", "default.json"))
+
+    loaded = load_instance(
+        os.path.join(ROOT, "data", "toy"), os.path.join(ROOT, "configs", "default.json")
+    )
     loaded.config.update(strategy=strategy, time_limit_sec=300)
-    try:
-        result = solve(loaded.instance, loaded.config)
-    except NotImplementedError:
-        pytest.skip(f"exam_solver chưa cài đặt strategy '{strategy}'")
+    # Cả single và two_phase là chức năng bắt buộc, không bỏ qua nếu chưa triển khai.
+    result = solve(loaded.instance, loaded.config)
     return loaded, result
 
 
 @pytest.mark.parametrize("strategy", ["single", "two_phase"])
 def test_solver_on_toy(strategy):
     loaded, result = _solve(strategy)
-    schedule = build_schedule(loaded.instance, loaded.config, loaded.messages, result, "toy")
+    schedule = build_schedule(
+        loaded.instance, loaded.config, loaded.messages, result, "toy"
+    )
     assert schedule["violations"] == [], schedule["violations"]
-    assert compute_penalties(loaded.instance, schedule) == result.penalties, "penalties không khớp với lịch"
+    assert (
+        compute_penalties(loaded.instance, schedule) == result.penalties
+    ), "penalties không khớp với lịch"
     weights = loaded.config["weights"]
     assert sum(weights[k] * v for k, v in result.penalties.items()) == result.objective
     if strategy == "single":
         assert result.status == "OPTIMAL"
         assert result.objective == REFERENCE_OBJECTIVE
     else:
-        # Hai pha có thể kém hơn giải một lần (model_spec A.7), nhưng không bao giờ tốt hơn tối ưu.
         assert result.status in ("OPTIMAL", "FEASIBLE")
         assert result.objective >= REFERENCE_OBJECTIVE
 
 
+def test_two_phase_proves_reference_optimum_on_toy():
+    loaded, result = _solve("two_phase")  # time_limit_sec = 300
+    assert result.status == "OPTIMAL"
+    assert result.objective == REFERENCE_OBJECTIVE
+    assert result.best_bound is not None
+    assert abs(result.best_bound - result.objective) <= 1e-6
+    schedule = build_schedule(
+        loaded.instance, loaded.config, loaded.messages, result, "toy"
+    )
+    assert schedule["violations"] == []
+    assert compute_penalties(loaded.instance, schedule) == result.penalties
+    assert (
+        sum(loaded.config["weights"][k] * v for k, v in result.penalties.items())
+        == result.objective
+    )
+
+
 # ---- Solver đối chứng PuLP + CBC (src/exam_solver_pulp.py, người phụ trách: Minh) ----
 
+
 def _load_toy(time_limit):
-    loaded = load_instance(os.path.join(ROOT, "data", "toy"), os.path.join(ROOT, "configs", "default.json"))
+    loaded = load_instance(
+        os.path.join(ROOT, "data", "toy"), os.path.join(ROOT, "configs", "default.json")
+    )
     loaded.config.update(time_limit_sec=time_limit)
     return loaded
 
 
 def test_pulp_solver_finds_reference_optimum():
     """CBC tìm ra lời giải đạt giá trị tối ưu 2391 sau khoảng 10 giây, nhưng không chứng minh được tối ưu trong
-    vài phút (model_spec A.13). Vì vậy chấp nhận cả OPTIMAL lẫn FEASIBLE, miễn đạt đúng giá trị tối ưu."""
+    vài phút (model_spec A.13). Vì vậy chấp nhận cả OPTIMAL lẫn FEASIBLE, miễn đạt đúng giá trị tối ưu.
+    """
     from src.exam_solver_pulp import solve
+
     loaded = _load_toy(60)
     result = solve(loaded.instance, loaded.config)
     assert result.status in ("OPTIMAL", "FEASIBLE")
     assert result.objective == REFERENCE_OBJECTIVE
-    schedule = build_schedule(loaded.instance, loaded.config, loaded.messages, result, "toy")
+    schedule = build_schedule(
+        loaded.instance, loaded.config, loaded.messages, result, "toy"
+    )
     assert schedule["violations"] == [], schedule["violations"]
     assert compute_penalties(loaded.instance, schedule) == result.penalties
     weights = loaded.config["weights"]
     assert sum(weights[k] * v for k, v in result.penalties.items()) == result.objective
-    assert result.best_bound == (result.objective if result.status == "OPTIMAL" else None)
+    assert result.best_bound == (
+        result.objective if result.status == "OPTIMAL" else None
+    )
 
 
 def test_pulp_solver_detects_infeasible(tmp_path):
     """Chỉ còn 2 ca (ca 1 và ca 2 ngày 14/12) nhưng sinh viên 22020031 thi 4 môn, trong đó 2 môn chiếm 2 ca:
     qua được mọi kiểm tra trước khi giải nhưng không thể xếp lịch."""
     from src.exam_solver_pulp import solve
+
     toy = os.path.join(ROOT, "data", "toy")
     for name in os.listdir(toy):
         if name.endswith(".csv"):
@@ -99,10 +131,13 @@ def test_pulp_hard_deadline_stops_cbc():
     import pulp
 
     from src.exam_solver_pulp import _Model, _solve_with_deadline, hard_deadline
+
     assert hard_deadline(300) == 360 and hard_deadline(60) == 90
     loaded = _load_toy(10)
     model = _Model(loaded.instance, loaded.config)
-    cbc = pulp.PULP_CBC_CMD(msg=False, gapRel=0)          # không đặt timeLimit: CBC cần vài phút trên toy
+    cbc = pulp.PULP_CBC_CMD(
+        msg=False, gapRel=0
+    )  # không đặt timeLimit: CBC cần vài phút trên toy
     started = time.time()
     assert _solve_with_deadline(model.prob, cbc, deadline=3) is True
     assert time.time() - started < 15
@@ -110,6 +145,7 @@ def test_pulp_hard_deadline_stops_cbc():
 
 def test_pulp_solver_rejects_two_phase():
     from src.exam_solver_pulp import solve
+
     loaded = _load_toy(10)
     loaded.config.update(strategy="two_phase")
     with pytest.raises(NotImplementedError):
