@@ -104,6 +104,9 @@ thư mục tạm (biến môi trường `EXAM_APP_DATA_DIR`, `EXAM_APP_OUTPUT_DI
 │   ├── instance.py        Cấu trúc dữ liệu dùng chung, giao diện SolveResult của solver
 │   ├── config.py          Đọc cấu hình
 │   ├── data_loader.py     Đọc và kiểm tra dữ liệu (mã D, P)
+│   ├── instance_b.py      Cấu trúc dữ liệu bài toán B, giao ước đầu vào/đầu ra của room_solver
+│   ├── data_loader_b.py   Đọc và kiểm tra dữ liệu bài toán B (mã D, PB)
+│   ├── validator_b.py     Kiểm tra lịch học bài toán B độc lập với solver, tính lại điểm phạt
 │   ├── exam_solver.py     Solver bài toán A (CP-SAT)
 │   ├── exam_solver_pulp.py  Solver đối chứng bài toán A (PuLP + CBC)
 │   ├── room_solver.py     Solver bài toán B
@@ -130,7 +133,9 @@ thư mục tạm (biến môi trường `EXAM_APP_DATA_DIR`, `EXAM_APP_OUTPUT_DI
 | `generator.py` | Hoàn chỉnh, có kiểm thử; dữ liệu sinh sẵn (seed 1) trong `data/toy_gen`, `data/medium`, `data/large` |
 | `exam_solver.py` | Chiến lược `single` hoàn chỉnh, có kiểm thử: trên `toy` đạt `OPTIMAL` 2391 trong khoảng 20 giây. Chiến lược `two_phase` hoàn chỉnh (KHOE-3), trên `toy` đạt 2391 trong khoảng 7 giây |
 | `exam_solver_pulp.py` | Hoàn chỉnh, có kiểm thử. Trên `toy` tìm được lời giải tối ưu 2391 nhưng không chứng minh được tối ưu trong vài phút (model_spec A.13) |
-| `room_solver.py` | Spec bài toán B đã có (model_spec mục B, data_schema mục 9); chờ cài đặt (Khỏe) |
+| `instance_b.py`, `data_loader_b.py` | Hoàn chỉnh, có kiểm thử: đọc dữ liệu bài toán B, kiểm tra PB1–PB7 (model_spec B.7). `data_loader.load_instance` tự chuyển sang bộ đọc B khi cấu hình có `"problem": "B"` |
+| `validator_b.py` | Hoàn chỉnh, có kiểm thử: soát B-H1 đến B-H7 trên mảng `sessions` của `timetable.json`, tính lại B-S1 đến B-S4. Lịch tối ưu mẫu của `toy_b` (Z = 355) nằm trong `tests/test_validator_b.py` |
+| `room_solver.py` | Spec bài toán B đã có (model_spec mục B, data_schema mục 9); chờ cài đặt (Khỏe). Đầu vào là `InstanceB`, đầu ra là `SolveResult` chứa `SolutionB` (xem đầu file `src/instance_b.py`) |
 | `app/app.py` | Xem và so sánh lịch, kiểm tra dữ liệu, chạy solver (CP-SAT/PuLP), khai báo sự cố và xếp lại; biểu đồ và bảng CSV thực nghiệm; có AppTest |
 
 ## Phân công
