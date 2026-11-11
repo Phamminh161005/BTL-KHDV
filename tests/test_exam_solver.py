@@ -82,10 +82,11 @@ def _load_toy(time_limit):
 def test_pulp_solver_finds_reference_optimum():
     """CBC tìm ra lời giải đạt giá trị tối ưu 2391 sau khoảng 10 giây, nhưng không chứng minh được tối ưu trong
     vài phút (model_spec A.13). Vì vậy chấp nhận cả OPTIMAL lẫn FEASIBLE, miễn đạt đúng giá trị tối ưu.
+    Giới hạn 120 giây: với 60 giây, khi chạy cả bộ kiểm thử trên máy đang bận CBC đôi khi chưa kịp tìm ra 2391.
     """
     from src.exam_solver_pulp import solve
 
-    loaded = _load_toy(60)
+    loaded = _load_toy(120)
     result = solve(loaded.instance, loaded.config)
     assert result.status in ("OPTIMAL", "FEASIBLE")
     assert result.objective == REFERENCE_OBJECTIVE

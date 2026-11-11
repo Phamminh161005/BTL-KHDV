@@ -67,6 +67,56 @@ def test_no_incident_keeps_schedule(tmp_path):
     assert new["reschedule"]["change_cost"] == 0
 
 
+def _toy_with_base(incidents):
+    from src.reschedule import apply_incidents, base_solution
+    loaded = load_instance(TOY, CONFIG)
+    base = base_solution(loaded.instance, BASE_SCHEDULE, [])
+    apply_incidents(loaded.instance, incidents, [])
+    return loaded, base
+
+
+def test_scopes_grow_from_touched_courses_to_whole_schedule():
+    from src.reschedule import conflicting_courses, reschedule_scopes
+    incident = {"resource_type": "room", "resource_id": "G2-LAB1", "date": "2026-12-15", "period": 3}
+    loaded, base = _toy_with_base([incident])
+    assert conflicting_courses(loaded.instance, base) == {"INT3306"}
+    scopes = reschedule_scopes(loaded.instance, base, [incident])
+    frees = [free for _, free in scopes]
+    assert frees[0] == {"INT3306"}
+    assert all(a < b for a, b in zip(frees, frees[1:]))          # mỗi phạm vi rộng hơn phạm vi trước
+    assert frees[-1] == set(loaded.instance.courses)
+
+
+def test_frozen_courses_keep_old_sittings_rooms_students_and_proctors():
+    from src.exam_solver import solve
+    incident = {"resource_type": "room", "resource_id": "G2-LAB1", "date": "2026-12-15", "period": 3}
+    loaded, base = _toy_with_base([incident])
+    frozen = frozenset(loaded.instance.courses) - {"INT3306"}
+    result = solve(loaded.instance, loaded.config, base=base, frozen=frozen)
+    assert result.status in ("OPTIMAL", "FEASIBLE")
+    old = {(s.course_id, s.start, tuple(s.rooms), tuple(s.students)) for s in base.sittings if s.course_id in frozen}
+    new = {(s.course_id, s.start, tuple(s.rooms), tuple(s.students)) for s in result.solution.sittings
+           if s.course_id in frozen}
+    assert new == old
+    for st in base.sittings:
+        if st.course_id in frozen:
+            for r in st.rooms:
+                for t in loaded.instance.covered(st.course_id, st.start):
+                    assert sorted(result.solution.proctoring[r, t]) == sorted(base.proctoring[r, t])
+    with pytest.raises(ValueError):
+        solve(loaded.instance, loaded.config, frozen=frozen)        # frozen cần lịch cũ
+
+
+def test_reschedule_reports_local_step_and_keeps_best_total(tmp_path):
+    new = _reschedule(tmp_path, [{"resource_type": "room", "resource_id": "G2-LAB1", "date": "2026-12-15",
+                                  "period": 3}])
+    steps = [m["message"] for m in new["messages"] if m["code"] == "I04"]
+    assert steps[0].startswith("Bước 1") and steps[1].startswith("Bước 2")
+    # Trên toy, giải trên toàn lịch tìm được tổng chi phí thấp hơn lời giải cục bộ và chứng minh tối ưu.
+    assert new["status"] == "OPTIMAL"
+    assert new["objective"] + new["reschedule"]["change_cost"] == 4571
+
+
 def test_lecturer_incident_only_changes_proctors(tmp_path):
     new = _reschedule(tmp_path, [parse_incident("lecturer,GV02,2026-12-15")])
     assert new["violations"] == []
