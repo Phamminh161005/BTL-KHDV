@@ -316,6 +316,9 @@ Mã D là lỗi định dạng dữ liệu (tài liệu này). Mã P là kiểm 
 | R01 | info | Hậu xử lý: một phòng của lượt thi không có sinh viên nào (mục 7.3) |
 | S01 | warning | Solver không tự dừng ở giới hạn thời gian nên bị dừng cưỡng bức; trạng thái `UNKNOWN` |
 | S02 | error | Bộ giải bên ngoài (CBC) thoát bất thường; trạng thái `UNKNOWN` |
+| S03 | warning | `two_phase` hết thời gian khi đang dựng mô hình pha 1 hoặc trước khi bắt đầu pha 2 (phân giám thị) |
+| S04 | warning | Pha 2 của `two_phase` không tìm được cách phân giám thị; giải lại bằng `single` trong phần thời gian còn lại (spec A.7) |
+| S05 | info | `two_phase`: trạng thái của từng pha và tổng thời gian |
 | N01 | warning | Chẩn đoán: bỏ một nhóm ràng buộc (giám thị, A-H2 hoặc A-H6) thì xếp được lịch; kèm gợi ý sửa dữ liệu. Có thể có nhiều N01 |
 | N02 | warning | Chẩn đoán: không nhóm nào riêng lẻ đủ, nhưng bỏ cả ba nhóm thì xếp được lịch (nhiều nguyên nhân cùng lúc) |
 | N03 | warning | Chẩn đoán: bỏ cả ba nhóm vẫn vô nghiệm; nguyên nhân ở phòng và số lượt (A-H1, A-H3, A-H4, A-H5) |
@@ -346,7 +349,7 @@ Mọi khóa đều có giá trị mặc định. File cấu hình có thể ch�
 | Khóa | Kiểu | Mặc định | Mô tả |
 |---|---|---|---|
 | `strategy` | `"single"` hoặc `"two_phase"` | `"single"` | Giải một lần hay hai pha (spec A.7) |
-| `time_limit_sec` | Số dương | `300` | Giới hạn thời gian. Với `two_phase` là tổng thời gian cả hai pha. Solver PuLP + CBC có thể chạy quá giới hạn này một chút; nếu vượt hạn cứng (giới hạn cộng thêm 30 giây hoặc 20%, lấy số lớn hơn) thì bị dừng với thông báo S01 |
+| `time_limit_sec` | Số dương | `300` | Giới hạn thời gian, tính cả thời gian dựng mô hình. Với `two_phase` là tổng thời gian cả hai pha, kể cả khi phải giải lại bằng `single` (S04). Solver PuLP + CBC có thể chạy quá giới hạn này một chút; nếu vượt hạn cứng (giới hạn cộng thêm 30 giây hoặc 20%, lấy số lớn hơn) thì bị dừng với thông báo S01 |
 | `num_workers` | Số nguyên ≥ 1 | `8` | Số luồng CP-SAT. Không áp dụng cho CBC (CBC luôn chạy một luồng, xem `src/exam_solver_pulp.py`) |
 | `random_seed` | Số nguyên ≥ 0 | `0` | Hạt giống ngẫu nhiên của CP-SAT, để chạy lại cho cùng kết quả |
 | `proctors_per_room` | Số nguyên ≥ 1 | `2` | $\nu$ |

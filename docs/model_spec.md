@@ -389,7 +389,7 @@ Nếu mô hình đầy đủ chạy quá chậm với bộ `large`, dùng chiế
 
 Hai pha có thể cho lời giải kém hơn giải một lần, vì pha 1 không biết lịch bận của từng giám thị. Nếu pha 2 vô nghiệm (hiếm, chỉ xảy ra khi bật A-H10 hoặc khi ràng buộc giữ nguyên giám thị cho lượt 2 ca không thỏa được), quay lại giải một lần với giới hạn thời gian dài hơn. Khi viết báo cáo, so sánh hai cách này là một phần thực nghiệm tốt.
 
-Kết quả thử ở A.13 cho thấy phần giám thị làm thời gian chứng minh tối ưu tăng rõ rệt, kể cả với dữ liệu rất nhỏ. Lý do là các giám thị rảnh cùng lúc có thể đổi chỗ cho nhau mà không làm thay đổi giá trị mục tiêu, nên solver phải xét rất nhiều lời giải tương đương. Vì vậy khi cài đặt cần làm cả hai cách, và dự kiến dùng hai pha làm mặc định cho bộ `medium` và `large`. Quyết định cuối cùng dựa trên số đo thực nghiệm.
+Kết quả thử ở A.13 cho thấy phần giám thị làm thời gian chứng minh tối ưu tăng rõ rệt, kể cả với dữ liệu rất nhỏ. Lý do là các giám thị rảnh cùng lúc có thể đổi chỗ cho nhau mà không làm thay đổi giá trị mục tiêu, nên solver phải xét rất nhiều lời giải tương đương. Vì vậy khi cài đặt cần làm cả hai cách, và dự kiến dùng hai pha làm mặc định cho bộ `medium` và `large`. Số đo thực nghiệm ở A.13 xác nhận lựa chọn này.
 
 ### A.8. Kiểm tra dữ liệu trước khi giải
 
@@ -519,6 +519,42 @@ Ba vấn đề kỹ thuật của CBC phát hiện khi cài đặt, đã xử l�
 1. Bản CBC đóng gói trong PuLP cho Windows bị treo ngay khi bắt đầu nhánh và cận nếu truyền tham số `-threads`, kể cả `threads=1`. Vì vậy không truyền tham số này; CBC chạy một luồng.
 2. Khi CBC dừng do hết giờ mà đã có lời giải, `prob.status` của PuLP vẫn là "Optimal". Trạng thái được đọc từ `prob.sol_status`, nơi phân biệt được tối ưu (1) và chỉ khả thi (2).
 3. Với mô hình lớn, CBC không dừng đúng giới hạn thời gian vì chỉ kiểm tra giới hạn giữa các bước. Solver đặt thêm hạn cứng (giới hạn cộng 30 giây hoặc 20%, lấy số lớn hơn) và dừng CBC khi vượt quá.
+
+#### Kết quả thực nghiệm hiệu năng
+
+Thực nghiệm có hệ thống (KHOE-4, chi tiết ở `experiments/README.md`): 30 lần giải gồm CP-SAT `single` và `two_phase` trên `toy`, `toy_gen`, `medium`, `large`, cộng PuLP + CBC trên hai bộ nhỏ. Mỗi tổ hợp chạy 3 lần (CP-SAT với `random_seed` 0, 1, 2), giới hạn 300 giây, CP-SAT 8 luồng. Thêm 6 kịch bản xếp lại trên `medium` và `large`.
+
+Khoảng cách tới cận dưới:
+
+$$
+\text{gap} = \frac{Z - \max(B, 0)}{Z}
+$$
+
+với $Z$ là giá trị mục tiêu của lời giải và $B$ là cận dưới solver báo. Vì $Z \ge 0$ nên cận âm không cho thông tin gì hơn cận 0 và được thay bằng 0. Gap bằng 0 là đã chứng minh tối ưu; gap bằng 1 là chưa chứng minh được gì.
+
+<!-- RESULTS_BEGIN -->
+Kết quả dưới đây tổng hợp từ `experiments/results/perf.csv` và `experiments/results/reschedule.csv`. Chi tiết phương pháp và phân tích: [Báo cáo thực nghiệm](../experiments/README.md).
+
+| Dữ liệu | Chiến lược | Nghiệm hợp lệ / 3 | Z TB | Thời gian TB (s) | Gap TB |
+|---|---|---:|---:|---:|---:|
+| `medium` | `single` | 3/3 | 14994.7 | 300.7 | 1.000 |
+| `medium` | `two_phase` | 3/3 | 13050.3 | 240.8 | 1.000 |
+| `large` | `single` | 3/3 | 43494.0 | 302.1 | 1.000 |
+| `large` | `two_phase` | 3/3 | 38758.0 | 242.6 | 1.000 |
+
+Dấu «—» là thiếu giá trị, không phải 0. Cận dưới âm được kẹp về 0 vì Z không âm, nên gap = 1 nghĩa là chưa chứng minh được gì.
+
+- Medium: đề xuất `two_phase` (single 3/3 nghiệm hợp lệ, two_phase 3/3; Z TB 14994.7 / 13050.3; gap TB 1.000 / 1.000; thời gian TB 300.7s / 240.8s).
+- Large: đề xuất `two_phase` (single 3/3 nghiệm hợp lệ, two_phase 3/3; Z TB 43494.0 / 38758.0; gap TB 1.000 / 1.000; thời gian TB 302.1s / 242.6s).
+- Xếp lại trên large: đạt KPI dưới 60 giây trên cả ba kịch bản đã đo; chưa giữ được chất lượng lịch ở `three_simultaneous`.
+<!-- RESULTS_END -->
+
+Kết luận:
+
+- `two_phase` tốt hơn `single` trên `medium` và `large`: cùng seed thì `two_phase` luôn cho Z thấp hơn (trung bình thấp hơn 13% trên `medium`, 11% trên `large`), dù chỉ dùng khoảng 240 trong 300 giây. Pha 1 không có biến giám thị nên nhỏ hơn và không bị các lời giải tương đương do đổi chỗ giám thị làm chậm (A.7). Đây là chiến lược khuyến nghị cho `medium` và `large`. Mặc định trong `configs/default.json` vẫn là `single`, vì với dữ liệu nhỏ `single` chứng minh được tối ưu.
+- Trên `medium` và `large`, cận dưới của cả hai chiến lược đều âm, nên gap bằng 1: không chứng minh được gì về chất lượng lời giải, và gap không dùng để so sánh hai chiến lược.
+- CP-SAT chứng minh tối ưu `toy` trong 4–14 giây và `toy_gen` trong 18–26 giây. CBC tìm được lời giải tốt cho hai bộ này nhưng chạy hết 300 giây mà không chứng minh được tối ưu, và một lần trên `toy_gen` dừng ở 3710 thay vì 3650. Nguyên nhân như đã nêu ở mục trên.
+- Xếp lại: cả 6 kịch bản có lịch hợp lệ trong dưới 60 giây (`medium` khoảng 25 giây, `large` khoảng 46 giây). Trên `large` solver luôn chạy hết giới hạn 45 giây, nên thời gian đạt KPI là nhờ giới hạn này. Kịch bản ba sự cố cùng lúc trên `large` cho lịch kém: Z tăng từ 37660 lên 108280, 98 lượt thay đổi và 999 trong 1000 sinh viên bị ảnh hưởng. Cần cải tiến A.14 (ví dụ chỉ mở lại các lượt liên quan đến sự cố, cố định phần còn lại) rồi đo lại.
 
 ### A.14. Xếp lại khi có sự cố
 
