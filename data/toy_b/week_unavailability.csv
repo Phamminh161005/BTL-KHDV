@@ -1,0 +1,14 @@
+resource_type,resource_id,weekday,period,note
+room,G2-101,2,1,Sinh hoạt khoa
+room,G2-LAB2,6,,Bảo trì định kỳ
+lecturer,GV01,3,,Họp bộ môn
+lecturer,GV03,2,3,
+lecturer,GV03,2,4,
+lecturer,GV05,5,,Đi công tác
+lecturer,GV05,6,,Đi công tác
+lecturer,GV05,7,,Đi công tác
+lecturer,GV06,2,,
+lecturer,GV06,3,,
+lecturer,GV06,4,,
+lecturer,GV06,5,,
+lecturer,GV06,7,,
