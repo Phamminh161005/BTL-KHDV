@@ -8,7 +8,7 @@ Mặc định tái sử dụng lịch two_phase seed=0 do experiments/perf.py t�
 Cấu hình giải khi xếp lại do src/reschedule.py quyết định: strategy "single",
 time_limit_sec = reschedule.time_limit_sec trong configs/default.json, num_workers và
 random_seed lấy từ default.json.
-Mỗi kịch bản đo MỘT lần : objective_before và objective_after cùng thang đo (chỉ gồm Z; điểm phạt thay đổi
+Mỗi kịch bản đo một lần. objective_before và objective_after cùng thang đo (chỉ gồm Z; điểm phạt thay đổi
 nằm riêng trong schedule["reschedule"]["change_cost"]).
 """
 
@@ -290,7 +290,9 @@ def main():
             )
             print(
                 f"  -> {row['status']}, tổng {row['total_time_sec']}s, "
-                f"KPI <{SLA_SECONDS}s: {sla}",
+                f"KPI <{SLA_SECONDS}s: {sla}; Z {row['objective_before']} -> "
+                f"{row['objective_after']}, {row['sittings_changed']} lượt thay đổi, "
+                f"{row['students_affected']} SV bị ảnh hưởng",
                 flush=True,
             )
     print(f"Kết quả: {RESULTS}")

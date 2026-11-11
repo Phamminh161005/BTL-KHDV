@@ -66,9 +66,12 @@ def runs(datasets=DATASETS, seeds=SEEDS):
 
 
 def gap_value(objective, best_bound):
-    """(objective - best_bound) / objective; để trống nếu thiếu một trong hai.
+    """(objective - max(best_bound, 0)) / objective; để trống nếu thiếu một trong hai.
 
     Để trống khi objective bằng 0, không hữu hạn hoặc thiếu giá trị.
+    Z là tổng các điểm phạt không âm nên Z >= 0 luôn đúng: cận dưới âm của CP-SAT (gặp ở medium,
+    large) không cho thông tin gì hơn cận 0, và được kẹp về 0. Vì vậy gap nằm trong [0, 1]; gap = 1
+    nghĩa là solver chưa chứng minh được điều gì về chất lượng lời giải.
     Kẹp về >= 0 để tránh gap âm nhỏ do sai số số thực.
     """
     if objective in (None, "") or best_bound in (None, ""):
@@ -80,6 +83,7 @@ def gap_value(objective, best_bound):
         return ""
     if not (math.isfinite(z) and math.isfinite(bound)) or z == 0:
         return ""
+    bound = max(bound, 0.0)
     # Sai số số thực rất nhỏ có thể khiến tỷ số âm gần 0.
     return max(0.0, round((z - bound) / z, 8))
 

@@ -30,6 +30,8 @@ SOLVERS = (("cp-sat", "single"), ("cp-sat", "two_phase"), ("pulp", "single"))
 SCENARIOS = ("room_one_period", "lecturer_whole_day", "three_simultaneous")
 SEEDS = (0, 1, 2)
 SLA_SECONDS = 60
+# Xếp lại phải giữ lịch gần lịch cũ: Z của lịch mới không được tăng quá 10% (ngưỡng nhóm tự chọn, xem README).
+QUALITY_RATIO = 1.10
 PERF_COLUMNS = (
     "dataset",
     "solver",
@@ -142,6 +144,25 @@ def pick_winner(a, b):
     return "single"
 
 
+def resch_time_ok(row):
+    """KPI trong scope: có lịch hợp lệ và tổng thời gian xếp lại dưới 60 giây."""
+    return (
+        row.get("status") in ("OPTIMAL", "FEASIBLE")
+        and row.get("violations") == "0"
+        and numeric(row.get("objective_after")) is not None
+        and numeric(row.get("total_time_sec")) is not None
+        and numeric(row["total_time_sec"]) < SLA_SECONDS
+    )
+
+
+def resch_quality_ok(row):
+    """Lịch mới hợp lệ và Z không tăng quá QUALITY_RATIO lần so với lịch cũ."""
+    before, after = numeric(row.get("objective_before")), numeric(row.get("objective_after"))
+    if not resch_time_ok(row) or before is None or after is None:
+        return False
+    return after <= QUALITY_RATIO * before
+
+
 def expected_perf_keys():
     return [
         (d, solver, st, seed)
@@ -177,7 +198,7 @@ def summary():
     resch_complete = all(key in by_resch for key in expected_resch)
 
     lines = [
-        f"**Tiến độ:** {sum(key in by_perf for key in expected)}/30 lượt giải; "
+        f"Tiến độ: {sum(key in by_perf for key in expected)}/30 lượt giải; "
         f"{sum(key in by_resch for key in expected_resch)}/6 kịch bản xếp lại.",
         "",
         "| Bộ dữ liệu | Phương pháp | Nghiệm hợp lệ / lượt đo | OPTIMAL / lượt đo | Z TB (min–max) | Thời gian TB (s) | Gap TB |",
@@ -227,7 +248,8 @@ def summary():
         [
             "",
             "Dấu «—» biểu thị thiếu giá trị để tính, không phải bằng 0. "
-            "Thời gian trung bình tính trên các lượt đã ghi; Z/gap chỉ tính từ nghiệm hợp lệ.",
+            "Thời gian trung bình tính trên các lượt đã ghi; Z/gap chỉ tính từ nghiệm hợp lệ. "
+            "Cận dưới âm được kẹp về 0 vì Z không âm, nên gap = 1 nghĩa là chưa chứng minh được gì.",
             "",
             "### Fallback của `two_phase`",
             "",
@@ -258,10 +280,10 @@ def summary():
                 f"thời gian TB {fmt(a['time'])}s / {fmt(b['time'])}s)"
             )
         decisions[dataset] = decision
-        lines.append(f"- **{dataset}:** {decision}.")
+        lines.append(f"- {dataset}: {decision}.")
     if not perf_complete:
         lines.append(
-            "- **CP-SAT/PuLP:** chưa đo đủ tổ hợp để kết luận so sánh chính thức."
+            "- CP-SAT/PuLP: chưa đo đủ tổ hợp để kết luận so sánh chính thức."
         )
 
     lines.extend(
@@ -269,44 +291,56 @@ def summary():
             "",
             "### Xếp lại khi có sự cố",
             "",
-            "| Bộ dữ liệu | Kịch bản | Trạng thái | Tổng thời gian (s) | Vi phạm | KPI < 60s |",
-            "|---|---|---|---:|---:|---|",
+            "Hai tiêu chí được đánh giá riêng. Thời gian: có lịch hợp lệ và tổng thời gian dưới "
+            f"{SLA_SECONDS} giây (KPI trong scope). Chất lượng: Z của lịch mới không tăng quá "
+            f"{round((QUALITY_RATIO - 1) * 100)}% so với lịch cũ.",
+            "",
+            "| Bộ dữ liệu | Kịch bản | Trạng thái | Tổng thời gian (s) | Z trước → sau | Lượt thay đổi / dời ca "
+            "| SV bị ảnh hưởng | Thời gian | Chất lượng |",
+            "|---|---|---|---:|---:|---:|---:|---|---|",
         ]
     )
-
-    def resch_pass(row):
-        return (
-            row.get("status") in ("OPTIMAL", "FEASIBLE")
-            and row.get("violations") == "0"
-            and numeric(row.get("objective_after")) is not None
-            and numeric(row.get("total_time_sec")) is not None
-            and numeric(row["total_time_sec"]) < SLA_SECONDS
-        )
 
     for dataset, scenario in expected_resch:
         row = by_resch.get((dataset, scenario))
         if row is None:
-            lines.append(f"| {dataset} | {scenario} | Chưa đo | — | — | Chưa đo |")
-        else:
-            lines.append(
-                f"| {dataset} | {scenario} | {row['status']} | "
-                f"{fmt(numeric(row['total_time_sec']), 3)} | {row['violations'] or '—'} | "
-                f"{'ĐẠT' if resch_pass(row) else 'KHÔNG ĐẠT'} |"
-            )
+            lines.append(f"| {dataset} | {scenario} | Chưa đo | — | — | — | — | Chưa đo | Chưa đo |")
+            continue
+        before, after = numeric(row.get("objective_before")), numeric(row.get("objective_after"))
+        change = (
+            f"{before:.0f} → {after:.0f} ({(after - before) / before:+.1%})"
+            if before and after is not None
+            else "—"
+        )
+        lines.append(
+            f"| {dataset} | {scenario} | {row['status']} | "
+            f"{fmt(numeric(row['total_time_sec']), 3)} | {change} | "
+            f"{row['sittings_changed'] or '—'} / {row['sittings_moved'] or '—'} | "
+            f"{row['students_affected'] or '—'} | "
+            f"{'ĐẠT' if resch_time_ok(row) else 'KHÔNG ĐẠT'} | "
+            f"{'ĐẠT' if resch_quality_ok(row) else 'KHÔNG ĐẠT'} |"
+        )
     if all(("large", scenario) in by_resch for scenario in SCENARIOS):
-        large_kpi = all(resch_pass(by_resch["large", sc]) for sc in SCENARIOS)
-        conclusion = (
+        large = [by_resch["large", sc] for sc in SCENARIOS]
+        time_part = (
             "đạt KPI dưới 60 giây trên cả ba kịch bản đã đo"
-            if large_kpi
+            if all(resch_time_ok(r) for r in large)
             else "chưa đạt KPI dưới 60 giây trên cả ba kịch bản"
         )
+        bad = [r["scenario"] for r in large if not resch_quality_ok(r)]
+        quality_part = (
+            "giữ được chất lượng lịch ở cả ba kịch bản"
+            if not bad
+            else "chưa giữ được chất lượng lịch ở " + ", ".join(f"`{s}`" for s in bad)
+        )
+        conclusion = f"{time_part}; {quality_part}"
     else:
         conclusion = "chưa đủ ba kịch bản để đánh giá KPI dưới 60 giây"
-    lines.extend(["", f"**Kết luận xếp lại trên large:** {conclusion}."])
+    lines.extend(["", f"Kết luận xếp lại trên large: {conclusion}."])
     lines.extend(
         [
             "",
-            "**Giới hạn:** Mỗi cấu hình solver được đo với ba seed; mỗi kịch bản xếp lại "
+            "Giới hạn: mỗi cấu hình solver được đo với ba seed; mỗi kịch bản xếp lại "
             "chỉ đo một lần. Kết quả phụ thuộc môi trường máy và dữ liệu thực nghiệm.",
         ]
     )
@@ -337,9 +371,9 @@ def machine_description():
         return "Chưa có thông tin cấu hình máy thực nghiệm."
     info = json.loads(path.read_text(encoding="utf-8"))
     return (
-        f"- CPU: **{info.get('cpu') or 'chưa xác định'}** "
+        f"- CPU: {info.get('cpu') or 'chưa xác định'} "
         f"({info.get('logical_cores') or '?'} luồng logic)\n"
-        f"- RAM: **{info.get('ram_gb') or 'chưa xác định'} GB**\n"
+        f"- RAM: {info.get('ram_gb') or 'chưa xác định'} GB\n"
         f"- Hệ điều hành: {info.get('os') or 'chưa xác định'}; "
         f"Python: {info.get('python') or 'chưa xác định'}\n"
         f"- Giới hạn mỗi lượt: {info.get('time_limit_sec', 300)} giây; "
@@ -384,16 +418,17 @@ def main():
     short.extend(
         [
             "",
-            'Các giá trị chưa có dữ liệu được ký hiệu "-"; không coi là 0.',
+            "Dấu «—» là thiếu giá trị, không phải 0. Cận dưới âm được kẹp về 0 vì Z không âm, "
+            "nên gap = 1 nghĩa là chưa chứng minh được gì.",
             "",
-            f"- **Medium:** {decisions['medium']}.",
-            f"- **Large:** {decisions['large']}.",
-            f"- **KPI xếp lại trên large:** {conclusion}.",
+            f"- Medium: {decisions['medium']}.",
+            f"- Large: {decisions['large']}.",
+            f"- Xếp lại trên large: {conclusion}.",
         ]
     )
     if not perf_complete or not resch_complete:
         short.append(
-            "\n*Chưa hoàn thành đầy đủ phép đo; các nhận xét trên chưa phải kết luận cuối cùng.*"
+            "\nChưa hoàn thành đầy đủ phép đo; các nhận xét trên chưa phải kết luận cuối cùng."
         )
     replace_section(spec, START, END, "\n".join(short))
     print("Đã cập nhật experiments/README.md và docs/model_spec.md (A.13).")

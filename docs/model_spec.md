@@ -4,6 +4,7 @@ Tài liệu này viết các quy tắc trong `docs/scope.md` thành mô hình qu
 
 Phiên bản hiện tại mới có bài toán A (lịch thi). Bài toán B (lịch phòng học/phòng máy) sẽ được bổ sung ở phiên bản sau, theo cùng cách trình bày.
 
+
 ---
 
 ## A. Bài toán lịch thi
@@ -25,41 +26,41 @@ Một lượt thi được xác định bằng cặp (môn, ca bắt đầu). N�
 
 ### A.2. Tập hợp và chỉ số
 
-| Ký hiệu                | Ý nghĩa                                                                                                                                                                                                                                                   |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| $D$                    | Tập ngày thi (12 ngày: 2 tuần, Thứ 2 đến Thứ 7), chỉ số $d$                                                                                                                                                                                               |
-| $T$                    | Tập các ca thi dùng được, chỉ số $t$ hoặc $s$. Các ca rơi vào ngày nghỉ của toàn khoa đã bị loại khỏi $T$                                                                                                                                                 |
-| $T_d \subseteq T$      | Các ca thuộc ngày $d$                                                                                                                                                                                                                                     |
-| $k(t) \in \{1,2,3,4\}$ | Thứ tự của ca $t$ trong ngày                                                                                                                                                                                                                              |
-| $t^{+}$                | Ca kế tiếp của $t$ trong cùng buổi: nếu $k(t)=1$ thì là ca 2 cùng ngày, nếu $k(t)=3$ thì là ca 4 cùng ngày; không định nghĩa với $k(t) \in \{2,4\}$                                                                                                       |
-| $C$                    | Tập môn thi, chỉ số $c$. Các lớp học phần của cùng một học phần đã được gộp thành một môn                                                                                                                                                                 |
-| $C^{V}, C^{M}$         | Môn thi viết, môn thi trên máy. $C = C^{V} \cup C^{M}$, hai tập không giao nhau                                                                                                                                                                           |
-| $C^{P}$                | Môn được phép chia lượt, tức $L_c \ge 2$ (xem tham số)                                                                                                                                                                                                    |
-| $C^{U}$                | Môn chỉ có một lượt, $C^{U} = C \setminus C^{P}$                                                                                                                                                                                                          |
-| $R$                    | Tập phòng, chỉ số $r$                                                                                                                                                                                                                                     |
-| $R^{V}, R^{M}$         | Phòng thường, phòng máy. $R = R^{V} \cup R^{M}$, hai tập không giao nhau                                                                                                                                                                                  |
-| $R_c$                  | Phòng phù hợp với môn $c$: $R_c = R^{V}$ nếu $c \in C^{V}$, $R_c = R^{M}$ nếu $c \in C^{M}$                                                                                                                                                               |
-| $I$                    | Tập sinh viên, chỉ số $i$                                                                                                                                                                                                                                 |
-| $I_c$                  | Sinh viên đăng ký môn $c$                                                                                                                                                                                                                                 |
-| $C_i$                  | Các môn sinh viên $i$ đăng ký                                                                                                                                                                                                                             |
-| $G$                    | Tập giảng viên tham gia coi thi, chỉ số $g$                                                                                                                                                                                                               |
-| $Q$                    | Tập cặp ngày thi $(d, d')$ với $d'$ là ngày ngay sau $d$ theo lịch, ví dụ Thứ 2–Thứ 3. Thứ 7 và Thứ 2 tuần sau không phải cặp vì có Chủ nhật ở giữa; tương tự nếu Thứ 4 nghỉ lễ thì Thứ 3 và Thứ 5 không phải cặp, vì sinh viên có ngày nghỉ ở giữa để ôn |
+| Ký hiệu | Ý nghĩa |
+|---|---|
+| $D$ | Tập ngày thi (12 ngày: 2 tuần, Thứ 2 đến Thứ 7), chỉ số $d$ |
+| $T$ | Tập các ca thi dùng được, chỉ số $t$ hoặc $s$. Các ca rơi vào ngày nghỉ của toàn khoa đã bị loại khỏi $T$ |
+| $T_d \subseteq T$ | Các ca thuộc ngày $d$ |
+| $k(t) \in \{1,2,3,4\}$ | Thứ tự của ca $t$ trong ngày |
+| $t^{+}$ | Ca kế tiếp của $t$ trong cùng buổi: nếu $k(t)=1$ thì là ca 2 cùng ngày, nếu $k(t)=3$ thì là ca 4 cùng ngày; không định nghĩa với $k(t) \in \{2,4\}$ |
+| $C$ | Tập môn thi, chỉ số $c$. Các lớp học phần của cùng một học phần đã được gộp thành một môn |
+| $C^{V}, C^{M}$ | Môn thi viết, môn thi trên máy. $C = C^{V} \cup C^{M}$, hai tập không giao nhau |
+| $C^{P}$ | Môn được phép chia lượt, tức $L_c \ge 2$ (xem tham số) |
+| $C^{U}$ | Môn chỉ có một lượt, $C^{U} = C \setminus C^{P}$ |
+| $R$ | Tập phòng, chỉ số $r$ |
+| $R^{V}, R^{M}$ | Phòng thường, phòng máy. $R = R^{V} \cup R^{M}$, hai tập không giao nhau |
+| $R_c$ | Phòng phù hợp với môn $c$: $R_c = R^{V}$ nếu $c \in C^{V}$, $R_c = R^{M}$ nếu $c \in C^{M}$ |
+| $I$ | Tập sinh viên, chỉ số $i$ |
+| $I_c$ | Sinh viên đăng ký môn $c$ |
+| $C_i$ | Các môn sinh viên $i$ đăng ký |
+| $G$ | Tập giảng viên tham gia coi thi, chỉ số $g$ |
+| $Q$ | Tập cặp ngày thi $(d, d')$ với $d'$ là ngày ngay sau $d$ theo lịch, ví dụ Thứ 2–Thứ 3. Thứ 7 và Thứ 2 tuần sau không phải cặp vì có Chủ nhật ở giữa; tương tự nếu Thứ 4 nghỉ lễ thì Thứ 3 và Thứ 5 không phải cặp, vì sinh viên có ngày nghỉ ở giữa để ôn |
 
 ### A.3. Tham số (dữ liệu biết trước)
 
-| Ký hiệu                     | Ý nghĩa                                             | Ghi chú                                                                                                                               |
-| --------------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| $\tau_c$                    | Thời lượng làm bài của môn $c$ (phút)               |                                                                                                                                       |
-| $\ell_c \in \{1,2\}$        | Số ca mỗi lượt của môn $c$ chiếm                    | $\ell_c = 1$ nếu $\tau_c \le 120$; $\ell_c = 2$ nếu $120 < \tau_c \le 280$. Môn có $\tau_c > 280$ bị loại ở bước kiểm tra trước (A.8) |
-| $L_c \ge 1$                 | Số lượt tối đa của môn $c$                          | Môn thi viết mặc định $L_c = 1$; chỉ lớn hơn 1 khi dữ liệu đánh dấu cho phép chia                                                     |
-| $n_c$                       | Số sinh viên của môn $c$, $n_c = \lvert I_c \rvert$ |                                                                                                                                       |
-| $\kappa_r$                  | Sức chứa khi thi của phòng $r$                      | Số nguyên. Mặc định $\lfloor$số ghế$/2\rfloor$ với phòng thường, bằng số máy đang hoạt động với phòng máy                             |
-| $B^{R}_r \subseteq T$       | Các ca phòng $r$ bận                                |                                                                                                                                       |
-| $B^{G}_g \subseteq T$       | Các ca giảng viên $g$ bận                           |                                                                                                                                       |
-| $\Phi_g \subseteq C$        | Các môn giảng viên $g$ dạy                          | Chỉ dùng khi bật A-H10                                                                                                                |
-| $\nu = 2$                   | Số giám thị mỗi phòng                               |                                                                                                                                       |
-| $\theta \in \{0,1\}$        | Bật/tắt A-H10                                       | Mặc định $\theta = 0$                                                                                                                 |
-| $\omega_1, \dots, \omega_6$ | Trọng số các ràng buộc mềm                          | Số nguyên, xem A.6                                                                                                                    |
+| Ký hiệu | Ý nghĩa | Ghi chú |
+|---|---|---|
+| $\tau_c$ | Thời lượng làm bài của môn $c$ (phút) | |
+| $\ell_c \in \{1,2\}$ | Số ca mỗi lượt của môn $c$ chiếm | $\ell_c = 1$ nếu $\tau_c \le 120$; $\ell_c = 2$ nếu $120 < \tau_c \le 280$. Môn có $\tau_c > 280$ bị loại ở bước kiểm tra trước (A.8) |
+| $L_c \ge 1$ | Số lượt tối đa của môn $c$ | Môn thi viết mặc định $L_c = 1$; chỉ lớn hơn 1 khi dữ liệu đánh dấu cho phép chia |
+| $n_c$ | Số sinh viên của môn $c$, $n_c = \lvert I_c \rvert$ | |
+| $\kappa_r$ | Sức chứa khi thi của phòng $r$ | Số nguyên. Mặc định $\lfloor$số ghế$/2\rfloor$ với phòng thường, bằng số máy đang hoạt động với phòng máy |
+| $B^{R}_r \subseteq T$ | Các ca phòng $r$ bận | |
+| $B^{G}_g \subseteq T$ | Các ca giảng viên $g$ bận | |
+| $\Phi_g \subseteq C$ | Các môn giảng viên $g$ dạy | Chỉ dùng khi bật A-H10 |
+| $\nu = 2$ | Số giám thị mỗi phòng | |
+| $\theta \in \{0,1\}$ | Bật/tắt A-H10 | Mặc định $\theta = 0$ |
+| $\omega_1, \dots, \omega_6$ | Trọng số các ràng buộc mềm | Số nguyên, xem A.6 |
 
 Từ các tham số trên, định nghĩa thêm hai tập dẫn xuất:
 
@@ -95,15 +96,15 @@ Ví dụ: môn 180 phút có $\ell_c = 2$. Nó chỉ được bắt đầu ở c
 
 ### A.4. Biến quyết định
 
-| Biến                             | Miền                                                 | Ý nghĩa                                                                                        |
-| -------------------------------- | ---------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| $x_{c,s}$                        | $\{0,1\}$, với $c \in C,\ s \in S_c$                 | Bằng 1 nếu môn $c$ có một lượt bắt đầu ở ca $s$                                                |
-| $u_{c,r,s}$                      | $\{0,1\}$, với $c \in C,\ r \in R_c,\ s \in S_c$     | Bằng 1 nếu lượt $(c,s)$ dùng phòng $r$                                                         |
-| $q_{i,c,s}$                      | $\{0,1\}$, với $c \in C^{P},\ i \in I_c,\ s \in S_c$ | Bằng 1 nếu sinh viên $i$ thi môn $c$ ở lượt bắt đầu ca $s$. Chỉ tồn tại với môn được chia lượt |
-| $w_{g,r,t}$                      | $\{0,1\}$, với $g \in G,\ r \in R,\ t \in T$         | Bằng 1 nếu giám thị $g$ coi phòng $r$ ở ca $t$                                                 |
-| $a_{i,d}$                        | Số nguyên $\ge 0$                                    | Biến phụ cho A-S1                                                                              |
-| $b_{i,d}$                        | Số nguyên $\ge 0$                                    | Biến phụ cho A-S2                                                                              |
-| $\Lambda^{\max}, \Lambda^{\min}$ | Số nguyên $\ge 0$                                    | Biến phụ cho A-S5                                                                              |
+| Biến | Miền | Ý nghĩa |
+|---|---|---|
+| $x_{c,s}$ | $\{0,1\}$, với $c \in C,\ s \in S_c$ | Bằng 1 nếu môn $c$ có một lượt bắt đầu ở ca $s$ |
+| $u_{c,r,s}$ | $\{0,1\}$, với $c \in C,\ r \in R_c,\ s \in S_c$ | Bằng 1 nếu lượt $(c,s)$ dùng phòng $r$ |
+| $q_{i,c,s}$ | $\{0,1\}$, với $c \in C^{P},\ i \in I_c,\ s \in S_c$ | Bằng 1 nếu sinh viên $i$ thi môn $c$ ở lượt bắt đầu ca $s$. Chỉ tồn tại với môn được chia lượt |
+| $w_{g,r,t}$ | $\{0,1\}$, với $g \in G,\ r \in R,\ t \in T$ | Bằng 1 nếu giám thị $g$ coi phòng $r$ ở ca $t$ |
+| $a_{i,d}$ | Số nguyên $\ge 0$ | Biến phụ cho A-S1 |
+| $b_{i,d}$ | Số nguyên $\ge 0$ | Biến phụ cho A-S2 |
+| $\Lambda^{\max}, \Lambda^{\min}$ | Số nguyên $\ge 0$ | Biến phụ cho A-S5 |
 
 Biến $u$ chỉ được tạo với $r \in R_c$. Vì vậy ràng buộc A-H5 (đúng loại phòng) được đảm bảo ngay từ cách khai báo biến.
 
@@ -357,14 +358,14 @@ $$
 
 Trọng số mặc định. CP-SAT chỉ nhận hệ số nguyên nên mọi trọng số là số nguyên:
 
-| Trọng số          | Giá trị | Đơn vị của $P_k$             | Lý do                                     |
-| ----------------- | ------- | ---------------------------- | ----------------------------------------- |
-| $\omega_1$ (A-S1) | 100     | Môn thừa trong ngày          | Ưu tiên cao nhất về trải nghiệm sinh viên |
-| $\omega_2$ (A-S2) | 30      | Môn thừa trong cửa sổ 2 ngày | Quan trọng nhưng kém A-S1                 |
-| $\omega_3$ (A-S3) | 50      | Phòng thêm                   | Mỗi phòng thêm tốn 2 giám thị             |
-| $\omega_4$ (A-S4) | 1       | Chỗ trống × ca               | Đơn vị nhỏ nhất, dùng làm mốc             |
-| $\omega_5$ (A-S5) | 20      | Ca coi thi chênh lệch        |                                           |
-| $\omega_6$ (A-S6) | 200     | Lượt thêm (đề thêm)          | Ra thêm một đề tốn công nhất              |
+| Trọng số | Giá trị | Đơn vị của $P_k$ | Lý do |
+|---|---|---|---|
+| $\omega_1$ (A-S1) | 100 | Môn thừa trong ngày | Ưu tiên cao nhất về trải nghiệm sinh viên |
+| $\omega_2$ (A-S2) | 30 | Môn thừa trong cửa sổ 2 ngày | Quan trọng nhưng kém A-S1 |
+| $\omega_3$ (A-S3) | 50 | Phòng thêm | Mỗi phòng thêm tốn 2 giám thị |
+| $\omega_4$ (A-S4) | 1 | Chỗ trống × ca | Đơn vị nhỏ nhất, dùng làm mốc |
+| $\omega_5$ (A-S5) | 20 | Ca coi thi chênh lệch | |
+| $\omega_6$ (A-S6) | 200 | Lượt thêm (đề thêm) | Ra thêm một đề tốn công nhất |
 
 Cách đọc: thêm một lượt (tốn 200) chỉ đáng khi nó giúp ít nhất 2 sinh viên không phải thi 2 môn cùng ngày (tiết kiệm 2 × 100). Một phòng thêm (tốn 50) đáng giá bằng 50 chỗ trống × ca.
 
@@ -374,12 +375,12 @@ Các trọng số này là điểm khởi đầu. Phần thực nghiệm sẽ th
 
 Mặc định giải toàn bộ mô hình một lần bằng CP-SAT, với giới hạn thời gian (mặc định 300 giây). Kết quả trả về một trong bốn trạng thái:
 
-| Trạng thái CP-SAT | Ý nghĩa với người dùng                                               |
-| ----------------- | -------------------------------------------------------------------- |
-| `OPTIMAL`         | Lịch tối ưu theo hàm mục tiêu                                        |
-| `FEASIBLE`        | Lịch hợp lệ, chưa chứng minh tối ưu (hết thời gian)                  |
-| `INFEASIBLE`      | Không tồn tại lịch thỏa mọi ràng buộc cứng; báo nguyên nhân theo A.8 |
-| `UNKNOWN`         | Hết thời gian mà chưa tìm được lịch hợp lệ nào                       |
+| Trạng thái CP-SAT | Ý nghĩa với người dùng |
+|---|---|
+| `OPTIMAL` | Lịch tối ưu theo hàm mục tiêu |
+| `FEASIBLE` | Lịch hợp lệ, chưa chứng minh tối ưu (hết thời gian) |
+| `INFEASIBLE` | Không tồn tại lịch thỏa mọi ràng buộc cứng; báo nguyên nhân theo A.8 |
+| `UNKNOWN` | Hết thời gian mà chưa tìm được lịch hợp lệ nào |
 
 Nếu mô hình đầy đủ chạy quá chậm với bộ `large`, dùng chiến lược hai pha:
 
@@ -388,23 +389,23 @@ Nếu mô hình đầy đủ chạy quá chậm với bộ `large`, dùng chiế
 
 Hai pha có thể cho lời giải kém hơn giải một lần, vì pha 1 không biết lịch bận của từng giám thị. Nếu pha 2 vô nghiệm (hiếm, chỉ xảy ra khi bật A-H10 hoặc khi ràng buộc giữ nguyên giám thị cho lượt 2 ca không thỏa được), quay lại giải một lần với giới hạn thời gian dài hơn. Khi viết báo cáo, so sánh hai cách này là một phần thực nghiệm tốt.
 
-Kết quả thử ở A.13 cho thấy phần giám thị làm thời gian chứng minh tối ưu tăng rõ rệt, kể cả với dữ liệu rất nhỏ. Lý do là các giám thị rảnh cùng lúc có thể đổi chỗ cho nhau mà không làm thay đổi giá trị mục tiêu, nên solver phải xét rất nhiều lời giải tương đương. Vì vậy khi cài đặt cần làm cả hai cách, và dự kiến dùng hai pha làm mặc định cho bộ `medium` và `large`. Quyết định cuối cùng dựa trên số đo thực nghiệm.
+Kết quả thử ở A.13 cho thấy phần giám thị làm thời gian chứng minh tối ưu tăng rõ rệt, kể cả với dữ liệu rất nhỏ. Lý do là các giám thị rảnh cùng lúc có thể đổi chỗ cho nhau mà không làm thay đổi giá trị mục tiêu, nên solver phải xét rất nhiều lời giải tương đương. Vì vậy khi cài đặt cần làm cả hai cách, và dự kiến dùng hai pha làm mặc định cho bộ `medium` và `large`. Số đo thực nghiệm ở A.13 xác nhận lựa chọn này.
 
 ### A.8. Kiểm tra dữ liệu trước khi giải
 
 Các kiểm tra sau chạy trước khi dựng mô hình. Mỗi lỗi được báo bằng một thông điệp chỉ rõ đối tượng gây lỗi.
 
-| Mã  | Điều kiện lỗi                                                                                         | Mức độ                                              |
-| --- | ----------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
-| P1  | Có môn $\tau_c > 280$                                                                                 | Lỗi, dừng                                           |
-| P2  | Có môn $n_c = 0$                                                                                      | Cảnh báo, bỏ môn đó khỏi mô hình                    |
-| P3  | Có môn $R_c = \emptyset$ (ví dụ thi máy nhưng khoa không có phòng máy)                                | Lỗi, dừng                                           |
-| P4  | Có môn $S_c = \emptyset$                                                                              | Lỗi, dừng                                           |
-| P5  | Có môn $n_c > L_c \cdot \sum_{r \in R_c} \kappa_r$ (kể cả dùng hết phòng ở mọi lượt vẫn không đủ chỗ) | Lỗi, dừng                                           |
-| P6  | $\lvert G \rvert < \nu$                                                                               | Lỗi, dừng                                           |
-| P7  | Môn thi viết có $L_c \ge 2$                                                                           | Thông tin: môn này được phép chia lượt theo dữ liệu |
-| P8  | Có cặp (sinh viên, môn) bị lặp trong dữ liệu đăng ký                                                  | Cảnh báo, loại bản ghi trùng                        |
-| P9  | Có phòng $\kappa_r \le 0$                                                                             | Cảnh báo, loại phòng đó khỏi mô hình                |
+| Mã | Điều kiện lỗi | Mức độ |
+|---|---|---|
+| P1 | Có môn $\tau_c > 280$ | Lỗi, dừng |
+| P2 | Có môn $n_c = 0$ | Cảnh báo, bỏ môn đó khỏi mô hình |
+| P3 | Có môn $R_c = \emptyset$ (ví dụ thi máy nhưng khoa không có phòng máy) | Lỗi, dừng |
+| P4 | Có môn $S_c = \emptyset$ | Lỗi, dừng |
+| P5 | Có môn $n_c > L_c \cdot \sum_{r \in R_c} \kappa_r$ (kể cả dùng hết phòng ở mọi lượt vẫn không đủ chỗ) | Lỗi, dừng |
+| P6 | $\lvert G \rvert < \nu$ | Lỗi, dừng |
+| P7 | Môn thi viết có $L_c \ge 2$ | Thông tin: môn này được phép chia lượt theo dữ liệu |
+| P8 | Có cặp (sinh viên, môn) bị lặp trong dữ liệu đăng ký | Cảnh báo, loại bản ghi trùng |
+| P9 | Có phòng $\kappa_r \le 0$ | Cảnh báo, loại phòng đó khỏi mô hình |
 
 Các kiểm tra này là điều kiện cần, không phải điều kiện đủ. Dữ liệu qua hết các kiểm tra vẫn có thể vô nghiệm, ví dụ khi có quá nhiều môn trùng sinh viên so với số ca. Khi đó CP-SAT trả về `INFEASIBLE`. Để gợi ý nguyên nhân, chạy lại lần lượt với một nhóm ràng buộc được nới ra và báo nhóm nào làm mô hình có nghiệm trở lại.
 
@@ -412,11 +413,11 @@ Các kiểm tra này là điều kiện cần, không phải điều kiện đ�
 
 Cài đặt ở `src/diagnose.py`, tự chạy trong `src/run.py` và `src/reschedule.py` mỗi khi solver trả về `INFEASIBLE` (tắt bằng `--no-diagnose`). Có ba nhóm ràng buộc được thử bỏ, mỗi lần bỏ một nhóm:
 
-| Nhóm     | Ràng buộc bị bỏ                                 | Nếu bỏ nhóm này mà có lịch, nghĩa là              |
-| -------- | ----------------------------------------------- | ------------------------------------------------- |
-| Giám thị | Biến $w$, A-H7, A-H8, A-H10 và ràng buộc bổ trợ | Không đủ giám thị rảnh để coi thi                 |
-| A-H2     | Không trùng lịch sinh viên                      | Quá ít ca so với số môn một số sinh viên phải thi |
-| A-H6     | Lịch bận của phòng                              | Phòng bận quá nhiều ca                            |
+| Nhóm | Ràng buộc bị bỏ | Nếu bỏ nhóm này mà có lịch, nghĩa là |
+|---|---|---|
+| Giám thị | Biến $w$, A-H7, A-H8, A-H10 và ràng buộc bổ trợ | Không đủ giám thị rảnh để coi thi |
+| A-H2 | Không trùng lịch sinh viên | Quá ít ca so với số môn một số sinh viên phải thi |
+| A-H6 | Lịch bận của phòng | Phòng bận quá nhiều ca |
 
 Mỗi lần thử chỉ tìm một lịch hợp lệ bất kỳ, không có hàm mục tiêu, với giới hạn 30 giây (hoặc `time_limit_sec` nếu nhỏ hơn). Kết quả được báo bằng mã N01–N05 (data_schema mục 5):
 
@@ -426,27 +427,27 @@ Mỗi lần thử chỉ tìm một lịch hợp lệ bất kỳ, không có hàm
 
 Chẩn đoán luôn dùng CP-SAT, kể cả khi lần giải chính dùng PuLP + CBC. Kết quả kiểm thử trên các biến thể của bộ `toy` (`tests/test_reschedule.py`), mỗi trường hợp chẩn đoán xong dưới 1 giây:
 
-| Biến thể                                   | Chẩn đoán                                                 |
-| ------------------------------------------ | --------------------------------------------------------- |
-| Chỉ 2 giảng viên coi thi                   | N01, nhóm giám thị                                        |
-| Chỉ 7 ca (ngày 14/12 và ca 1–3 ngày 15/12) | N01, nhóm A-H2                                            |
-| Phòng máy duy nhất bận từ 15/12 đến 17/12  | N01, nhóm A-H6                                            |
-| Chỉ 2 ca (ca 1, ca 2 ngày 14/12)           | N03: một phòng máy với 2 ca không đủ cho các lượt thi máy |
+| Biến thể | Chẩn đoán |
+|---|---|
+| Chỉ 2 giảng viên coi thi | N01, nhóm giám thị |
+| Chỉ 7 ca (ngày 14/12 và ca 1–3 ngày 15/12) | N01, nhóm A-H2 |
+| Phòng máy duy nhất bận từ 15/12 đến 17/12 | N01, nhóm A-H6 |
+| Chỉ 2 ca (ca 1, ca 2 ngày 14/12) | N03: một phòng máy với 2 ca không đủ cho các lượt thi máy |
 
 ### A.9. Đối chiếu với 10 quy tắc lập mô hình của Daskin
 
-| Quy tắc                                                  | Áp dụng trong mô hình                                                                              |
-| -------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| 1. Định nghĩa rõ mọi tập hợp bằng lời                    | Bảng A.2                                                                                           |
-| 2. Tách bạch tập hợp, đầu vào, biến quyết định           | Ba bảng riêng A.2, A.3, A.4                                                                        |
-| 3. Có chỉ số trong ký hiệu thì có trong lời định nghĩa   | Mọi ký hiệu có chỉ số đều nêu chỉ số trong cột ý nghĩa                                             |
-| 4. Không để chỉ số lơ lửng trong hàm mục tiêu            | Mọi chỉ số trong $P_1, \dots, P_6$ đều nằm dưới một dấu tổng                                       |
-| 5. Mục tiêu và mỗi ràng buộc chứa biến quyết định        | Đã kiểm tra từng công thức                                                                         |
-| 6. Mọi nhóm biến phải liên kết với nhau                  | $u \le x$; $q \le x$ và $x \le \sum q$; $w$ nối với $u$ qua $o_{r,t}$ (A-H7)                       |
-| 7. Mỗi chỉ số hoặc lấy tổng hoặc "với mọi", không cả hai | Đã kiểm tra từng công thức                                                                         |
-| 8. Giữ mô hình tuyến tính                                | Mọi ràng buộc tuyến tính; không có tích hai biến nhờ biến $q_{i,c,s}$ gắn trực tiếp với ca bắt đầu |
-| 9. Tránh big-M                                           | Không dùng; ràng buộc giữ nguyên giám thị ở A-H7 chỉ dùng hằng số 1                                |
-| 10. Tách nhỏ ràng buộc                                   | $u_{c,r,s} \le x_{c,s}$ và $q_{i,c,s} \le x_{c,s}$ viết cho từng phần tử thay vì gộp               |
+| Quy tắc | Áp dụng trong mô hình |
+|---|---|
+| 1. Định nghĩa rõ mọi tập hợp bằng lời | Bảng A.2 |
+| 2. Tách bạch tập hợp, đầu vào, biến quyết định | Ba bảng riêng A.2, A.3, A.4 |
+| 3. Có chỉ số trong ký hiệu thì có trong lời định nghĩa | Mọi ký hiệu có chỉ số đều nêu chỉ số trong cột ý nghĩa |
+| 4. Không để chỉ số lơ lửng trong hàm mục tiêu | Mọi chỉ số trong $P_1, \dots, P_6$ đều nằm dưới một dấu tổng |
+| 5. Mục tiêu và mỗi ràng buộc chứa biến quyết định | Đã kiểm tra từng công thức |
+| 6. Mọi nhóm biến phải liên kết với nhau | $u \le x$; $q \le x$ và $x \le \sum q$; $w$ nối với $u$ qua $o_{r,t}$ (A-H7) |
+| 7. Mỗi chỉ số hoặc lấy tổng hoặc "với mọi", không cả hai | Đã kiểm tra từng công thức |
+| 8. Giữ mô hình tuyến tính | Mọi ràng buộc tuyến tính; không có tích hai biến nhờ biến $q_{i,c,s}$ gắn trực tiếp với ca bắt đầu |
+| 9. Tránh big-M | Không dùng; ràng buộc giữ nguyên giám thị ở A-H7 chỉ dùng hằng số 1 |
+| 10. Tách nhỏ ràng buộc | $u_{c,r,s} \le x_{c,s}$ và $q_{i,c,s} \le x_{c,s}$ viết cho từng phần tử thay vì gộp |
 
 ### A.10. Hậu xử lý
 
@@ -462,10 +463,10 @@ Sau khi có lời giải:
 Ước lượng giới hạn trên, với 48 ca, giả sử mỗi sinh viên học 4–5 môn, 1/3 số môn thi trên máy và được chia lượt:
 
 | Bộ dữ liệu | Môn | Phòng | Sinh viên | Giám thị | Biến nhị phân (xấp xỉ) | Ràng buộc A-H2 |
-| ---------- | --- | ----- | --------- | -------- | ---------------------- | -------------- |
-| `toy`      | 5   | 3     | 50        | 6        | 3 nghìn                | 2,4 nghìn      |
-| `medium`   | 30  | 10    | 500       | 25       | 55 nghìn               | 24 nghìn       |
-| `large`    | 60  | 15    | 1.000     | 40       | 140 nghìn              | 48 nghìn       |
+|---|---|---|---|---|---|---|
+| `toy` | 5 | 3 | 50 | 6 | 3 nghìn | 2,4 nghìn |
+| `medium` | 30 | 10 | 500 | 25 | 55 nghìn | 24 nghìn |
+| `large` | 60 | 15 | 1.000 | 40 | 140 nghìn | 48 nghìn |
 
 Phần lớn biến đến từ $q$ (phân sinh viên vào lượt) và $w$ (giám thị). Các cách thu nhỏ mô hình khi cài đặt, không làm thay đổi tập nghiệm:
 
@@ -489,13 +490,13 @@ Phần lớn biến đến từ $q$ (phân sinh viên vào lượt) và $w$ (gi�
 
 Dữ liệu thử: 4 ngày, 15 ca (một ca nghỉ giữa buổi sáng), 3 phòng (2 thường, 1 máy), 30 sinh viên, 6 giám thị, 5 môn gồm: môn thi viết cần 2 phòng, môn thi viết 180 phút (2 ca), môn thi máy 20 sinh viên trên phòng 8 máy (buộc chia ít nhất 3 lượt), môn thi máy 150 phút buộc chia lượt, môn thi viết được phép chia lượt. Có phòng bận và giám thị bận.
 
-| Kịch bản                                                                                                                                              | Kết quả mong đợi           | Kết quả                                                           |
-| ----------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- | ----------------------------------------------------------------- |
-| Dữ liệu chuẩn, A-H10 tắt và bật                                                                                                                       | Có lời giải, không vi phạm | Tối ưu, không vi phạm; điểm phạt tính lại độc lập khớp với solver |
-| Môn thi máy 20 sinh viên nhưng chỉ cho 1 lượt                                                                                                         | Vô nghiệm                  | `INFEASIBLE`                                                      |
-| Chỉ còn 1 giám thị                                                                                                                                    | Vô nghiệm                  | `INFEASIBLE`                                                      |
-| 8 bộ dữ liệu ngẫu nhiên × 2 trạng thái A-H10                                                                                                          | Không vi phạm              | 16/16 không vi phạm                                               |
-| Cố ý làm hỏng lời giải theo 8 cách (bỏ lượt, sai ca 2 ca, sai loại phòng, thiếu chỗ, trùng lượt, trùng ca, thiếu giám thị, giám thị coi môn mình dạy) | Bộ kiểm tra phải phát hiện | 8/8 phát hiện đúng mã lỗi                                         |
+| Kịch bản | Kết quả mong đợi | Kết quả |
+|---|---|---|
+| Dữ liệu chuẩn, A-H10 tắt và bật | Có lời giải, không vi phạm | Tối ưu, không vi phạm; điểm phạt tính lại độc lập khớp với solver |
+| Môn thi máy 20 sinh viên nhưng chỉ cho 1 lượt | Vô nghiệm | `INFEASIBLE` |
+| Chỉ còn 1 giám thị | Vô nghiệm | `INFEASIBLE` |
+| 8 bộ dữ liệu ngẫu nhiên × 2 trạng thái A-H10 | Không vi phạm | 16/16 không vi phạm |
+| Cố ý làm hỏng lời giải theo 8 cách (bỏ lượt, sai ca 2 ca, sai loại phòng, thiếu chỗ, trùng lượt, trùng ca, thiếu giám thị, giám thị coi môn mình dạy) | Bộ kiểm tra phải phát hiện | 8/8 phát hiện đúng mã lỗi |
 
 Thời gian chứng minh tối ưu trên dữ liệu thử: 20 đến 56 giây tùy biến thể; bỏ mục tiêu A-S5 nhanh hơn. Đây là cơ sở cho khuyến nghị dùng hai pha ở A.7.
 
@@ -503,13 +504,13 @@ Thời gian chứng minh tối ưu trên dữ liệu thử: 20 đến 56 giây t
 
 Mô hình được cài đặt lần thứ hai bằng PuLP 3.3.2 với bộ giải CBC 2.10.3 (`src/exam_solver_pulp.py`), độc lập với CP-SAT. Kết quả với `configs/default.json`, CBC chạy một luồng:
 
-| Bộ dữ liệu                                   | Giới hạn | Kết quả CBC                              | Ghi chú                                                                        |
-| -------------------------------------------- | -------- | ---------------------------------------- | ------------------------------------------------------------------------------ |
-| `toy`                                        | 60 giây  | `FEASIBLE`, mục tiêu 2391, không vi phạm | Tìm ra lời giải đạt giá trị tối ưu ở khoảng giây thứ 9, trùng với CP-SAT       |
-| `toy`                                        | 300 giây | `FEASIBLE`, mục tiêu 2391                | Cận dưới chỉ đạt 2285, còn cách tối ưu khoảng 4%; không chứng minh được tối ưu |
-| `toy`, bỏ A-S5                               | 300 giây | `FEASIBLE`, mục tiêu 2391                | Cận dưới 2229; khác CP-SAT, phần giám thị không phải nguyên nhân chính         |
-| Dữ liệu chỉ có 2 ca (vô nghiệm)              | 60 giây  | `INFEASIBLE` sau 0,2 giây                |                                                                                |
-| `medium` (64 nghìn biến, 88 nghìn ràng buộc) | 300 giây | `UNKNOWN`                                | Chưa xong tiền xử lý và nút gốc; bị dừng ở hạn cứng 360 giây (thông báo S01)   |
+| Bộ dữ liệu | Giới hạn | Kết quả CBC | Ghi chú |
+|---|---|---|---|
+| `toy` | 60 giây | `FEASIBLE`, mục tiêu 2391, không vi phạm | Tìm ra lời giải đạt giá trị tối ưu ở khoảng giây thứ 9, trùng với CP-SAT |
+| `toy` | 300 giây | `FEASIBLE`, mục tiêu 2391 | Cận dưới chỉ đạt 2285, còn cách tối ưu khoảng 4%; không chứng minh được tối ưu |
+| `toy`, bỏ A-S5 | 300 giây | `FEASIBLE`, mục tiêu 2391 | Cận dưới 2229; khác CP-SAT, phần giám thị không phải nguyên nhân chính |
+| Dữ liệu chỉ có 2 ca (vô nghiệm) | 60 giây | `INFEASIBLE` sau 0,2 giây | |
+| `medium` (64 nghìn biến, 88 nghìn ràng buộc) | 300 giây | `UNKNOWN` | Chưa xong tiền xử lý và nút gốc; bị dừng ở hạn cứng 360 giây (thông báo S01) |
 
 Nhận xét: CP-SAT chứng minh tối ưu bộ `toy` trong 20–56 giây và tìm được lời giải hợp lệ cho `medium` trong 300 giây, còn CBC không chứng minh được tối ưu `toy` và không tìm được lời giải nào cho `medium`. Nguyên nhân là nới lỏng tuyến tính của mô hình xếp lịch cho cận dưới yếu (nhiều biến nhị phân gắn với nhau qua các ràng buộc phủ ca), nên phương pháp nhánh và cận phải duyệt rất nhiều nút; CP-SAT kết hợp lan truyền ràng buộc và học mệnh đề nên xử lý loại bài toán này tốt hơn.
 
@@ -519,103 +520,41 @@ Ba vấn đề kỹ thuật của CBC phát hiện khi cài đặt, đã xử l�
 2. Khi CBC dừng do hết giờ mà đã có lời giải, `prob.status` của PuLP vẫn là "Optimal". Trạng thái được đọc từ `prob.sol_status`, nơi phân biệt được tối ưu (1) và chỉ khả thi (2).
 3. Với mô hình lớn, CBC không dừng đúng giới hạn thời gian vì chỉ kiểm tra giới hạn giữa các bước. Solver đặt thêm hạn cứng (giới hạn cộng 30 giây hoặc 20%, lấy số lớn hơn) và dừng CBC khi vượt quá.
 
-#### Kết quả thực nghiệm và đánh giá hiệu năng
+#### Kết quả thực nghiệm hiệu năng
 
-**Mục tiêu thực nghiệm**
+Thực nghiệm có hệ thống (KHOE-4, chi tiết ở `experiments/README.md`): 30 lần giải gồm CP-SAT `single` và `two_phase` trên `toy`, `toy_gen`, `medium`, `large`, cộng PuLP + CBC trên hai bộ nhỏ. Mỗi tổ hợp chạy 3 lần (CP-SAT với `random_seed` 0, 1, 2), giới hạn 300 giây, CP-SAT 8 luồng. Thêm 6 kịch bản xếp lại trên `medium` và `large`.
 
-Thực nghiệm nhằm đánh giá hiệu năng và chất lượng nghiệm của các phương pháp giải bài toán xếp lịch thi, đồng thời kiểm tra khả năng điều chỉnh lịch khi phát sinh sự cố. Kết quả được sử dụng làm cơ sở lựa chọn chiến lược giải mặc định cho các bộ dữ liệu có quy mô `medium` và `large`.
-
-**Phương pháp và điều kiện thực nghiệm**
-
-Các phương pháp được đánh giá gồm:
-
-- **CP-SAT `single`:** Giải đồng thời bài toán xếp lịch, phân phòng, phân sinh viên và phân công giám thị.
-- **CP-SAT `two_phase`:** Chia quá trình giải thành hai pha: xếp lịch, phòng và sinh viên ở pha 1; phân công giám thị ở pha 2.
-- **PuLP/CBC:** Sử dụng mô hình quy hoạch nguyên hỗn hợp làm phương pháp đối chứng trên các bộ dữ liệu nhỏ.
-
-Thực nghiệm sử dụng bốn bộ dữ liệu `toy`, `toy_gen`, `medium` và `large`. CP-SAT được chạy với cả hai chiến lược trên toàn bộ dữ liệu, trong khi PuLP/CBC chỉ được đánh giá trên `toy` và `toy_gen`.
-
-Mỗi tổ hợp được thực hiện ba lần. CP-SAT sử dụng `random_seed` lần lượt là `0`, `1`, `2`, với `time_limit_sec = 300` và `num_workers = 8`. PuLP/CBC không sử dụng seed và chạy một luồng, do đó ba lần chạy chỉ đóng vai trò đo lặp.
-
-Tổng cộng có **30 lượt giải**, gồm 24 lượt CP-SAT và 6 lượt PuLP/CBC. Các phép đo được thực hiện tuần tự trên cùng một môi trường để hạn chế ảnh hưởng của việc sử dụng tài nguyên đồng thời.
-
-**Các chỉ số đánh giá**
-
-Hiệu năng của từng phương pháp được đánh giá dựa trên:
-
-1. **Trạng thái nghiệm:** `OPTIMAL`, `FEASIBLE`, `INFEASIBLE` hoặc `UNKNOWN`. Một lần giải được tính là tìm được lịch hợp lệ khi có nghiệm và không vi phạm ràng buộc cứng.
-2. **Giá trị mục tiêu (Z):** Tổng điểm phạt có trọng số theo A-S1–A-S6. Giá trị càng thấp thể hiện lịch có chất lượng tốt hơn theo hàm mục tiêu đã định nghĩa.
-3. **Thời gian giải:** Thời gian thực hiện được ghi nhận trong `solve_time_sec`.
-4. **Khoảng cách tới cận dưới (gap):** Đánh giá mức độ chênh lệch giữa nghiệm tìm được và cận dưới đã chứng minh.
-
-Công thức xác định khoảng cách tới cận dưới:
-
-Công thức xác định khoảng cách tới cận dưới:
+Khoảng cách tới cận dưới:
 
 $$
-\operatorname{gap} = \frac{Z - B}{Z}
+\text{gap} = \frac{Z - \max(B, 0)}{Z}
 $$
 
-Trong đó:
-
-- \(Z\): Giá trị hàm mục tiêu của nghiệm tìm được.
-- \(B\): Cận dưới tốt nhất đã được chứng minh.
-
-Trong đó, \(Z\) là giá trị mục tiêu của nghiệm tìm được và \(B\) là cận dưới tốt nhất. Chỉ tính gap khi có đủ hai giá trị và \(Z\ne0\). Gap bằng 0 cùng với cận dưới hợp lệ cho thấy đã chứng minh được tính tối ưu; gap lớn hơn 0 thể hiện vẫn còn khoảng cách chưa được chứng minh.
-
-Ngoài ra, thực nghiệm ghi nhận số lượt thi, số sinh viên phải thi nhiều môn trong một ngày và mức chênh lệch tải coi thi giữa các giám thị.
-
-**Kết quả so sánh các chiến lược**
+với $Z$ là giá trị mục tiêu của lời giải và $B$ là cận dưới solver báo. Vì $Z \ge 0$ nên cận âm không cho thông tin gì hơn cận 0 và được thay bằng 0. Gap bằng 0 là đã chứng minh tối ưu; gap bằng 1 là chưa chứng minh được gì.
 
 <!-- RESULTS_BEGIN -->
-
 Kết quả dưới đây tổng hợp từ `experiments/results/perf.csv` và `experiments/results/reschedule.csv`. Chi tiết phương pháp và phân tích: [Báo cáo thực nghiệm](../experiments/README.md).
 
-| Dữ liệu  | Chiến lược  | Nghiệm hợp lệ / 3 |    Z TB | Thời gian TB (s) | Gap TB |
-| -------- | ----------- | ----------------: | ------: | ---------------: | -----: |
-| `medium` | `single`    |               3/3 | 14994.7 |            300.7 |  1.313 |
-| `medium` | `two_phase` |               3/3 | 13050.3 |            240.8 |  1.078 |
-| `large`  | `single`    |               3/3 | 43494.0 |            302.1 |  1.217 |
-| `large`  | `two_phase` |               3/3 | 38758.0 |            242.6 |  1.238 |
+| Dữ liệu | Chiến lược | Nghiệm hợp lệ / 3 | Z TB | Thời gian TB (s) | Gap TB |
+|---|---|---:|---:|---:|---:|
+| `medium` | `single` | 3/3 | 14994.7 | 300.7 | 1.000 |
+| `medium` | `two_phase` | 3/3 | 13050.3 | 240.8 | 1.000 |
+| `large` | `single` | 3/3 | 43494.0 | 302.1 | 1.000 |
+| `large` | `two_phase` | 3/3 | 38758.0 | 242.6 | 1.000 |
 
-Các giá trị chưa có dữ liệu được ký hiệu "-"; không coi là 0.
+Dấu «—» là thiếu giá trị, không phải 0. Cận dưới âm được kẹp về 0 vì Z không âm, nên gap = 1 nghĩa là chưa chứng minh được gì.
 
-- **Medium:** đề xuất `two_phase` (single 3/3 nghiệm hợp lệ, two_phase 3/3; Z TB 14994.7 / 13050.3; gap TB 1.313 / 1.078; thời gian TB 300.7s / 240.8s).
-- **Large:** đề xuất `two_phase` (single 3/3 nghiệm hợp lệ, two_phase 3/3; Z TB 43494.0 / 38758.0; gap TB 1.217 / 1.238; thời gian TB 302.1s / 242.6s).
-- **KPI xếp lại trên large:** đạt KPI dưới 60 giây trên cả ba kịch bản đã đo.
+- Medium: đề xuất `two_phase` (single 3/3 nghiệm hợp lệ, two_phase 3/3; Z TB 14994.7 / 13050.3; gap TB 1.000 / 1.000; thời gian TB 300.7s / 240.8s).
+- Large: đề xuất `two_phase` (single 3/3 nghiệm hợp lệ, two_phase 3/3; Z TB 43494.0 / 38758.0; gap TB 1.000 / 1.000; thời gian TB 302.1s / 242.6s).
+- Xếp lại trên large: đạt KPI dưới 60 giây trên cả ba kịch bản đã đo; chưa giữ được chất lượng lịch ở `three_simultaneous`.
 <!-- RESULTS_END -->
 
-**Đánh giá khả năng xếp lại khi có sự cố**
+Kết luận:
 
-Thực nghiệm xếp lại được thực hiện trên `medium` và `large`, sử dụng lịch do `two_phase` với seed `0` tạo ra làm lịch ban đầu.
-
-Mỗi bộ dữ liệu được kiểm tra với ba kịch bản:
-
-1. Một phòng thi bị hỏng trong một ca đang có lịch thi.
-2. Một giám thị không thể coi thi trong cả ngày.
-3. Hai phòng thi gặp sự cố tại hai ca, đồng thời một giám thị bận cả ngày.
-
-Tổng cộng có **6 kịch bản xếp lại**, mỗi kịch bản được đo một lần. Quá trình xếp lại sử dụng solver `single` và giới hạn thời gian giải theo cấu hình (45 giây trong cấu hình hiện tại).
-
-Chỉ số `total_time_sec` đo toàn bộ thời gian xử lý của lời gọi xếp lại, bao gồm chuẩn bị dữ liệu, dựng mô hình, giải và hậu xử lý.
-
-Một kịch bản được xem là **đạt yêu cầu xếp lại dưới một phút** khi đồng thời thỏa mãn:
-
-- Tìm được lịch hợp lệ (`FEASIBLE` hoặc `OPTIMAL`).
-- Không vi phạm ràng buộc cứng.
-- Tổng thời gian xử lý nhỏ hơn 60 giây.
-
-Việc đánh giá còn xem xét số lượt thi thay đổi, số lượt phải chuyển thời gian, số sinh viên và giám thị bị ảnh hưởng nhằm phản ánh mức độ thay đổi so với lịch ban đầu.
-
-**Kết luận và định hướng lựa chọn chiến lược**
-
-Kết luận chính thức về chiến lược mặc định cho `medium` và `large` sẽ được xác định sau khi hoàn thành đầy đủ các phép đo, dựa trên chất lượng nghiệm, tỷ lệ tìm được lịch hợp lệ, khoảng cách tới cận dưới và thời gian xử lý.
-
-Đối với chức năng xếp lại, cần xác định liệu cả ba kịch bản trên `large` có đáp ứng yêu cầu dưới 60 giây hay không. Nếu không đạt, có thể xem xét thu hẹp phạm vi tối ưu, cố định những phần lịch không bị ảnh hưởng và tận dụng lịch cũ làm lời giải gợi ý, sau đó thực nghiệm lại để đánh giá hiệu quả.
-
-Kết quả cần được diễn giải trong phạm vi môi trường và dữ liệu đã đo; không mặc định một phương pháp luôn vượt trội trên mọi trường hợp.
-
-Các bảng số liệu đầy đủ, cấu hình máy, phương pháp tái lập và phân tích chi tiết được trình bày tại [Báo cáo thực nghiệm](../experiments/README.md).
+- `two_phase` tốt hơn `single` trên `medium` và `large`: cùng seed thì `two_phase` luôn cho Z thấp hơn (trung bình thấp hơn 13% trên `medium`, 11% trên `large`), dù chỉ dùng khoảng 240 trong 300 giây. Pha 1 không có biến giám thị nên nhỏ hơn và không bị các lời giải tương đương do đổi chỗ giám thị làm chậm (A.7). Đây là chiến lược khuyến nghị cho `medium` và `large`. Mặc định trong `configs/default.json` vẫn là `single`, vì với dữ liệu nhỏ `single` chứng minh được tối ưu.
+- Trên `medium` và `large`, cận dưới của cả hai chiến lược đều âm, nên gap bằng 1: không chứng minh được gì về chất lượng lời giải, và gap không dùng để so sánh hai chiến lược.
+- CP-SAT chứng minh tối ưu `toy` trong 4–14 giây và `toy_gen` trong 18–26 giây. CBC tìm được lời giải tốt cho hai bộ này nhưng chạy hết 300 giây mà không chứng minh được tối ưu, và một lần trên `toy_gen` dừng ở 3710 thay vì 3650. Nguyên nhân như đã nêu ở mục trên.
+- Xếp lại: cả 6 kịch bản có lịch hợp lệ trong dưới 60 giây (`medium` khoảng 25 giây, `large` khoảng 46 giây). Trên `large` solver luôn chạy hết giới hạn 45 giây, nên thời gian đạt KPI là nhờ giới hạn này. Kịch bản ba sự cố cùng lúc trên `large` cho lịch kém: Z tăng từ 37660 lên 108280, 98 lượt thay đổi và 999 trong 1000 sinh viên bị ảnh hưởng. Cần cải tiến A.14 (ví dụ chỉ mở lại các lượt liên quan đến sự cố, cố định phần còn lại) rồi đo lại.
 
 ### A.14. Xếp lại khi có sự cố
 
@@ -632,12 +571,12 @@ Mô hình giữ nguyên mọi ràng buộc cứng ở A.5 và điểm phạt ở
 
 Gọi $\bar{X}$, $\bar{U}$, $\bar{Q}$, $\bar{W}$ là các bộ chỉ số mà $x$, $u$, $q$, $w$ bằng 1 trong lịch cũ ($\bar{Q}$ chỉ gồm các môn chia lượt). Biến nào không còn tồn tại (ví dụ $u$ của phòng vừa báo hỏng) được coi là bằng 0, tức thay đổi đó chắc chắn xảy ra.
 
-| Mã   | Đếm                                                | Công thức                                                |
-| ---- | -------------------------------------------------- | -------------------------------------------------------- |
-| A-R1 | Lượt cũ không còn mở ở ca bắt đầu cũ (dời ca)      | $R_1 = \sum_{(c,s) \in \bar{X}} (1 - x_{c,s})$           |
-| A-R2 | Lượt cũ giữ ca nhưng bỏ một phòng cũ (đổi phòng)   | $R_2 = \sum_{(c,r,s) \in \bar{U}} (x_{c,s} - u_{c,r,s})$ |
-| A-R3 | Sinh viên của môn chia lượt bị chuyển khỏi lượt cũ | $R_3 = \sum_{(i,c,s) \in \bar{Q}} (1 - q_{i,c,s})$       |
-| A-R4 | Giám thị bị bỏ khỏi một ca coi thi cũ (phòng, ca)  | $R_4 = \sum_{(g,r,t) \in \bar{W}} (1 - w_{g,r,t})$       |
+| Mã | Đếm | Công thức |
+|---|---|---|
+| A-R1 | Lượt cũ không còn mở ở ca bắt đầu cũ (dời ca) | $R_1 = \sum_{(c,s) \in \bar{X}} (1 - x_{c,s})$ |
+| A-R2 | Lượt cũ giữ ca nhưng bỏ một phòng cũ (đổi phòng) | $R_2 = \sum_{(c,r,s) \in \bar{U}} (x_{c,s} - u_{c,r,s})$ |
+| A-R3 | Sinh viên của môn chia lượt bị chuyển khỏi lượt cũ | $R_3 = \sum_{(i,c,s) \in \bar{Q}} (1 - q_{i,c,s})$ |
+| A-R4 | Giám thị bị bỏ khỏi một ca coi thi cũ (phòng, ca) | $R_4 = \sum_{(g,r,t) \in \bar{W}} (1 - w_{g,r,t})$ |
 
 Vì $u_{c,r,s} \le x_{c,s}$, mỗi số hạng của $R_2$ bằng 0 hoặc 1, và bằng 1 đúng khi lượt giữ ca mà bỏ phòng $r$. Lượt bị dời ca đã được tính ở A-R1 nên không bị tính thêm ở A-R2. Mọi công thức đều tuyến tính, không cần biến phụ.
 
@@ -649,12 +588,12 @@ $$
 
 Trọng số mặc định (khóa `reschedule.weights` trong cấu hình, data_schema mục 6):
 
-| Trọng số        | Giá trị | Lý do                                                                                                 |
-| --------------- | ------- | ----------------------------------------------------------------------------------------------------- |
-| $\rho_1$ (A-R1) | 1000    | Dời ca buộc toàn bộ sinh viên và giám thị của lượt xem lại lịch; đắt bằng 5 lượt thêm (A-S6)          |
-| $\rho_2$ (A-R2) | 100     | Đổi phòng giữ nguyên giờ thi, chỉ cần báo sinh viên của phòng đó                                      |
-| $\rho_3$ (A-R3) | 50      | Chuyển một sinh viên sang lượt khác chỉ đáng khi giảm được ít nhất 2 đơn vị A-S2 hoặc nửa đơn vị A-S1 |
-| $\rho_4$ (A-R4) | 20      | Đổi giám thị một ca coi thi, ngang một đơn vị chênh lệch tải A-S5                                     |
+| Trọng số | Giá trị | Lý do |
+|---|---|---|
+| $\rho_1$ (A-R1) | 1000 | Dời ca buộc toàn bộ sinh viên và giám thị của lượt xem lại lịch; đắt bằng 5 lượt thêm (A-S6) |
+| $\rho_2$ (A-R2) | 100 | Đổi phòng giữ nguyên giờ thi, chỉ cần báo sinh viên của phòng đó |
+| $\rho_3$ (A-R3) | 50 | Chuyển một sinh viên sang lượt khác chỉ đáng khi giảm được ít nhất 2 đơn vị A-S2 hoặc nửa đơn vị A-S1 |
+| $\rho_4$ (A-R4) | 20 | Đổi giám thị một ca coi thi, ngang một đơn vị chênh lệch tải A-S5 |
 
 Khi thử trên `toy`, với $\rho_3$ bằng 10, 30, 50 hoặc 100 thì số sinh viên bị ảnh hưởng đều bằng nhau. Trọng số nhỏ hơn chỉ cho phép solver đảo thêm chính những sinh viên vốn đã bị ảnh hưởng để giảm $Z$.
 
@@ -675,13 +614,13 @@ Số sinh viên và giám thị bị ảnh hưởng không lấy từ $R_3$, $R_
 
 Kết quả đo (8 luồng, cấu hình mặc định). Lịch cũ của `toy` là kết quả tham chiếu; lịch cũ của `medium` là lịch hai pha với giới hạn 300 giây ($Z$ = 11586):
 
-| Bộ       | Sự cố                                                                   | Kết quả                                                                                                                    | Thời gian giải         |
-| -------- | ----------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
-| `toy`    | Phòng máy G2-LAB1 hỏng ca 3 ngày 15/12                                  | `OPTIMAL`, không vi phạm, 1 lượt dời ca, 11 sinh viên và 3 giám thị bị ảnh hưởng, $Z$ từ 2391 lên 2601                     | 0,3 giây               |
-| `toy`    | Giảng viên GV02 bận cả ngày 15/12                                       | `OPTIMAL`, không vi phạm, chỉ đổi giám thị của 2 lượt, $Z$ giữ 2391                                                        | 0,2 giây               |
-| `toy`    | Không có sự cố                                                          | `OPTIMAL`, lịch giữ nguyên                                                                                                 | 0,2 giây               |
+| Bộ | Sự cố | Kết quả | Thời gian giải |
+|---|---|---|---|
+| `toy` | Phòng máy G2-LAB1 hỏng ca 3 ngày 15/12 | `OPTIMAL`, không vi phạm, 1 lượt dời ca, 11 sinh viên và 3 giám thị bị ảnh hưởng, $Z$ từ 2391 lên 2601 | 0,3 giây |
+| `toy` | Giảng viên GV02 bận cả ngày 15/12 | `OPTIMAL`, không vi phạm, chỉ đổi giám thị của 2 lượt, $Z$ giữ 2391 | 0,2 giây |
+| `toy` | Không có sự cố | `OPTIMAL`, lịch giữ nguyên | 0,2 giây |
 | `medium` | Phòng máy E3-LAB2 hỏng ca 1 ngày 14/12, phòng G2-103 hỏng cả ngày 14/12 | `FEASIBLE`, không vi phạm, 2 lượt đổi phòng, không lượt nào dời ca, 68 sinh viên và 5 giám thị bị ảnh hưởng, $Z$ giữ 11586 | 45 giây (tổng 50 giây) |
-| `medium` | Giảng viên GV01 bận cả ngày 14/12                                       | `OPTIMAL`, không vi phạm, chỉ đổi giám thị, $Z$ giữ 11586                                                                  | 39 giây (tổng 43 giây) |
+| `medium` | Giảng viên GV01 bận cả ngày 14/12 | `OPTIMAL`, không vi phạm, chỉ đổi giám thị, $Z$ giữ 11586 | 39 giây (tổng 43 giây) |
 
 ---
 

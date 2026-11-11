@@ -33,7 +33,7 @@ def test_csv_schemas_exactly_match_task():
     "objective,bound,expected",
     [
         (100, 80, 0.2),
-        (100, -20, 1.2),
+        (100, -20, 1.0),  # cận âm không tốt hơn cận 0 vì Z >= 0
         (None, 0, ""),
         (100, None, ""),
         (0, 0, ""),
@@ -232,6 +232,14 @@ def test_summary_complete_counts_and_reschedule_sla(tmp_path, monkeypatch):
     _write_csv(r, resch.COLUMNS, rows)
     content, *_ = report.summary()
     assert "đạt KPI dưới 60 giây" in content
+
+
+def test_reschedule_quality_is_judged_separately_from_time():
+    fast = _resch_row("large", "three_simultaneous", seconds=46)
+    assert report.resch_time_ok(fast)
+    assert report.resch_quality_ok({**fast, "objective_after": "110"})        # +10%: còn chấp nhận
+    assert not report.resch_quality_ok({**fast, "objective_after": "288"})    # nhanh nhưng xáo trộn lớn
+    assert not report.resch_quality_ok({**fast, "total_time_sec": "61", "objective_after": "100"})
 
 
 def test_summary_rejects_duplicate_and_bad_header(tmp_path, monkeypatch):
