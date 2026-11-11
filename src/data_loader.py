@@ -62,8 +62,8 @@ class _Reader:
     def has_error(self) -> bool:
         return any(m.level == "error" for m in self.messages)
 
-    def read_csv(self, path: str, fname: str) -> Optional[list[Row]]:
-        """Đọc file theo quy ước mục 2. Trả None nếu thiếu cột bắt buộc."""
+    def read_csv(self, path: str, fname: str, schema: Optional[dict] = None) -> Optional[list[Row]]:
+        """Đọc file theo quy ước mục 2. Trả None nếu thiếu cột bắt buộc. schema mặc định là SCHEMA của bài A."""
         with open(path, "rb") as f:
             text = f.read().decode("utf-8-sig")
         first = next((ln for ln in text.splitlines() if ln.strip()), "")
@@ -83,7 +83,7 @@ class _Reader:
                 continue
             rows.append((lineno, {header[k]: (record[k] if k < len(record) else "") for k in range(len(header))}))
 
-        required, optional = SCHEMA[fname]
+        required, optional = (schema or SCHEMA)[fname]
         header = header or []
         for col in required:
             if col not in header:
@@ -140,10 +140,15 @@ class _Reader:
 
 
 def load_instance(folder: str, config_path: Optional[str] = None) -> LoadResult:
-    """Đọc toàn bộ bộ dữ liệu. Không dừng ở lỗi đầu tiên mà gom hết thông báo (data_schema mục 5)."""
+    """Đọc toàn bộ bộ dữ liệu. Không dừng ở lỗi đầu tiên mà gom hết thông báo (data_schema mục 5).
+
+    Nếu cấu hình có "problem": "B" thì đọc theo bài toán B (src/data_loader_b.py, data_schema mục 9)."""
     messages: list[Message] = []
     rd = _Reader(messages)
     config = load_config(config_path, messages)
+    if config["problem"] == "B":
+        from src.data_loader_b import read_problem_b
+        return read_problem_b(folder, config, messages)
     name = os.path.basename(os.path.normpath(folder))
 
     data: dict[str, Optional[list[Row]]] = {}

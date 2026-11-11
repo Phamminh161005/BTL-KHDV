@@ -8,6 +8,7 @@ from typing import Optional
 from src.instance import Message
 
 DEFAULT_CONFIG: dict = {
+    "problem": "A",                 # "A" lịch thi, "B" lịch học theo tuần (data_schema mục 9.8)
     "strategy": "single",
     "time_limit_sec": 300,
     "num_workers": 8,
@@ -16,11 +17,14 @@ DEFAULT_CONFIG: dict = {
     "forbid_own_course": False,
     "written_capacity_ratio": 0.5,
     "default_max_sittings_computer": 3,
-    "weights": {"A-S1": 100, "A-S2": 30, "A-S3": 50, "A-S4": 1, "A-S5": 20, "A-S6": 200},
-    # Xếp lại khi có sự cố (model_spec A.14)
+    "weights": {"A-S1": 100, "A-S2": 30, "A-S3": 50, "A-S4": 1, "A-S5": 20, "A-S6": 200,
+                "B-S1": 1, "B-S2": 50, "B-S3": 100, "B-S4": 30},
+    # Bài toán B: ngưỡng sử dụng phòng máy rho của B-S4 (model_spec B.6)
+    "lab_reserve_ratio": 0.85,
+    # Xếp lại khi có sự cố (model_spec A.14, B.9)
     "reschedule": {
         "time_limit_sec": 45,
-        "weights": {"A-R1": 1000, "A-R2": 100, "A-R3": 50, "A-R4": 20},
+        "weights": {"A-R1": 1000, "A-R2": 100, "A-R3": 50, "A-R4": 20, "B-R1": 100, "B-R2": 20},
     },
 }
 
@@ -34,6 +38,8 @@ def _is_number(x) -> bool:
 
 
 _VALIDATORS = {
+    "problem": lambda x: x in ("A", "B"),
+    "lab_reserve_ratio": lambda x: _is_number(x) and 0 < x <= 1,
     "strategy": lambda x: x in ("single", "two_phase"),
     "time_limit_sec": lambda x: _is_number(x) and x > 0,
     "num_workers": lambda x: _is_int(x) and x >= 1,
