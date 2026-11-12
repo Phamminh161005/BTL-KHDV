@@ -93,6 +93,17 @@ Phần xem kết quả:
 Kiểm thử giao diện: `pytest tests/test_app.py`. Test chạy bằng AppTest trên bản sao dữ liệu toy trong
 thư mục tạm (biến môi trường `EXAM_APP_DATA_DIR`, `EXAM_APP_OUTPUT_DIR`), không ghi vào `data/` và `output/` của repo.
 
+## Giao diện bài toán B (MANH-5)
+
+- Tab **Lịch học tuần B** chỉ liệt kê bộ dữ liệu có `week_slots.csv` và `classes.csv`; danh sách A không còn chứa `toy_b`.
+- Chọn `toy_b`, rồi **Mẫu toy_b tham chiếu** để mở 24 buổi trong `tests/reference/toy_timetable.json`. Đây là mẫu tham chiếu, không phải solver chạy từ giao diện. Mặc định giao diện đọc `output/<dataset>/timetable.json`.
+- Lưới Thứ × ca và danh sách buổi lọc đồng thời theo phòng, giảng viên, nhóm bắt buộc. Nhóm không chứa lớp tự chọn. Excel xuất các buổi đang lọc và KPI toàn lịch (có chú thích phạm vi); KPI được tính lại từ `InstanceB`, không tin số đính kèm JSON. Lịch có vi phạm cứng không được xuất.
+- Tab **Sự cố B** khai báo một phòng/giảng viên bận ở một ca hoặc thêm lớp, xuất `incidents_b.json` dạng nháp `B-incident-draft-v1`. Đây chưa phải hợp đồng đầu vào của backend. Nút xếp lại bị khóa đến khi có quy trình B của Minh. Có thể nhập đường dẫn `retimetable.json` để đối chiếu; bảng so sánh ghép lớp/ca trước, rồi mới ghép buổi chuyển ca. File lịch mới được kiểm tra lại với ca bận đang chọn; trường hợp thêm lớp chưa được xác thực với dữ liệu mở rộng. Không tuyên bố đã tự động sửa lịch.
+- Tab **Thực nghiệm B** đọc `perf_b.csv`, `lab_reserve_b.csv` từ `EXAM_APP_RESULTS_DIR`; dữ liệu mẫu chỉ dùng khi bật lựa chọn rõ ràng. Hợp đồng CSV tạm và giới hạn diễn giải được ghi ở `experiments/README.md`, cần đối chiếu KHOE-5 trước tích hợp thật.
+- Kiểm thử B: `pytest tests/test_kpi_b.py tests/test_app_b.py tests/test_app_experiments_b.py`; hồi quy A: `pytest tests/test_app.py`.
+
+Chưa nghiệm thu luồng solver/xếp lại B: `room_solver.py` hiện là stub. Ca phòng máy hỏng chỉ có thể kiểm tra khai báo và so sánh hai file, chưa thể chạy xếp lại tự động.
+
 ## Cấu trúc thư mục
 
 ```

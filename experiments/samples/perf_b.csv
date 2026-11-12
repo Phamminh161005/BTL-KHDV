@@ -1,0 +1,5 @@
+dataset,seed,status,solve_time_sec,time_limit_sec,objective,best_bound,solver,strategy
+synthetic_small,0,OPTIMAL,12.4,300,120,120,cp-sat,single
+synthetic_small,1,FEASIBLE,300.0,300,124,110,cp-sat,single
+synthetic_medium,0,FEASIBLE,285.2,300,430,300,cp-sat,two_phase
+synthetic_medium,1,UNKNOWN,300.0,300,,,cp-sat,two_phase
