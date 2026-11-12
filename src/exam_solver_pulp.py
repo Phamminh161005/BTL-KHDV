@@ -45,8 +45,15 @@ def solve(instance: Instance, config: dict) -> SolveResult:
     """Giải bài toán A bằng PuLP + CBC. Đầu vào, đầu ra giống src.exam_solver.solve."""
     if config["strategy"] != "single":
         raise NotImplementedError("solver PuLP chỉ hỗ trợ strategy 'single'")
-    started = time.time()
+    started = time.monotonic()
+    budget = max(0.0, float(config["time_limit_sec"]))
+    if budget <= 0:
+        return SolveResult("UNKNOWN", time.monotonic() - started, solver_name=SOLVER_NAME)
     model = _Model(instance, config)
+    remaining = budget - (time.monotonic() - started)
+    if remaining <= 0:
+        return SolveResult("UNKNOWN", time.monotonic() - started, solver_name=SOLVER_NAME,
+                           messages=[Message("S03", "warning", "Hết thời gian khi dựng mô hình PuLP")])
     # Không truyền threads: bản CBC 2.10.3 đóng gói trong PuLP cho Windows bị treo ngay khi bắt đầu nhánh và cận
     # nếu có tham số -threads (kể cả threads=1), và không còn tôn trọng giới hạn thời gian. Vì vậy CBC chạy một
     # luồng; num_workers trong cấu hình chỉ áp dụng cho CP-SAT.
@@ -55,17 +62,17 @@ def solve(instance: Instance, config: dict) -> SolveResult:
         warnings.simplefilter("ignore", DeprecationWarning)
         cbc = pulp.PULP_CBC_CMD(
             msg=False,
-            timeLimit=config["time_limit_sec"],
+            timeLimit=remaining,
             gapRel=0,
             options=[f"randomCbcSeed {config['random_seed']}"] if config["random_seed"] > 0 else [],
         )
-    deadline = hard_deadline(config["time_limit_sec"])
+    deadline = max(0.0, hard_deadline(budget) - (time.monotonic() - started))
     try:
         timed_out = _solve_with_deadline(model.prob, cbc, deadline)
     except pulp.PulpSolverError as e:
-        return SolveResult("UNKNOWN", time.time() - started, solver_name=SOLVER_NAME, messages=[
+        return SolveResult("UNKNOWN", time.monotonic() - started, solver_name=SOLVER_NAME, messages=[
             Message("S02", "error", f"CBC thoát bất thường: {e}")])
-    elapsed = time.time() - started
+    elapsed = time.monotonic() - started
     if timed_out:
         return SolveResult("UNKNOWN", elapsed, solver_name=SOLVER_NAME, messages=[
             Message("S01", "warning",
@@ -80,7 +87,8 @@ def solve(instance: Instance, config: dict) -> SolveResult:
     objective = sum(config["weights"][k] * penalties[k] for k in PENALTY_KEYS)
     # PuLP không trả cận dưới của CBC; chỉ biết cận bằng giá trị mục tiêu khi đã chứng minh tối ưu.
     best_bound = objective if status == "OPTIMAL" else None
-    return SolveResult(status, elapsed, objective, best_bound, penalties, solution, solver_name=SOLVER_NAME)
+    return SolveResult(status, time.monotonic() - started, objective, best_bound, penalties, solution,
+                       solver_name=SOLVER_NAME)
 
 
 def hard_deadline(time_limit: float) -> float:

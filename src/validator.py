@@ -17,6 +17,8 @@ SESSION = {1: "sáng", 2: "sáng", 3: "chiều", 4: "chiều"}
 
 def _expected_periods(duration: int, start_period: int):
     """Các ca một lượt phải chiếm, suy ra trực tiếp từ khung giờ (không dùng l_c của mô hình)."""
+    if start_period not in PERIOD_TIMES:
+        return None
     start, end = PERIOD_TIMES[start_period]
     if duration + OVERHEAD_MIN <= end - start:
         return [start_period]
@@ -42,23 +44,37 @@ def validate(instance: Instance, schedule: dict, config: dict) -> list[dict]:
     def add(code, message, **refs):
         out.append({"code": code, "message": message, "refs": refs})
 
-    sittings = schedule["sittings"]
+    raw_sittings = schedule["sittings"]
+    sittings = []
     slots = {(d.isoformat(), k) for d, k in instance.slots}
     nu = config["proctors_per_room"]
 
     # A-H1: thời gian của từng lượt và số lượt của từng môn
     occupied = {}
-    for s in sittings:
+    seen_ids = set()
+    for s in raw_sittings:
         sid = s["sitting_id"]
+        if sid in seen_ids:
+            add("A-H1", f"Trùng mã lượt {sid}", sitting_id=sid)
+            continue
+        seen_ids.add(sid)
         course = instance.courses.get(s["course_id"])
         if course is None:
             add("A-H1", f"Lượt {sid} thuộc môn không có trong dữ liệu", sitting_id=sid)
+            continue
+        try:
+            dt.date.fromisoformat(s["date"])
+        except (ValueError, TypeError):
+            add("A-H1", f"Lượt {sid} có ngày không hợp lệ", sitting_id=sid)
             continue
         periods = _expected_periods(course.duration_min, s["start_period"])
         if periods is None or periods != s["periods"] or any((s["date"], k) not in slots for k in periods):
             add("A-H1", f"Lượt {sid} không đặt được vào khung ca hợp lệ "
                         f"(thi {course.duration_min} phút, bắt đầu ca {s['start_period']})", sitting_id=sid)
-        occupied[sid] = periods or s["periods"]
+        if periods is None:
+            continue  # không dựng khoảng giờ từ ca sai; lỗi A-H1 đã được báo
+        occupied[sid] = periods
+        sittings.append(s)
     by_course = {}
     for s in sittings:
         by_course.setdefault(s["course_id"], []).append(s)

@@ -1,0 +1,1713 @@
+{
+  "meta": {
+    "problem": "B",
+    "dataset": "medium_b",
+    "created_at": "2026-11-12T00:33:54+07:00",
+    "solver": "OR-Tools CP-SAT 9.15.6755",
+    "strategy": "single",
+    "config": {
+      "problem": "B",
+      "strategy": "single",
+      "time_limit_sec": 300.0,
+      "num_workers": 8,
+      "random_seed": 0,
+      "proctors_per_room": 2,
+      "forbid_own_course": false,
+      "written_capacity_ratio": 0.5,
+      "default_max_sittings_computer": 3,
+      "weights": {
+        "A-S1": 100,
+        "A-S2": 30,
+        "A-S3": 50,
+        "A-S4": 1,
+        "A-S5": 20,
+        "A-S6": 200,
+        "B-S1": 1,
+        "B-S2": 50,
+        "B-S3": 100,
+        "B-S4": 30
+      },
+      "lab_reserve_ratio": 0.85,
+      "reschedule": {
+        "time_limit_sec": 45,
+        "weights": {
+          "A-R1": 1000,
+          "A-R2": 100,
+          "A-R3": 50,
+          "A-R4": 20,
+          "B-R1": 100,
+          "B-R2": 20
+        }
+      }
+    }
+  },
+  "status": "OPTIMAL",
+  "objective": 1357,
+  "best_bound": 1357.0,
+  "solve_time_sec": 2.339619699996547,
+  "penalties": {
+    "B-S1": 1177,
+    "B-S2": 0,
+    "B-S3": 0,
+    "B-S4": 6
+  },
+  "sessions": [
+    {
+      "session_id": "B027-LT@T2_1",
+      "class_id": "B027-LT",
+      "class_name": "Học phần 27 (lý thuyết)",
+      "course_id": "B027",
+      "needs_lab": false,
+      "weekday": 2,
+      "period": 1,
+      "start_time": "07:00",
+      "end_time": "09:30",
+      "room_id": "G2-103",
+      "room_capacity": 80,
+      "size": 75,
+      "lecturer_id": "GV16",
+      "groups": [
+        "K68-N03-1",
+        "K68-N03-2"
+      ]
+    },
+    {
+      "session_id": "B005-LT@T2_1",
+      "class_id": "B005-LT",
+      "class_name": "Học phần 5 (lý thuyết)",
+      "course_id": "B005",
+      "needs_lab": false,
+      "weekday": 2,
+      "period": 1,
+      "start_time": "07:00",
+      "end_time": "09:30",
+      "room_id": "G2-104",
+      "room_capacity": 60,
+      "size": 34,
+      "lecturer_id": "GV11",
+      "groups": [
+        "K68-N01-1",
+        "K68-N01-2"
+      ]
+    },
+    {
+      "session_id": "B002-TH2@T2_1",
+      "class_id": "B002-TH2",
+      "class_name": "Học phần 2 (thực hành 2)",
+      "course_id": "B002",
+      "needs_lab": true,
+      "weekday": 2,
+      "period": 1,
+      "start_time": "07:00",
+      "end_time": "09:30",
+      "room_id": "G2-LAB1",
+      "room_capacity": 28,
+      "size": 12,
+      "lecturer_id": "GV23",
+      "groups": [
+        "K68-N02-2"
+      ]
+    },
+    {
+      "session_id": "B013-TH1@T2_2",
+      "class_id": "B013-TH1",
+      "class_name": "Học phần 13 (thực hành 1)",
+      "course_id": "B013",
+      "needs_lab": true,
+      "weekday": 2,
+      "period": 2,
+      "start_time": "09:40",
+      "end_time": "12:10",
+      "room_id": "E3-LAB2",
+      "room_capacity": 28,
+      "size": 23,
+      "lecturer_id": "GV12",
+      "groups": [
+        "K68-N01-1"
+      ]
+    },
+    {
+      "session_id": "B007-LT@T2_2",
+      "class_id": "B007-LT",
+      "class_name": "Học phần 7 (lý thuyết)",
+      "course_id": "B007",
+      "needs_lab": false,
+      "weekday": 2,
+      "period": 2,
+      "start_time": "09:40",
+      "end_time": "12:10",
+      "room_id": "G2-102",
+      "room_capacity": 60,
+      "size": 30,
+      "lecturer_id": "GV23",
+      "groups": [
+        "K68-N03-1",
+        "K68-N03-2"
+      ]
+    },
+    {
+      "session_id": "B016-LT@T2_2",
+      "class_id": "B016-LT",
+      "class_name": "Học phần 16 (lý thuyết)",
+      "course_id": "B016",
+      "needs_lab": false,
+      "weekday": 2,
+      "period": 2,
+      "start_time": "09:40",
+      "end_time": "12:10",
+      "room_id": "G2-103",
+      "room_capacity": 80,
+      "size": 77,
+      "lecturer_id": "GV22",
+      "groups": [
+        "K68-N04-1",
+        "K68-N04-2"
+      ]
+    },
+    {
+      "session_id": "B006-TH2@T2_2",
+      "class_id": "B006-TH2",
+      "class_name": "Học phần 6 (thực hành 2)",
+      "course_id": "B006",
+      "needs_lab": true,
+      "weekday": 2,
+      "period": 2,
+      "start_time": "09:40",
+      "end_time": "12:10",
+      "room_id": "G2-LAB3",
+      "room_capacity": 20,
+      "size": 19,
+      "lecturer_id": "GV14",
+      "groups": [
+        "K68-N02-2"
+      ]
+    },
+    {
+      "session_id": "B025-LT@T2_3",
+      "class_id": "B025-LT",
+      "class_name": "Học phần 25 (lý thuyết)",
+      "course_id": "B025",
+      "needs_lab": false,
+      "weekday": 2,
+      "period": 3,
+      "start_time": "13:00",
+      "end_time": "15:30",
+      "room_id": "G2-101",
+      "room_capacity": 80,
+      "size": 61,
+      "lecturer_id": "GV12",
+      "groups": [
+        "K68-N01-1",
+        "K68-N01-2"
+      ]
+    },
+    {
+      "session_id": "B010-LT@T2_3",
+      "class_id": "B010-LT",
+      "class_name": "Học phần 10 (lý thuyết)",
+      "course_id": "B010",
+      "needs_lab": false,
+      "weekday": 2,
+      "period": 3,
+      "start_time": "13:00",
+      "end_time": "15:30",
+      "room_id": "G2-102",
+      "room_capacity": 60,
+      "size": 29,
+      "lecturer_id": "GV14",
+      "groups": [
+        "K68-N02-1",
+        "K68-N02-2"
+      ]
+    },
+    {
+      "session_id": "B024-LT@T2_3",
+      "class_id": "B024-LT",
+      "class_name": "Học phần 24 (lý thuyết)",
+      "course_id": "B024",
+      "needs_lab": false,
+      "weekday": 2,
+      "period": 3,
+      "start_time": "13:00",
+      "end_time": "15:30",
+      "room_id": "G2-103",
+      "room_capacity": 80,
+      "size": 63,
+      "lecturer_id": "GV06",
+      "groups": [
+        "K68-N04-1",
+        "K68-N04-2"
+      ]
+    },
+    {
+      "session_id": "B015-TH2@T2_3",
+      "class_id": "B015-TH2",
+      "class_name": "Học phần 15 (thực hành 2)",
+      "course_id": "B015",
+      "needs_lab": true,
+      "weekday": 2,
+      "period": 3,
+      "start_time": "13:00",
+      "end_time": "15:30",
+      "room_id": "G2-LAB1",
+      "room_capacity": 28,
+      "size": 19,
+      "lecturer_id": "GV19",
+      "groups": [
+        "K68-N03-2"
+      ]
+    },
+    {
+      "session_id": "B015-TH1@T2_3",
+      "class_id": "B015-TH1",
+      "class_name": "Học phần 15 (thực hành 1)",
+      "course_id": "B015",
+      "needs_lab": true,
+      "weekday": 2,
+      "period": 3,
+      "start_time": "13:00",
+      "end_time": "15:30",
+      "room_id": "G2-LAB3",
+      "room_capacity": 20,
+      "size": 14,
+      "lecturer_id": "GV02",
+      "groups": [
+        "K68-N03-1"
+      ]
+    },
+    {
+      "session_id": "B007-TH1@T2_4",
+      "class_id": "B007-TH1",
+      "class_name": "Học phần 7 (thực hành 1)",
+      "course_id": "B007",
+      "needs_lab": true,
+      "weekday": 2,
+      "period": 4,
+      "start_time": "15:40",
+      "end_time": "18:10",
+      "room_id": "E3-LAB2",
+      "room_capacity": 28,
+      "size": 12,
+      "lecturer_id": "GV18",
+      "groups": [
+        "K68-N03-1"
+      ]
+    },
+    {
+      "session_id": "B018-LT@T2_4",
+      "class_id": "B018-LT",
+      "class_name": "Học phần 18 (lý thuyết)",
+      "course_id": "B018",
+      "needs_lab": false,
+      "weekday": 2,
+      "period": 4,
+      "start_time": "15:40",
+      "end_time": "18:10",
+      "room_id": "G2-102",
+      "room_capacity": 60,
+      "size": 41,
+      "lecturer_id": "GV17",
+      "groups": [
+        "K68-N02-1",
+        "K68-N02-2"
+      ]
+    },
+    {
+      "session_id": "B008-TH2@T2_4",
+      "class_id": "B008-TH2",
+      "class_name": "Học phần 8 (thực hành 2)",
+      "course_id": "B008",
+      "needs_lab": true,
+      "weekday": 2,
+      "period": 4,
+      "start_time": "15:40",
+      "end_time": "18:10",
+      "room_id": "G2-LAB3",
+      "room_capacity": 20,
+      "size": 15,
+      "lecturer_id": "GV22",
+      "groups": [
+        "K68-N04-2"
+      ]
+    },
+    {
+      "session_id": "B004-TH2@T3_1",
+      "class_id": "B004-TH2",
+      "class_name": "Học phần 4 (thực hành 2)",
+      "course_id": "B004",
+      "needs_lab": true,
+      "weekday": 3,
+      "period": 1,
+      "start_time": "07:00",
+      "end_time": "09:30",
+      "room_id": "E3-LAB2",
+      "room_capacity": 28,
+      "size": 13,
+      "lecturer_id": "GV10",
+      "groups": [
+        "K68-N04-2"
+      ]
+    },
+    {
+      "session_id": "B007-LT@T3_1",
+      "class_id": "B007-LT",
+      "class_name": "Học phần 7 (lý thuyết)",
+      "course_id": "B007",
+      "needs_lab": false,
+      "weekday": 3,
+      "period": 1,
+      "start_time": "07:00",
+      "end_time": "09:30",
+      "room_id": "G2-102",
+      "room_capacity": 60,
+      "size": 30,
+      "lecturer_id": "GV23",
+      "groups": [
+        "K68-N03-1",
+        "K68-N03-2"
+      ]
+    },
+    {
+      "session_id": "B006-TH2@T3_1",
+      "class_id": "B006-TH2",
+      "class_name": "Học phần 6 (thực hành 2)",
+      "course_id": "B006",
+      "needs_lab": true,
+      "weekday": 3,
+      "period": 1,
+      "start_time": "07:00",
+      "end_time": "09:30",
+      "room_id": "G2-LAB3",
+      "room_capacity": 20,
+      "size": 19,
+      "lecturer_id": "GV14",
+      "groups": [
+        "K68-N02-2"
+      ]
+    },
+    {
+      "session_id": "B009-LT@T3_1",
+      "class_id": "B009-LT",
+      "class_name": "Học phần 9 (lý thuyết)",
+      "course_id": "B009",
+      "needs_lab": false,
+      "weekday": 3,
+      "period": 1,
+      "start_time": "07:00",
+      "end_time": "09:30",
+      "room_id": "G3-103",
+      "room_capacity": 60,
+      "size": 40,
+      "lecturer_id": "GV16",
+      "groups": [
+        "K68-N01-1",
+        "K68-N01-2"
+      ]
+    },
+    {
+      "session_id": "B011-LT@T3_2",
+      "class_id": "B011-LT",
+      "class_name": "Học phần 11 (lý thuyết)",
+      "course_id": "B011",
+      "needs_lab": false,
+      "weekday": 3,
+      "period": 2,
+      "start_time": "09:40",
+      "end_time": "12:10",
+      "room_id": "G2-104",
+      "room_capacity": 60,
+      "size": 39,
+      "lecturer_id": "GV01",
+      "groups": [
+        "K68-N03-1",
+        "K68-N03-2"
+      ]
+    },
+    {
+      "session_id": "B010-TH1@T3_2",
+      "class_id": "B010-TH1",
+      "class_name": "Học phần 10 (thực hành 1)",
+      "course_id": "B010",
+      "needs_lab": true,
+      "weekday": 3,
+      "period": 2,
+      "start_time": "09:40",
+      "end_time": "12:10",
+      "room_id": "G2-LAB1",
+      "room_capacity": 28,
+      "size": 14,
+      "lecturer_id": "GV08",
+      "groups": [
+        "K68-N02-1"
+      ]
+    },
+    {
+      "session_id": "B005-TH2@T3_2",
+      "class_id": "B005-TH2",
+      "class_name": "Học phần 5 (thực hành 2)",
+      "course_id": "B005",
+      "needs_lab": true,
+      "weekday": 3,
+      "period": 2,
+      "start_time": "09:40",
+      "end_time": "12:10",
+      "room_id": "G2-LAB3",
+      "room_capacity": 20,
+      "size": 14,
+      "lecturer_id": "GV03",
+      "groups": [
+        "K68-N01-2"
+      ]
+    },
+    {
+      "session_id": "B020-LT@T3_2",
+      "class_id": "B020-LT",
+      "class_name": "Học phần 20 (lý thuyết)",
+      "course_id": "B020",
+      "needs_lab": false,
+      "weekday": 3,
+      "period": 2,
+      "start_time": "09:40",
+      "end_time": "12:10",
+      "room_id": "G3-103",
+      "room_capacity": 60,
+      "size": 60,
+      "lecturer_id": "GV04",
+      "groups": [
+        "K68-N04-1",
+        "K68-N04-2"
+      ]
+    },
+    {
+      "session_id": "B014-TH2@T3_3",
+      "class_id": "B014-TH2",
+      "class_name": "Học phần 14 (thực hành 2)",
+      "course_id": "B014",
+      "needs_lab": true,
+      "weekday": 3,
+      "period": 3,
+      "start_time": "13:00",
+      "end_time": "15:30",
+      "room_id": "E3-LAB2",
+      "room_capacity": 28,
+      "size": 14,
+      "lecturer_id": "GV09",
+      "groups": [
+        "K68-N02-2"
+      ]
+    },
+    {
+      "session_id": "B021-LT@T3_3",
+      "class_id": "B021-LT",
+      "class_name": "Học phần 21 (lý thuyết)",
+      "course_id": "B021",
+      "needs_lab": false,
+      "weekday": 3,
+      "period": 3,
+      "start_time": "13:00",
+      "end_time": "15:30",
+      "room_id": "G2-103",
+      "room_capacity": 80,
+      "size": 73,
+      "lecturer_id": "GV08",
+      "groups": [
+        "K68-N01-1",
+        "K68-N01-2"
+      ]
+    },
+    {
+      "session_id": "B008-LT@T3_3",
+      "class_id": "B008-LT",
+      "class_name": "Học phần 8 (lý thuyết)",
+      "course_id": "B008",
+      "needs_lab": false,
+      "weekday": 3,
+      "period": 3,
+      "start_time": "13:00",
+      "end_time": "15:30",
+      "room_id": "G2-104",
+      "room_capacity": 60,
+      "size": 31,
+      "lecturer_id": "GV16",
+      "groups": [
+        "K68-N04-1",
+        "K68-N04-2"
+      ]
+    },
+    {
+      "session_id": "B014-TH1@T3_3",
+      "class_id": "B014-TH1",
+      "class_name": "Học phần 14 (thực hành 1)",
+      "course_id": "B014",
+      "needs_lab": true,
+      "weekday": 3,
+      "period": 3,
+      "start_time": "13:00",
+      "end_time": "15:30",
+      "room_id": "G2-LAB3",
+      "room_capacity": 20,
+      "size": 17,
+      "lecturer_id": "GV02",
+      "groups": [
+        "K68-N02-1"
+      ]
+    },
+    {
+      "session_id": "B030-LT@T3_4",
+      "class_id": "B030-LT",
+      "class_name": "Học phần 30 (lý thuyết)",
+      "course_id": "B030",
+      "needs_lab": false,
+      "weekday": 3,
+      "period": 4,
+      "start_time": "15:40",
+      "end_time": "18:10",
+      "room_id": "G2-102",
+      "room_capacity": 60,
+      "size": 37,
+      "lecturer_id": "GV14",
+      "groups": [
+        "K68-N02-1",
+        "K68-N02-2"
+      ]
+    },
+    {
+      "session_id": "B005-TH1@T3_4",
+      "class_id": "B005-TH1",
+      "class_name": "Học phần 5 (thực hành 1)",
+      "course_id": "B005",
+      "needs_lab": true,
+      "weekday": 3,
+      "period": 4,
+      "start_time": "15:40",
+      "end_time": "18:10",
+      "room_id": "G2-LAB3",
+      "room_capacity": 20,
+      "size": 20,
+      "lecturer_id": "GV15",
+      "groups": [
+        "K68-N01-1"
+      ]
+    },
+    {
+      "session_id": "B003-LT@T3_4",
+      "class_id": "B003-LT",
+      "class_name": "Học phần 3 (lý thuyết)",
+      "course_id": "B003",
+      "needs_lab": false,
+      "weekday": 3,
+      "period": 4,
+      "start_time": "15:40",
+      "end_time": "18:10",
+      "room_id": "G3-103",
+      "room_capacity": 60,
+      "size": 37,
+      "lecturer_id": "GV03",
+      "groups": [
+        "K68-N03-1",
+        "K68-N03-2"
+      ]
+    },
+    {
+      "session_id": "B003-TH2@T4_1",
+      "class_id": "B003-TH2",
+      "class_name": "Học phần 3 (thực hành 2)",
+      "course_id": "B003",
+      "needs_lab": true,
+      "weekday": 4,
+      "period": 1,
+      "start_time": "07:00",
+      "end_time": "09:30",
+      "room_id": "E3-LAB2",
+      "room_capacity": 28,
+      "size": 18,
+      "lecturer_id": "GV05",
+      "groups": [
+        "K68-N03-2"
+      ]
+    },
+    {
+      "session_id": "B004-LT@T4_1",
+      "class_id": "B004-LT",
+      "class_name": "Học phần 4 (lý thuyết)",
+      "course_id": "B004",
+      "needs_lab": false,
+      "weekday": 4,
+      "period": 1,
+      "start_time": "07:00",
+      "end_time": "09:30",
+      "room_id": "G2-102",
+      "room_capacity": 60,
+      "size": 27,
+      "lecturer_id": "GV18",
+      "groups": [
+        "K68-N04-1",
+        "K68-N04-2"
+      ]
+    },
+    {
+      "session_id": "B005-LT@T4_1",
+      "class_id": "B005-LT",
+      "class_name": "Học phần 5 (lý thuyết)",
+      "course_id": "B005",
+      "needs_lab": false,
+      "weekday": 4,
+      "period": 1,
+      "start_time": "07:00",
+      "end_time": "09:30",
+      "room_id": "G2-104",
+      "room_capacity": 60,
+      "size": 34,
+      "lecturer_id": "GV11",
+      "groups": [
+        "K68-N01-1",
+        "K68-N01-2"
+      ]
+    },
+    {
+      "session_id": "B014-TH2@T4_1",
+      "class_id": "B014-TH2",
+      "class_name": "Học phần 14 (thực hành 2)",
+      "course_id": "B014",
+      "needs_lab": true,
+      "weekday": 4,
+      "period": 1,
+      "start_time": "07:00",
+      "end_time": "09:30",
+      "room_id": "G2-LAB3",
+      "room_capacity": 20,
+      "size": 14,
+      "lecturer_id": "GV09",
+      "groups": [
+        "K68-N02-2"
+      ]
+    },
+    {
+      "session_id": "B001-TH1@T4_2",
+      "class_id": "B001-TH1",
+      "class_name": "Học phần 1 (thực hành 1)",
+      "course_id": "B001",
+      "needs_lab": true,
+      "weekday": 4,
+      "period": 2,
+      "start_time": "09:40",
+      "end_time": "12:10",
+      "room_id": "E3-LAB2",
+      "room_capacity": 28,
+      "size": 28,
+      "lecturer_id": "GV13",
+      "groups": [
+        "K68-N01-1"
+      ]
+    },
+    {
+      "session_id": "B011-LT@T4_2",
+      "class_id": "B011-LT",
+      "class_name": "Học phần 11 (lý thuyết)",
+      "course_id": "B011",
+      "needs_lab": false,
+      "weekday": 4,
+      "period": 2,
+      "start_time": "09:40",
+      "end_time": "12:10",
+      "room_id": "G2-102",
+      "room_capacity": 60,
+      "size": 39,
+      "lecturer_id": "GV01",
+      "groups": [
+        "K68-N03-1",
+        "K68-N03-2"
+      ]
+    },
+    {
+      "session_id": "B008-LT@T4_2",
+      "class_id": "B008-LT",
+      "class_name": "Học phần 8 (lý thuyết)",
+      "course_id": "B008",
+      "needs_lab": false,
+      "weekday": 4,
+      "period": 2,
+      "start_time": "09:40",
+      "end_time": "12:10",
+      "room_id": "G2-104",
+      "room_capacity": 60,
+      "size": 31,
+      "lecturer_id": "GV16",
+      "groups": [
+        "K68-N04-1",
+        "K68-N04-2"
+      ]
+    },
+    {
+      "session_id": "B010-TH2@T4_2",
+      "class_id": "B010-TH2",
+      "class_name": "Học phần 10 (thực hành 2)",
+      "course_id": "B010",
+      "needs_lab": true,
+      "weekday": 4,
+      "period": 2,
+      "start_time": "09:40",
+      "end_time": "12:10",
+      "room_id": "G2-LAB3",
+      "room_capacity": 20,
+      "size": 15,
+      "lecturer_id": "GV18",
+      "groups": [
+        "K68-N02-2"
+      ]
+    },
+    {
+      "session_id": "B026-LT@T4_3",
+      "class_id": "B026-LT",
+      "class_name": "Học phần 26 (lý thuyết)",
+      "course_id": "B026",
+      "needs_lab": false,
+      "weekday": 4,
+      "period": 3,
+      "start_time": "13:00",
+      "end_time": "15:30",
+      "room_id": "G2-102",
+      "room_capacity": 60,
+      "size": 54,
+      "lecturer_id": "GV19",
+      "groups": [
+        "K68-N02-1",
+        "K68-N02-2"
+      ]
+    },
+    {
+      "session_id": "B004-TH2@T4_3",
+      "class_id": "B004-TH2",
+      "class_name": "Học phần 4 (thực hành 2)",
+      "course_id": "B004",
+      "needs_lab": true,
+      "weekday": 4,
+      "period": 3,
+      "start_time": "13:00",
+      "end_time": "15:30",
+      "room_id": "G2-LAB1",
+      "room_capacity": 28,
+      "size": 13,
+      "lecturer_id": "GV10",
+      "groups": [
+        "K68-N04-2"
+      ]
+    },
+    {
+      "session_id": "B009-TH2@T4_3",
+      "class_id": "B009-TH2",
+      "class_name": "Học phần 9 (thực hành 2)",
+      "course_id": "B009",
+      "needs_lab": true,
+      "weekday": 4,
+      "period": 3,
+      "start_time": "13:00",
+      "end_time": "15:30",
+      "room_id": "G2-LAB3",
+      "room_capacity": 20,
+      "size": 14,
+      "lecturer_id": "GV21",
+      "groups": [
+        "K68-N01-2"
+      ]
+    },
+    {
+      "session_id": "B015-LT@T4_4",
+      "class_id": "B015-LT",
+      "class_name": "Học phần 15 (lý thuyết)",
+      "course_id": "B015",
+      "needs_lab": false,
+      "weekday": 4,
+      "period": 4,
+      "start_time": "15:40",
+      "end_time": "18:10",
+      "room_id": "G2-102",
+      "room_capacity": 60,
+      "size": 33,
+      "lecturer_id": "GV15",
+      "groups": [
+        "K68-N03-1",
+        "K68-N03-2"
+      ]
+    },
+    {
+      "session_id": "B013-TH1@T4_4",
+      "class_id": "B013-TH1",
+      "class_name": "Học phần 13 (thực hành 1)",
+      "course_id": "B013",
+      "needs_lab": true,
+      "weekday": 4,
+      "period": 4,
+      "start_time": "15:40",
+      "end_time": "18:10",
+      "room_id": "G2-LAB1",
+      "room_capacity": 28,
+      "size": 23,
+      "lecturer_id": "GV12",
+      "groups": [
+        "K68-N01-1"
+      ]
+    },
+    {
+      "session_id": "B012-TH1@T4_4",
+      "class_id": "B012-TH1",
+      "class_name": "Học phần 12 (thực hành 1)",
+      "course_id": "B012",
+      "needs_lab": true,
+      "weekday": 4,
+      "period": 4,
+      "start_time": "15:40",
+      "end_time": "18:10",
+      "room_id": "G2-LAB3",
+      "room_capacity": 20,
+      "size": 15,
+      "lecturer_id": "GV24",
+      "groups": [
+        "K68-N04-1"
+      ]
+    },
+    {
+      "session_id": "B022-LT@T4_4",
+      "class_id": "B022-LT",
+      "class_name": "Học phần 22 (lý thuyết)",
+      "course_id": "B022",
+      "needs_lab": false,
+      "weekday": 4,
+      "period": 4,
+      "start_time": "15:40",
+      "end_time": "18:10",
+      "room_id": "G3-103",
+      "room_capacity": 60,
+      "size": 35,
+      "lecturer_id": "GV05",
+      "groups": [
+        "K68-N02-1",
+        "K68-N02-2"
+      ]
+    },
+    {
+      "session_id": "B002-LT@T5_1",
+      "class_id": "B002-LT",
+      "class_name": "Học phần 2 (lý thuyết)",
+      "course_id": "B002",
+      "needs_lab": false,
+      "weekday": 5,
+      "period": 1,
+      "start_time": "07:00",
+      "end_time": "09:30",
+      "room_id": "G2-102",
+      "room_capacity": 60,
+      "size": 32,
+      "lecturer_id": "GV09",
+      "groups": [
+        "K68-N02-1",
+        "K68-N02-2"
+      ]
+    },
+    {
+      "session_id": "B023-LT@T5_1",
+      "class_id": "B023-LT",
+      "class_name": "Học phần 23 (lý thuyết)",
+      "course_id": "B023",
+      "needs_lab": false,
+      "weekday": 5,
+      "period": 1,
+      "start_time": "07:00",
+      "end_time": "09:30",
+      "room_id": "G2-103",
+      "room_capacity": 80,
+      "size": 64,
+      "lecturer_id": "GV13",
+      "groups": [
+        "K68-N03-1",
+        "K68-N03-2"
+      ]
+    },
+    {
+      "session_id": "B005-TH2@T5_1",
+      "class_id": "B005-TH2",
+      "class_name": "Học phần 5 (thực hành 2)",
+      "course_id": "B005",
+      "needs_lab": true,
+      "weekday": 5,
+      "period": 1,
+      "start_time": "07:00",
+      "end_time": "09:30",
+      "room_id": "G2-LAB1",
+      "room_capacity": 28,
+      "size": 14,
+      "lecturer_id": "GV03",
+      "groups": [
+        "K68-N01-2"
+      ]
+    },
+    {
+      "session_id": "B005-TH1@T5_1",
+      "class_id": "B005-TH1",
+      "class_name": "Học phần 5 (thực hành 1)",
+      "course_id": "B005",
+      "needs_lab": true,
+      "weekday": 5,
+      "period": 1,
+      "start_time": "07:00",
+      "end_time": "09:30",
+      "room_id": "G2-LAB3",
+      "room_capacity": 20,
+      "size": 20,
+      "lecturer_id": "GV15",
+      "groups": [
+        "K68-N01-1"
+      ]
+    },
+    {
+      "session_id": "B013-TH2@T5_2",
+      "class_id": "B013-TH2",
+      "class_name": "Học phần 13 (thực hành 2)",
+      "course_id": "B013",
+      "needs_lab": true,
+      "weekday": 5,
+      "period": 2,
+      "start_time": "09:40",
+      "end_time": "12:10",
+      "room_id": "G2-LAB1",
+      "room_capacity": 28,
+      "size": 19,
+      "lecturer_id": "GV01",
+      "groups": [
+        "K68-N01-2"
+      ]
+    },
+    {
+      "session_id": "B006-TH1@T5_2",
+      "class_id": "B006-TH1",
+      "class_name": "Học phần 6 (thực hành 1)",
+      "course_id": "B006",
+      "needs_lab": true,
+      "weekday": 5,
+      "period": 2,
+      "start_time": "09:40",
+      "end_time": "12:10",
+      "room_id": "G2-LAB3",
+      "room_capacity": 20,
+      "size": 19,
+      "lecturer_id": "GV20",
+      "groups": [
+        "K68-N02-1"
+      ]
+    },
+    {
+      "session_id": "B007-TH1@T5_3",
+      "class_id": "B007-TH1",
+      "class_name": "Học phần 7 (thực hành 1)",
+      "course_id": "B007",
+      "needs_lab": true,
+      "weekday": 5,
+      "period": 3,
+      "start_time": "13:00",
+      "end_time": "15:30",
+      "room_id": "E3-LAB2",
+      "room_capacity": 28,
+      "size": 12,
+      "lecturer_id": "GV18",
+      "groups": [
+        "K68-N03-1"
+      ]
+    },
+    {
+      "session_id": "B001-LT@T5_3",
+      "class_id": "B001-LT",
+      "class_name": "Học phần 1 (lý thuyết)",
+      "course_id": "B001",
+      "needs_lab": false,
+      "weekday": 5,
+      "period": 3,
+      "start_time": "13:00",
+      "end_time": "15:30",
+      "room_id": "G2-102",
+      "room_capacity": 60,
+      "size": 44,
+      "lecturer_id": "GV09",
+      "groups": [
+        "K68-N01-1",
+        "K68-N01-2"
+      ]
+    },
+    {
+      "session_id": "B012-TH2@T5_3",
+      "class_id": "B012-TH2",
+      "class_name": "Học phần 12 (thực hành 2)",
+      "course_id": "B012",
+      "needs_lab": true,
+      "weekday": 5,
+      "period": 3,
+      "start_time": "13:00",
+      "end_time": "15:30",
+      "room_id": "G2-LAB3",
+      "room_capacity": 20,
+      "size": 18,
+      "lecturer_id": "GV23",
+      "groups": [
+        "K68-N04-2"
+      ]
+    },
+    {
+      "session_id": "B006-LT@T5_3",
+      "class_id": "B006-LT",
+      "class_name": "Học phần 6 (lý thuyết)",
+      "course_id": "B006",
+      "needs_lab": false,
+      "weekday": 5,
+      "period": 3,
+      "start_time": "13:00",
+      "end_time": "15:30",
+      "room_id": "G3-103",
+      "room_capacity": 60,
+      "size": 38,
+      "lecturer_id": "GV20",
+      "groups": [
+        "K68-N02-1",
+        "K68-N02-2"
+      ]
+    },
+    {
+      "session_id": "B012-TH1@T5_4",
+      "class_id": "B012-TH1",
+      "class_name": "Học phần 12 (thực hành 1)",
+      "course_id": "B012",
+      "needs_lab": true,
+      "weekday": 5,
+      "period": 4,
+      "start_time": "15:40",
+      "end_time": "18:10",
+      "room_id": "E3-LAB2",
+      "room_capacity": 28,
+      "size": 15,
+      "lecturer_id": "GV24",
+      "groups": [
+        "K68-N04-1"
+      ]
+    },
+    {
+      "session_id": "B015-TH2@T5_4",
+      "class_id": "B015-TH2",
+      "class_name": "Học phần 15 (thực hành 2)",
+      "course_id": "B015",
+      "needs_lab": true,
+      "weekday": 5,
+      "period": 4,
+      "start_time": "15:40",
+      "end_time": "18:10",
+      "room_id": "G2-LAB3",
+      "room_capacity": 20,
+      "size": 19,
+      "lecturer_id": "GV19",
+      "groups": [
+        "K68-N03-2"
+      ]
+    },
+    {
+      "session_id": "B010-LT@T5_4",
+      "class_id": "B010-LT",
+      "class_name": "Học phần 10 (lý thuyết)",
+      "course_id": "B010",
+      "needs_lab": false,
+      "weekday": 5,
+      "period": 4,
+      "start_time": "15:40",
+      "end_time": "18:10",
+      "room_id": "G3-103",
+      "room_capacity": 60,
+      "size": 29,
+      "lecturer_id": "GV14",
+      "groups": [
+        "K68-N02-1",
+        "K68-N02-2"
+      ]
+    },
+    {
+      "session_id": "B008-TH1@T6_1",
+      "class_id": "B008-TH1",
+      "class_name": "Học phần 8 (thực hành 1)",
+      "course_id": "B008",
+      "needs_lab": true,
+      "weekday": 6,
+      "period": 1,
+      "start_time": "07:00",
+      "end_time": "09:30",
+      "room_id": "E3-LAB2",
+      "room_capacity": 28,
+      "size": 16,
+      "lecturer_id": "GV07",
+      "groups": [
+        "K68-N04-1"
+      ]
+    },
+    {
+      "session_id": "B025-LT@T6_1",
+      "class_id": "B025-LT",
+      "class_name": "Học phần 25 (lý thuyết)",
+      "course_id": "B025",
+      "needs_lab": false,
+      "weekday": 6,
+      "period": 1,
+      "start_time": "07:00",
+      "end_time": "09:30",
+      "room_id": "G2-101",
+      "room_capacity": 80,
+      "size": 61,
+      "lecturer_id": "GV12",
+      "groups": [
+        "K68-N01-1",
+        "K68-N01-2"
+      ]
+    },
+    {
+      "session_id": "B006-TH1@T6_1",
+      "class_id": "B006-TH1",
+      "class_name": "Học phần 6 (thực hành 1)",
+      "course_id": "B006",
+      "needs_lab": true,
+      "weekday": 6,
+      "period": 1,
+      "start_time": "07:00",
+      "end_time": "09:30",
+      "room_id": "G2-LAB1",
+      "room_capacity": 28,
+      "size": 19,
+      "lecturer_id": "GV20",
+      "groups": [
+        "K68-N02-1"
+      ]
+    },
+    {
+      "session_id": "B003-TH1@T6_1",
+      "class_id": "B003-TH1",
+      "class_name": "Học phần 3 (thực hành 1)",
+      "course_id": "B003",
+      "needs_lab": true,
+      "weekday": 6,
+      "period": 1,
+      "start_time": "07:00",
+      "end_time": "09:30",
+      "room_id": "G2-LAB3",
+      "room_capacity": 20,
+      "size": 19,
+      "lecturer_id": "GV21",
+      "groups": [
+        "K68-N03-1"
+      ]
+    },
+    {
+      "session_id": "B003-TH2@T6_2",
+      "class_id": "B003-TH2",
+      "class_name": "Học phần 3 (thực hành 2)",
+      "course_id": "B003",
+      "needs_lab": true,
+      "weekday": 6,
+      "period": 2,
+      "start_time": "09:40",
+      "end_time": "12:10",
+      "room_id": "E3-LAB2",
+      "room_capacity": 28,
+      "size": 18,
+      "lecturer_id": "GV05",
+      "groups": [
+        "K68-N03-2"
+      ]
+    },
+    {
+      "session_id": "B018-LT@T6_2",
+      "class_id": "B018-LT",
+      "class_name": "Học phần 18 (lý thuyết)",
+      "course_id": "B018",
+      "needs_lab": false,
+      "weekday": 6,
+      "period": 2,
+      "start_time": "09:40",
+      "end_time": "12:10",
+      "room_id": "G2-102",
+      "room_capacity": 60,
+      "size": 41,
+      "lecturer_id": "GV17",
+      "groups": [
+        "K68-N02-1",
+        "K68-N02-2"
+      ]
+    },
+    {
+      "session_id": "B004-LT@T6_2",
+      "class_id": "B004-LT",
+      "class_name": "Học phần 4 (lý thuyết)",
+      "course_id": "B004",
+      "needs_lab": false,
+      "weekday": 6,
+      "period": 2,
+      "start_time": "09:40",
+      "end_time": "12:10",
+      "room_id": "G2-104",
+      "room_capacity": 60,
+      "size": 27,
+      "lecturer_id": "GV18",
+      "groups": [
+        "K68-N04-1",
+        "K68-N04-2"
+      ]
+    },
+    {
+      "session_id": "B001-TH1@T6_2",
+      "class_id": "B001-TH1",
+      "class_name": "Học phần 1 (thực hành 1)",
+      "course_id": "B001",
+      "needs_lab": true,
+      "weekday": 6,
+      "period": 2,
+      "start_time": "09:40",
+      "end_time": "12:10",
+      "room_id": "G2-LAB1",
+      "room_capacity": 28,
+      "size": 28,
+      "lecturer_id": "GV13",
+      "groups": [
+        "K68-N01-1"
+      ]
+    },
+    {
+      "session_id": "B001-TH2@T6_2",
+      "class_id": "B001-TH2",
+      "class_name": "Học phần 1 (thực hành 2)",
+      "course_id": "B001",
+      "needs_lab": true,
+      "weekday": 6,
+      "period": 2,
+      "start_time": "09:40",
+      "end_time": "12:10",
+      "room_id": "G2-LAB3",
+      "room_capacity": 20,
+      "size": 16,
+      "lecturer_id": "GV04",
+      "groups": [
+        "K68-N01-2"
+      ]
+    },
+    {
+      "session_id": "B015-LT@T6_3",
+      "class_id": "B015-LT",
+      "class_name": "Học phần 15 (lý thuyết)",
+      "course_id": "B015",
+      "needs_lab": false,
+      "weekday": 6,
+      "period": 3,
+      "start_time": "13:00",
+      "end_time": "15:30",
+      "room_id": "G2-102",
+      "room_capacity": 60,
+      "size": 33,
+      "lecturer_id": "GV15",
+      "groups": [
+        "K68-N03-1",
+        "K68-N03-2"
+      ]
+    },
+    {
+      "session_id": "B029-LT@T6_3",
+      "class_id": "B029-LT",
+      "class_name": "Học phần 29 (lý thuyết)",
+      "course_id": "B029",
+      "needs_lab": false,
+      "weekday": 6,
+      "period": 3,
+      "start_time": "13:00",
+      "end_time": "15:30",
+      "room_id": "G2-103",
+      "room_capacity": 80,
+      "size": 80,
+      "lecturer_id": "GV17",
+      "groups": [
+        "K68-N01-1",
+        "K68-N01-2"
+      ]
+    },
+    {
+      "session_id": "B028-LT@T6_3",
+      "class_id": "B028-LT",
+      "class_name": "Học phần 28 (lý thuyết)",
+      "course_id": "B028",
+      "needs_lab": false,
+      "weekday": 6,
+      "period": 3,
+      "start_time": "13:00",
+      "end_time": "15:30",
+      "room_id": "G3-101",
+      "room_capacity": 120,
+      "size": 88,
+      "lecturer_id": "GV11",
+      "groups": [
+        "K68-N04-1",
+        "K68-N04-2"
+      ]
+    },
+    {
+      "session_id": "B004-TH1@T6_4",
+      "class_id": "B004-TH1",
+      "class_name": "Học phần 4 (thực hành 1)",
+      "course_id": "B004",
+      "needs_lab": true,
+      "weekday": 6,
+      "period": 4,
+      "start_time": "15:40",
+      "end_time": "18:10",
+      "room_id": "E3-LAB2",
+      "room_capacity": 28,
+      "size": 14,
+      "lecturer_id": "GV06",
+      "groups": [
+        "K68-N04-1"
+      ]
+    },
+    {
+      "session_id": "B014-LT@T6_4",
+      "class_id": "B014-LT",
+      "class_name": "Học phần 14 (lý thuyết)",
+      "course_id": "B014",
+      "needs_lab": false,
+      "weekday": 6,
+      "period": 4,
+      "start_time": "15:40",
+      "end_time": "18:10",
+      "room_id": "G2-102",
+      "room_capacity": 60,
+      "size": 31,
+      "lecturer_id": "GV21",
+      "groups": [
+        "K68-N02-1",
+        "K68-N02-2"
+      ]
+    },
+    {
+      "session_id": "B009-TH1@T6_4",
+      "class_id": "B009-TH1",
+      "class_name": "Học phần 9 (thực hành 1)",
+      "course_id": "B009",
+      "needs_lab": true,
+      "weekday": 6,
+      "period": 4,
+      "start_time": "15:40",
+      "end_time": "18:10",
+      "room_id": "G2-LAB1",
+      "room_capacity": 28,
+      "size": 26,
+      "lecturer_id": "GV16",
+      "groups": [
+        "K68-N01-1"
+      ]
+    },
+    {
+      "session_id": "B011-TH2@T6_4",
+      "class_id": "B011-TH2",
+      "class_name": "Học phần 11 (thực hành 2)",
+      "course_id": "B011",
+      "needs_lab": true,
+      "weekday": 6,
+      "period": 4,
+      "start_time": "15:40",
+      "end_time": "18:10",
+      "room_id": "G2-LAB3",
+      "room_capacity": 20,
+      "size": 19,
+      "lecturer_id": "GV11",
+      "groups": [
+        "K68-N03-2"
+      ]
+    },
+    {
+      "session_id": "B013-TH2@T7_1",
+      "class_id": "B013-TH2",
+      "class_name": "Học phần 13 (thực hành 2)",
+      "course_id": "B013",
+      "needs_lab": true,
+      "weekday": 7,
+      "period": 1,
+      "start_time": "07:00",
+      "end_time": "09:30",
+      "room_id": "E3-LAB2",
+      "room_capacity": 28,
+      "size": 19,
+      "lecturer_id": "GV01",
+      "groups": [
+        "K68-N01-2"
+      ]
+    },
+    {
+      "session_id": "B010-TH1@T7_1",
+      "class_id": "B010-TH1",
+      "class_name": "Học phần 10 (thực hành 1)",
+      "course_id": "B010",
+      "needs_lab": true,
+      "weekday": 7,
+      "period": 1,
+      "start_time": "07:00",
+      "end_time": "09:30",
+      "room_id": "G2-LAB1",
+      "room_capacity": 28,
+      "size": 14,
+      "lecturer_id": "GV08",
+      "groups": [
+        "K68-N02-1"
+      ]
+    },
+    {
+      "session_id": "B007-TH2@T7_1",
+      "class_id": "B007-TH2",
+      "class_name": "Học phần 7 (thực hành 2)",
+      "course_id": "B007",
+      "needs_lab": true,
+      "weekday": 7,
+      "period": 1,
+      "start_time": "07:00",
+      "end_time": "09:30",
+      "room_id": "G2-LAB3",
+      "room_capacity": 20,
+      "size": 18,
+      "lecturer_id": "GV17",
+      "groups": [
+        "K68-N03-2"
+      ]
+    },
+    {
+      "session_id": "B012-LT@T7_2",
+      "class_id": "B012-LT",
+      "class_name": "Học phần 12 (lý thuyết)",
+      "course_id": "B012",
+      "needs_lab": false,
+      "weekday": 7,
+      "period": 2,
+      "start_time": "09:40",
+      "end_time": "12:10",
+      "room_id": "G2-102",
+      "room_capacity": 60,
+      "size": 33,
+      "lecturer_id": "GV22",
+      "groups": [
+        "K68-N04-1",
+        "K68-N04-2"
+      ]
+    },
+    {
+      "session_id": "B001-TH2@T7_2",
+      "class_id": "B001-TH2",
+      "class_name": "Học phần 1 (thực hành 2)",
+      "course_id": "B001",
+      "needs_lab": true,
+      "weekday": 7,
+      "period": 2,
+      "start_time": "09:40",
+      "end_time": "12:10",
+      "room_id": "G2-LAB1",
+      "room_capacity": 28,
+      "size": 16,
+      "lecturer_id": "GV04",
+      "groups": [
+        "K68-N01-2"
+      ]
+    },
+    {
+      "session_id": "B015-TH1@T7_2",
+      "class_id": "B015-TH1",
+      "class_name": "Học phần 15 (thực hành 1)",
+      "course_id": "B015",
+      "needs_lab": true,
+      "weekday": 7,
+      "period": 2,
+      "start_time": "09:40",
+      "end_time": "12:10",
+      "room_id": "G2-LAB3",
+      "room_capacity": 20,
+      "size": 14,
+      "lecturer_id": "GV02",
+      "groups": [
+        "K68-N03-1"
+      ]
+    },
+    {
+      "session_id": "B002-TH2@T7_3",
+      "class_id": "B002-TH2",
+      "class_name": "Học phần 2 (thực hành 2)",
+      "course_id": "B002",
+      "needs_lab": true,
+      "weekday": 7,
+      "period": 3,
+      "start_time": "13:00",
+      "end_time": "15:30",
+      "room_id": "E3-LAB2",
+      "room_capacity": 28,
+      "size": 12,
+      "lecturer_id": "GV23",
+      "groups": [
+        "K68-N02-2"
+      ]
+    },
+    {
+      "session_id": "B016-LT@T7_3",
+      "class_id": "B016-LT",
+      "class_name": "Học phần 16 (lý thuyết)",
+      "course_id": "B016",
+      "needs_lab": false,
+      "weekday": 7,
+      "period": 3,
+      "start_time": "13:00",
+      "end_time": "15:30",
+      "room_id": "G2-101",
+      "room_capacity": 80,
+      "size": 77,
+      "lecturer_id": "GV22",
+      "groups": [
+        "K68-N04-1",
+        "K68-N04-2"
+      ]
+    },
+    {
+      "session_id": "B019-LT@T7_3",
+      "class_id": "B019-LT",
+      "class_name": "Học phần 19 (lý thuyết)",
+      "course_id": "B019",
+      "needs_lab": false,
+      "weekday": 7,
+      "period": 3,
+      "start_time": "13:00",
+      "end_time": "15:30",
+      "room_id": "G2-104",
+      "room_capacity": 60,
+      "size": 41,
+      "lecturer_id": "GV24",
+      "groups": [
+        "K68-N03-1",
+        "K68-N03-2"
+      ]
+    },
+    {
+      "session_id": "B002-TH1@T7_3",
+      "class_id": "B002-TH1",
+      "class_name": "Học phần 2 (thực hành 1)",
+      "course_id": "B002",
+      "needs_lab": true,
+      "weekday": 7,
+      "period": 3,
+      "start_time": "13:00",
+      "end_time": "15:30",
+      "room_id": "G2-LAB3",
+      "room_capacity": 20,
+      "size": 20,
+      "lecturer_id": "GV06",
+      "groups": [
+        "K68-N02-1"
+      ]
+    },
+    {
+      "session_id": "B013-LT@T7_3",
+      "class_id": "B013-LT",
+      "class_name": "Học phần 13 (lý thuyết)",
+      "course_id": "B013",
+      "needs_lab": false,
+      "weekday": 7,
+      "period": 3,
+      "start_time": "13:00",
+      "end_time": "15:30",
+      "room_id": "G3-103",
+      "room_capacity": 60,
+      "size": 42,
+      "lecturer_id": "GV07",
+      "groups": [
+        "K68-N01-1",
+        "K68-N01-2"
+      ]
+    },
+    {
+      "session_id": "B008-TH1@T7_4",
+      "class_id": "B008-TH1",
+      "class_name": "Học phần 8 (thực hành 1)",
+      "course_id": "B008",
+      "needs_lab": true,
+      "weekday": 7,
+      "period": 4,
+      "start_time": "15:40",
+      "end_time": "18:10",
+      "room_id": "E3-LAB2",
+      "room_capacity": 28,
+      "size": 16,
+      "lecturer_id": "GV07",
+      "groups": [
+        "K68-N04-1"
+      ]
+    },
+    {
+      "session_id": "B017-LT@T7_4",
+      "class_id": "B017-LT",
+      "class_name": "Học phần 17 (lý thuyết)",
+      "course_id": "B017",
+      "needs_lab": false,
+      "weekday": 7,
+      "period": 4,
+      "start_time": "15:40",
+      "end_time": "18:10",
+      "room_id": "G2-101",
+      "room_capacity": 80,
+      "size": 61,
+      "lecturer_id": "GV21",
+      "groups": [
+        "K68-N01-1",
+        "K68-N01-2"
+      ]
+    },
+    {
+      "session_id": "B026-LT@T7_4",
+      "class_id": "B026-LT",
+      "class_name": "Học phần 26 (lý thuyết)",
+      "course_id": "B026",
+      "needs_lab": false,
+      "weekday": 7,
+      "period": 4,
+      "start_time": "15:40",
+      "end_time": "18:10",
+      "room_id": "G2-102",
+      "room_capacity": 60,
+      "size": 54,
+      "lecturer_id": "GV19",
+      "groups": [
+        "K68-N02-1",
+        "K68-N02-2"
+      ]
+    },
+    {
+      "session_id": "B011-TH1@T7_4",
+      "class_id": "B011-TH1",
+      "class_name": "Học phần 11 (thực hành 1)",
+      "course_id": "B011",
+      "needs_lab": true,
+      "weekday": 7,
+      "period": 4,
+      "start_time": "15:40",
+      "end_time": "18:10",
+      "room_id": "G2-LAB3",
+      "room_capacity": 20,
+      "size": 20,
+      "lecturer_id": "GV10",
+      "groups": [
+        "K68-N03-1"
+      ]
+    }
+  ],
+  "kpi": {
+    "hard_violations": 0,
+    "room_utilization_normal": 0.2662337662337662,
+    "room_utilization_lab": 0.7272727272727273,
+    "lab_peak_utilization": 1.0,
+    "slots_without_lab_reserve": 6,
+    "seat_fill_rate": 0.6972736625514403,
+    "preference_violations": 0,
+    "classes_same_day": 0,
+    "group_max_sessions_per_day": 4,
+    "solve_time_sec": 2.339619699996547
+  },
+  "violations": [],
+  "messages": []
+}
