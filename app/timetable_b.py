@@ -134,18 +134,48 @@ def compare_timetables(old, new):
     return changes
 
 
+def run_solver_b(data_dir, dataset, out_path):
+    """Chạy toàn bộ quy trình bài B (đọc, kiểm tra, giải CP-SAT, hậu xử lý, validator) và ghi timetable.json."""
+    from src.run import run
+
+    config = ROOT / "configs" / "problem_b.json"
+    return run(str(data_dir / dataset), str(config) if config.is_file() else None, str(out_path), problem="B")
+
+
 def page_timetable_b(data_dir, output_dir):
     names = datasets_b(data_dir)
     if not names:
         st.info("Chưa có bộ dữ liệu B.")
         return
-    dataset = st.selectbox("Bộ dữ liệu B", names, key="b_dataset")
+    dataset = st.selectbox("Bộ dữ liệu B", names, index=names.index("toy_b") if "toy_b" in names else 0,
+                           key="b_dataset")
     source = st.radio("Nguồn lịch B", ["Kết quả đã lưu", "Mẫu toy_b tham chiếu"], key="b_source")
-    default = REFERENCE if source == "Mẫu toy_b tham chiếu" else output_dir / dataset / "timetable.json"
-    path = st.text_input("Đường dẫn timetable.json", str(default), key=f"b_path_{source}_{dataset}")
     st.session_state.pop("b_active", None)
+    saved = output_dir / dataset / "timetable.json"
     if source == "Mẫu toy_b tham chiếu":
-        st.caption("Lịch tham chiếu viết tay; không phải kết quả chạy solver từ giao diện.")
+        if dataset != "toy_b":
+            st.info("Lịch mẫu tham chiếu chỉ có cho bộ toy_b. Chọn toy_b, hoặc chọn \"Kết quả đã lưu\" rồi bấm chạy.")
+            return
+        st.caption("Lịch tối ưu tham chiếu của toy_b (Z = 355, model_spec B.12), không phải kết quả vừa chạy.")
+    else:
+        if st.button(f"Chạy xếp lịch B cho {dataset} (CP-SAT)", key="b_run_solver"):
+            with st.spinner("Đang giải..."):
+                try:
+                    result = run_solver_b(data_dir, dataset, saved)
+                except (OSError, ValueError) as exc:
+                    st.error(f"Không chạy được: {exc}")
+                else:
+                    st.success(f"Đã giải: {result['status']}, mục tiêu {result['objective']}, "
+                               f"{len(result['sessions'])} buổi, {result['solve_time_sec']:.2f} giây. "
+                               f"Kết quả lưu ở {saved}.")
+                    for m in result["messages"]:
+                        if m["level"] in ("error", "warning"):
+                            st.warning(f"{m['code']}: {m['message']}")
+        elif not saved.is_file():
+            st.info(f"Chưa có kết quả cho {dataset}. Bấm nút trên để chạy solver.")
+            return
+    default = REFERENCE if source == "Mẫu toy_b tham chiếu" else saved
+    path = st.text_input("Đường dẫn timetable.json", str(default), key=f"b_path_{source}_{dataset}")
     try:
         timetable = read_timetable(path)
         if timetable.get("meta", {}).get("dataset") != dataset:

@@ -39,10 +39,32 @@ def test_streamlit_entrypoint_imports_with_script_directory_first():
 
 def test_dataset_lists_do_not_mix_problems():
     assert "toy" in _available_datasets()
-    assert "toy_b" not in _available_datasets()
+    assert not {"toy_b", "medium_b", "large_b"} & set(_available_datasets())
     app = open_b()
-    assert app.selectbox(key="b_dataset").options == ["toy_b"]
+    assert set(app.selectbox(key="b_dataset").options) == {"toy_b", "medium_b", "large_b"}
+    assert app.selectbox(key="b_dataset").value == "toy_b"          # mặc định toy_b
     assert {t.label for t in app.tabs} >= {"Lịch học tuần B", "Sự cố B", "Thực nghiệm B"}
+
+
+def test_reference_only_for_toy_b():
+    app = open_b()
+    app.selectbox(key="b_dataset").select("medium_b").run()
+    assert not app.exception
+    assert any("chỉ có cho bộ toy_b" in m.value for m in app.info)
+    assert not any(m.label == "Buổi học đang hiển thị" for m in app.metric)
+
+
+def test_run_solver_from_ui_writes_and_shows_timetable(tmp_path, monkeypatch):
+    """Nút chạy giải toy_b bằng CP-SAT, ghi timetable.json vào thư mục kết quả rồi hiển thị ngay."""
+    monkeypatch.setenv("EXAM_APP_OUTPUT_DIR", str(tmp_path))
+    app = AppTest.from_file(str(APP), default_timeout=120).run()
+    assert any("Chưa có kết quả cho toy_b" in m.value for m in app.info)
+    app.button(key="b_run_solver").click().run()
+    assert not app.exception
+    assert any("OPTIMAL, mục tiêu 355" in s.value for s in app.success)
+    saved = json.loads((tmp_path / "toy_b" / "timetable.json").read_text(encoding="utf-8"))
+    assert saved["status"] == "OPTIMAL" and saved["objective"] == 355 and saved["violations"] == []
+    assert next(m for m in app.metric if m.label == "Buổi học đang hiển thị").value == "24"
 
 
 def test_weekly_timetable_and_required_group_filter():
