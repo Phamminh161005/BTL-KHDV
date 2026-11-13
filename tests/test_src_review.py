@@ -136,8 +136,10 @@ def test_cli_unsupported_b_solver_reports_error_without_traceback(tmp_path):
 
 def test_cbc_exhausted_build_budget_never_starts_search(monkeypatch):
     from src import exam_solver_pulp as mod
+    # Ngủ 0,05 giây nhưng chỉ đòi đo được ≥ 0,02 giây: đồng hồ của Windows có độ phân giải khoảng 15,6 ms,
+    # nên đòi đúng bằng thời gian ngủ thì test lúc qua lúc lỗi.
     def slow_build(*args):
-        time.sleep(0.02)
+        time.sleep(0.05)
         return SimpleNamespace()
     def forbidden(*args, **kwargs):
         pytest.fail("CBC không được bắt đầu sau khi dựng model đã hết giờ")

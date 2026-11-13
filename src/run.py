@@ -22,6 +22,7 @@ SOLVERS = {
     "cp-sat": "src.exam_solver",
     "pulp": "src.exam_solver_pulp",
 }
+DEFAULT_CONFIG_PATH = "configs/default.json"
 
 
 def run(data_dir: str, config_path: str | None, out_path: str | None, solver: str = "cp-sat",
@@ -74,7 +75,8 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Xếp lịch thi (A) hoặc lịch phòng học theo tuần (B)")
     parser.add_argument("--problem", choices=["A", "B"], default=None, help="Ghi đè chọn B; mặc định đọc cấu hình")
     parser.add_argument("--data", required=True, help="Thư mục bộ dữ liệu, ví dụ data/toy")
-    parser.add_argument("--config", default="configs/default.json")
+    parser.add_argument("--config", default=None,
+                        help="Mặc định configs/default.json nếu có; truyền file không tồn tại thì báo D12")
     parser.add_argument("--out", default=None, help="Mặc định output/<bộ dữ liệu>/schedule.json (A), timetable.json (B)")
     parser.add_argument("--solver", choices=sorted(SOLVERS), default="cp-sat",
                         help="cp-sat (mặc định) hoặc pulp (solver đối chứng PuLP + CBC)")
@@ -82,6 +84,8 @@ def main() -> int:
                         help="Không chẩn đoán nguyên nhân khi vô nghiệm")
     args = parser.parse_args()
     config_path = args.config
+    if config_path is None and os.path.exists(DEFAULT_CONFIG_PATH):
+        config_path = DEFAULT_CONFIG_PATH
 
     try:
         schedule = run(args.data, config_path, args.out, solver=args.solver, diagnose=not args.no_diagnose, problem=args.problem)
