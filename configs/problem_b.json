@@ -1,0 +1,9 @@
+{
+  "problem": "B",
+  "strategy": "single",
+  "time_limit_sec": 300,
+  "num_workers": 8,
+  "random_seed": 0,
+  "lab_reserve_ratio": 0.85,
+  "weights": {"B-S1": 1, "B-S2": 50, "B-S3": 100, "B-S4": 30}
+}

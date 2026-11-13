@@ -1,0 +1,69 @@
+﻿resource_type,resource_id,weekday,period,note
+room,E3-LAB2,3,4,Bảo trì định kỳ
+room,E3-LAB2,7,2,Bảo trì định kỳ
+room,G2-101,4,3,Bảo trì định kỳ
+room,G2-101,5,1,Bảo trì định kỳ
+room,G2-102,3,2,Bảo trì định kỳ
+room,G2-102,6,1,Bảo trì định kỳ
+room,G2-103,5,3,Bảo trì định kỳ
+room,G2-103,7,3,Bảo trì định kỳ
+room,G2-104,3,1,Bảo trì định kỳ
+room,G2-104,7,2,Bảo trì định kỳ
+room,G2-LAB1,4,2,Bảo trì định kỳ
+room,G2-LAB1,6,3,Bảo trì định kỳ
+room,G2-LAB3,2,1,Bảo trì định kỳ
+room,G2-LAB3,6,3,Bảo trì định kỳ
+room,G3-101,3,1,Bảo trì định kỳ
+room,G3-101,4,2,Bảo trì định kỳ
+room,G3-102,4,3,Bảo trì định kỳ
+room,G3-102,7,2,Bảo trì định kỳ
+room,G3-103,4,1,Bảo trì định kỳ
+room,G3-103,4,3,Bảo trì định kỳ
+lecturer,GV01,3,1,Lịch công tác
+lecturer,GV01,6,2,Lịch công tác
+lecturer,GV02,5,2,Lịch công tác
+lecturer,GV02,6,2,Lịch công tác
+lecturer,GV03,2,4,Lịch công tác
+lecturer,GV03,5,4,Lịch công tác
+lecturer,GV04,2,4,Lịch công tác
+lecturer,GV04,6,4,Lịch công tác
+lecturer,GV05,2,3,Lịch công tác
+lecturer,GV05,4,2,Lịch công tác
+lecturer,GV06,3,1,Lịch công tác
+lecturer,GV06,3,3,Lịch công tác
+lecturer,GV07,4,4,Lịch công tác
+lecturer,GV07,5,4,Lịch công tác
+lecturer,GV08,5,1,Lịch công tác
+lecturer,GV08,7,3,Lịch công tác
+lecturer,GV09,6,2,Lịch công tác
+lecturer,GV09,7,3,Lịch công tác
+lecturer,GV10,3,2,Lịch công tác
+lecturer,GV10,4,4,Lịch công tác
+lecturer,GV11,7,1,Lịch công tác
+lecturer,GV11,7,4,Lịch công tác
+lecturer,GV12,5,3,Lịch công tác
+lecturer,GV12,5,4,Lịch công tác
+lecturer,GV13,2,1,Lịch công tác
+lecturer,GV13,3,1,Lịch công tác
+lecturer,GV14,4,2,Lịch công tác
+lecturer,GV14,4,3,Lịch công tác
+lecturer,GV15,5,2,Lịch công tác
+lecturer,GV15,5,3,Lịch công tác
+lecturer,GV16,5,3,Lịch công tác
+lecturer,GV16,7,4,Lịch công tác
+lecturer,GV17,4,1,Lịch công tác
+lecturer,GV17,7,3,Lịch công tác
+lecturer,GV18,6,4,Lịch công tác
+lecturer,GV18,7,1,Lịch công tác
+lecturer,GV19,6,1,Lịch công tác
+lecturer,GV19,7,1,Lịch công tác
+lecturer,GV20,3,4,Lịch công tác
+lecturer,GV20,6,2,Lịch công tác
+lecturer,GV21,2,2,Lịch công tác
+lecturer,GV21,2,4,Lịch công tác
+lecturer,GV22,3,1,Lịch công tác
+lecturer,GV22,6,1,Lịch công tác
+lecturer,GV23,3,3,Lịch công tác
+lecturer,GV23,6,3,Lịch công tác
+lecturer,GV24,2,2,Lịch công tác
+lecturer,GV24,3,2,Lịch công tác

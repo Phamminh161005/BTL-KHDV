@@ -1,7 +1,8 @@
-"""Chạy toàn bộ quy trình bài toán A: đọc dữ liệu, giải, hậu xử lý, kiểm tra, ghi schedule.json.
+"""Chạy quy trình bài toán A/B: đọc dữ liệu, giải, hậu xử lý, kiểm tra, ghi schedule.json.
 
 Cách chạy:
     py -3.12 -m src.run --data data/toy
+    py -3.12 -m src.run --problem B --data data/toy_b --config configs/problem_b.json
     py -3.12 -m src.run --data data/toy --solver pulp
     py -3.12 -m src.run --data data/toy --no-diagnose      # không chẩn đoán khi vô nghiệm
     py -3.12 -m src.run --data data/medium --config configs/default.json --out output/medium/schedule.json
@@ -24,12 +25,31 @@ SOLVERS = {
 
 
 def run(data_dir: str, config_path: str | None, out_path: str | None, solver: str = "cp-sat",
-        diagnose: bool = True) -> dict:
-    """diagnose: khi solver trả về INFEASIBLE, chạy chẩn đoán nguyên nhân (src/diagnose.py, mã N01–N05)."""
+        diagnose: bool = True, problem: str | None = None) -> dict:
+    """diagnose áp dụng A (src.diagnose). B cung cấp room_solver.relax để Minh tích hợp chẩn đoán."""
+    if problem not in (None, "A", "B"):
+        raise ValueError("problem phải là A hoặc B")
     if solver not in SOLVERS:
         raise ValueError(f"solver phải là một trong {sorted(SOLVERS)}, gặp {solver!r}")
     dataset = os.path.basename(os.path.normpath(data_dir))
-    loaded = load_instance(data_dir, config_path)
+    if problem == "B":
+        from src.data_loader_b import load_instance_b
+        loaded = load_instance_b(data_dir, config_path)
+    else:
+        loaded = load_instance(data_dir, config_path)
+    if problem == "A" and loaded.config["problem"] != "A":
+        raise ValueError("--problem A không khớp problem trong cấu hình")
+    if loaded.config["problem"] == "B":
+        if solver != "cp-sat":
+            raise ValueError("Bài toán B chỉ hỗ trợ solver cp-sat")
+        from src.room_solver import solve as solve_b
+        from src.timetable import build_timetable
+        result = solve_b(loaded.instance, loaded.config) if loaded.ok else None
+        timetable = build_timetable(loaded.instance, loaded.config, loaded.messages, result, dataset)
+        out_path = out_path or os.path.join("output", dataset, "timetable.json")
+        os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
+        write_schedule(timetable, out_path)
+        return timetable
     result = None
     if loaded.ok:
         solve = importlib.import_module(SOLVERS[solver]).solve
@@ -45,28 +65,35 @@ def run(data_dir: str, config_path: str | None, out_path: str | None, solver: st
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Xếp lịch thi (bài toán A)")
+    # Giao thức CLI dùng UTF-8, kể cả khi stdout/stderr bị pipe trên Windows.
+    # Chỉ đổi ở entry point, không tác động ứng dụng import hàm run().
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is not None:
+            reconfigure(encoding="utf-8", errors="backslashreplace")
+    parser = argparse.ArgumentParser(description="Xếp lịch thi (A) hoặc lịch phòng học theo tuần (B)")
+    parser.add_argument("--problem", choices=["A", "B"], default=None, help="Ghi đè chọn B; mặc định đọc cấu hình")
     parser.add_argument("--data", required=True, help="Thư mục bộ dữ liệu, ví dụ data/toy")
     parser.add_argument("--config", default="configs/default.json")
-    parser.add_argument("--out", default=None, help="Mặc định output/<tên bộ dữ liệu>/schedule.json")
+    parser.add_argument("--out", default=None, help="Mặc định output/<bộ dữ liệu>/schedule.json (A), timetable.json (B)")
     parser.add_argument("--solver", choices=sorted(SOLVERS), default="cp-sat",
                         help="cp-sat (mặc định) hoặc pulp (solver đối chứng PuLP + CBC)")
     parser.add_argument("--no-diagnose", action="store_true",
                         help="Không chẩn đoán nguyên nhân khi vô nghiệm")
     args = parser.parse_args()
-    config_path = args.config if os.path.exists(args.config) else None
+    config_path = args.config
 
     try:
-        schedule = run(args.data, config_path, args.out, solver=args.solver, diagnose=not args.no_diagnose)
-    except NotImplementedError as e:
-        print(f"Chưa chạy được: {e}")
+        schedule = run(args.data, config_path, args.out, solver=args.solver, diagnose=not args.no_diagnose, problem=args.problem)
+    except (NotImplementedError, ValueError) as e:
+        print(f"Không chạy được: {e}")
         return 2
     for m in schedule["messages"]:
         where = f" ({m['file']}" + (f", dòng {m['line']}" if m["line"] else "") + ")" if m["file"] else ""
         print(f"[{m['level']}] {m['code']}{where}: {m['message']}")
     print(f"Solver: {schedule['meta']['solver']}")
     print(f"Trạng thái: {schedule['status']}, mục tiêu: {schedule['objective']}, "
-          f"thời gian: {schedule['solve_time_sec']} giây, số lượt: {len(schedule['sittings'])}, "
+          f"thời gian: {schedule['solve_time_sec']} giây, số lượt: {len(schedule.get('sittings', schedule.get('sessions', [])))}, "
           f"vi phạm: {len(schedule['violations'])}")
     return 0 if schedule["status"] in ("OPTIMAL", "FEASIBLE") and not schedule["violations"] else 1
 

@@ -1,0 +1,13 @@
+dataset,seed,b_s4_weight,lab_sessions,room_change_only,must_move,slots_without_lab_reserve,objective
+medium_b,0,30,48,32,16,6,1357
+medium_b,0,0,48,18,30,11,1177
+medium_b,1,30,48,33,15,6,1357
+medium_b,1,0,48,20,28,11,1177
+medium_b,2,30,48,33,15,6,1357
+medium_b,2,0,48,21,27,11,1177
+large_b,0,30,63,60,3,0,2521
+large_b,0,0,63,54,9,2,2521
+large_b,1,30,63,60,3,0,2521
+large_b,1,0,63,53,10,3,2521
+large_b,2,30,63,60,3,0,2521
+large_b,2,0,63,51,12,3,2521

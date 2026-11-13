@@ -1,0 +1,121 @@
+﻿class_id,class_name,course_id,needs_lab,size,sessions_per_week,lecturer_id
+B001-LT,Học phần 1 (lý thuyết),B001,0,47,2,GV38
+B001-TH1,Học phần 1 (thực hành 1),B001,1,29,1,GV25
+B001-TH2,Học phần 1 (thực hành 2),B001,1,18,1,GV21
+B002-LT,Học phần 2 (lý thuyết),B002,0,27,1,GV17
+B002-TH1,Học phần 2 (thực hành 1),B002,1,14,1,GV27
+B002-TH2,Học phần 2 (thực hành 2),B002,1,13,1,GV37
+B003-LT,Học phần 3 (lý thuyết),B003,0,32,1,GV10
+B003-TH1,Học phần 3 (thực hành 1),B003,1,16,1,GV31
+B003-TH2,Học phần 3 (thực hành 2),B003,1,16,1,GV32
+B004-LT,Học phần 4 (lý thuyết),B004,0,26,2,GV07
+B004-TH1,Học phần 4 (thực hành 1),B004,1,12,1,GV32
+B004-TH2,Học phần 4 (thực hành 2),B004,1,14,1,GV03
+B005-LT,Học phần 5 (lý thuyết),B005,0,44,2,GV06
+B005-TH1,Học phần 5 (thực hành 1),B005,1,25,1,GV01
+B005-TH2,Học phần 5 (thực hành 2),B005,1,19,1,GV07
+B006-LT,Học phần 6 (lý thuyết),B006,0,32,2,GV37
+B006-TH1,Học phần 6 (thực hành 1),B006,1,12,1,GV30
+B006-TH2,Học phần 6 (thực hành 2),B006,1,20,1,GV03
+B007-LT,Học phần 7 (lý thuyết),B007,0,30,1,GV39
+B007-TH1,Học phần 7 (thực hành 1),B007,1,17,1,GV11
+B007-TH2,Học phần 7 (thực hành 2),B007,1,13,1,GV17
+B008-LT,Học phần 8 (lý thuyết),B008,0,29,1,GV22
+B008-TH1,Học phần 8 (thực hành 1),B008,1,17,1,GV10
+B008-TH2,Học phần 8 (thực hành 2),B008,1,12,1,GV25
+B009-LT,Học phần 9 (lý thuyết),B009,0,42,1,GV24
+B009-TH1,Học phần 9 (thực hành 1),B009,1,27,1,GV30
+B009-TH2,Học phần 9 (thực hành 2),B009,1,15,1,GV35
+B010-LT,Học phần 10 (lý thuyết),B010,0,31,1,GV04
+B010-TH1,Học phần 10 (thực hành 1),B010,1,19,1,GV38
+B010-TH2,Học phần 10 (thực hành 2),B010,1,12,1,GV39
+B011-LT,Học phần 11 (lý thuyết),B011,0,36,2,GV18
+B011-TH1,Học phần 11 (thực hành 1),B011,1,18,1,GV20
+B011-TH2,Học phần 11 (thực hành 2),B011,1,18,1,GV22
+B012-LT,Học phần 12 (lý thuyết),B012,0,37,2,GV02
+B012-TH1,Học phần 12 (thực hành 1),B012,1,20,1,GV05
+B012-TH2,Học phần 12 (thực hành 2),B012,1,17,1,GV33
+B013-LT,Học phần 13 (lý thuyết),B013,0,39,2,GV40
+B013-TH1,Học phần 13 (thực hành 1),B013,1,24,1,GV09
+B013-TH2,Học phần 13 (thực hành 2),B013,1,15,1,GV40
+B014-LT,Học phần 14 (lý thuyết),B014,0,28,2,GV14
+B014-TH1,Học phần 14 (thực hành 1),B014,1,13,1,GV15
+B014-TH2,Học phần 14 (thực hành 2),B014,1,15,1,GV17
+B015-LT,Học phần 15 (lý thuyết),B015,0,32,2,GV25
+B015-TH1,Học phần 15 (thực hành 1),B015,1,17,1,GV19
+B015-TH2,Học phần 15 (thực hành 2),B015,1,15,1,GV13
+B016-LT,Học phần 16 (lý thuyết),B016,0,25,2,GV19
+B016-TH1,Học phần 16 (thực hành 1),B016,1,13,1,GV18
+B016-TH2,Học phần 16 (thực hành 2),B016,1,12,2,GV01
+B017-LT,Học phần 17 (lý thuyết),B017,0,41,1,GV17
+B017-TH1,Học phần 17 (thực hành 1),B017,1,29,1,GV18
+B017-TH2,Học phần 17 (thực hành 2),B017,1,12,1,GV38
+B018-LT,Học phần 18 (lý thuyết),B018,0,31,1,GV27
+B018-TH1,Học phần 18 (thực hành 1),B018,1,16,2,GV08
+B018-TH2,Học phần 18 (thực hành 2),B018,1,15,1,GV04
+B019-LT,Học phần 19 (lý thuyết),B019,0,27,1,GV35
+B019-TH1,Học phần 19 (thực hành 1),B019,1,12,1,GV40
+B019-TH2,Học phần 19 (thực hành 2),B019,1,15,1,GV16
+B020-LT,Học phần 20 (lý thuyết),B020,0,36,2,GV30
+B020-TH1,Học phần 20 (thực hành 1),B020,1,18,1,GV27
+B020-TH2,Học phần 20 (thực hành 2),B020,1,18,1,GV04
+B021-LT,Học phần 21 (lý thuyết),B021,0,38,2,GV28
+B021-TH1,Học phần 21 (thực hành 1),B021,1,22,1,GV26
+B021-TH2,Học phần 21 (thực hành 2),B021,1,16,1,GV39
+B022-LT,Học phần 22 (lý thuyết),B022,0,35,2,GV26
+B022-TH1,Học phần 22 (thực hành 1),B022,1,16,1,GV15
+B022-TH2,Học phần 22 (thực hành 2),B022,1,19,1,GV34
+B023-LT,Học phần 23 (lý thuyết),B023,0,36,1,GV15
+B023-TH1,Học phần 23 (thực hành 1),B023,1,19,1,GV36
+B023-TH2,Học phần 23 (thực hành 2),B023,1,17,2,GV24
+B024-LT,Học phần 24 (lý thuyết),B024,0,30,2,GV23
+B024-TH1,Học phần 24 (thực hành 1),B024,1,14,1,GV36
+B024-TH2,Học phần 24 (thực hành 2),B024,1,16,1,GV23
+B025-LT,Học phần 25 (lý thuyết),B025,0,42,1,GV13
+B025-TH1,Học phần 25 (thực hành 1),B025,1,30,1,GV06
+B025-TH2,Học phần 25 (thực hành 2),B025,1,12,1,GV21
+B026-LT,Học phần 26 (lý thuyết),B026,0,32,1,GV20
+B026-TH1,Học phần 26 (thực hành 1),B026,1,17,1,GV12
+B026-TH2,Học phần 26 (thực hành 2),B026,1,15,1,GV26
+B027-LT,Học phần 27 (lý thuyết),B027,0,30,2,GV33
+B027-TH1,Học phần 27 (thực hành 1),B027,1,13,1,GV07
+B027-TH2,Học phần 27 (thực hành 2),B027,1,17,1,GV37
+B028-LT,Học phần 28 (lý thuyết),B028,0,35,2,GV03
+B028-TH1,Học phần 28 (thực hành 1),B028,1,15,1,GV34
+B028-TH2,Học phần 28 (thực hành 2),B028,1,20,1,GV02
+B029-LT,Học phần 29 (lý thuyết),B029,0,46,1,GV35
+B029-TH1,Học phần 29 (thực hành 1),B029,1,28,1,GV29
+B029-TH2,Học phần 29 (thực hành 2),B029,1,18,1,GV14
+B030-LT,Học phần 30 (lý thuyết),B030,0,37,1,GV05
+B030-TH1,Học phần 30 (thực hành 1),B030,1,19,1,GV16
+B030-TH2,Học phần 30 (thực hành 2),B030,1,18,1,GV28
+B031-LT,Học phần 31 (lý thuyết),B031,0,43,2,GV08
+B032-LT,Học phần 32 (lý thuyết),B032,0,43,1,GV14
+B033-LT,Học phần 33 (lý thuyết),B033,0,76,2,GV19
+B034-LT,Học phần 34 (lý thuyết),B034,0,85,1,GV22
+B035-LT,Học phần 35 (lý thuyết),B035,0,74,1,GV05
+B036-LT,Học phần 36 (lý thuyết),B036,0,85,1,GV28
+B037-LT,Học phần 37 (lý thuyết),B037,0,81,1,GV35
+B038-LT,Học phần 38 (lý thuyết),B038,0,42,2,GV32
+B039-LT,Học phần 39 (lý thuyết),B039,0,66,2,GV29
+B040-LT,Học phần 40 (lý thuyết),B040,0,67,1,GV23
+B041-LT,Học phần 41 (lý thuyết),B041,0,58,1,GV12
+B042-LT,Học phần 42 (lý thuyết),B042,0,41,2,GV21
+B043-LT,Học phần 43 (lý thuyết),B043,0,89,1,GV20
+B044-LT,Học phần 44 (lý thuyết),B044,0,77,1,GV09
+B045-LT,Học phần 45 (lý thuyết),B045,0,69,1,GV33
+B046-LT,Học phần 46 (lý thuyết),B046,0,35,2,GV16
+B047-LT,Học phần 47 (lý thuyết),B047,0,50,1,GV07
+B048-LT,Học phần 48 (lý thuyết),B048,0,75,1,GV14
+B049-LT,Học phần 49 (lý thuyết),B049,0,65,1,GV02
+B050-LT,Học phần 50 (lý thuyết),B050,0,88,1,GV12
+B051-LT,Học phần 51 (lý thuyết),B051,0,40,1,GV09
+B052-LT,Học phần 52 (lý thuyết),B052,0,60,1,GV31
+B053-LT,Học phần 53 (lý thuyết),B053,0,74,1,GV13
+B054-LT,Học phần 54 (lý thuyết),B054,0,82,1,GV06
+B055-LT,Học phần 55 (lý thuyết),B055,0,36,1,GV34
+B056-LT,Học phần 56 (lý thuyết),B056,0,60,1,GV22
+B057-LT,Học phần 57 (lý thuyết),B057,0,69,2,GV11
+B058-LT,Học phần 58 (lý thuyết),B058,0,70,1,GV10
+B059-LT,Học phần 59 (lý thuyết),B059,0,58,1,GV36
+B060-LT,Học phần 60 (lý thuyết),B060,0,82,1,GV31

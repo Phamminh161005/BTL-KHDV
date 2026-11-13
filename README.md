@@ -3,18 +3,18 @@
 Bài tập lớn môn Khoa học Dịch vụ. Hệ thống dùng mô hình quy hoạch nguyên tuyến tính (ILP), giải bằng Google OR-Tools CP-SAT, để tự động xếp:
 
 - Lịch thi cuối kỳ: môn nào thi ca nào, ở phòng nào, giám thị nào coi (bài toán A);
-- Lịch phòng học / phòng máy thực hành theo tuần (bài toán B, đang làm).
+- Lịch phòng học / phòng máy thực hành theo tuần (bài toán B);
 
 ## Tài liệu
 
 Đọc theo thứ tự trước khi viết code:
 
-| Tài liệu | Nội dung |
-|---|---|
-| [docs/scope.md](docs/scope.md) | Phạm vi đề tài, giả định, ràng buộc, KPI |
-| [docs/model_spec.md](docs/model_spec.md) | Đặc tả mô hình toán (bài toán A và B) |
+| Tài liệu                                   | Nội dung                                            |
+| ------------------------------------------ | --------------------------------------------------- |
+| [docs/scope.md](docs/scope.md)             | Phạm vi đề tài, giả định, ràng buộc, KPI            |
+| [docs/model_spec.md](docs/model_spec.md)   | Đặc tả mô hình toán (bài toán A và B)               |
 | [docs/data_schema.md](docs/data_schema.md) | Định dạng dữ liệu đầu vào, cấu hình và file kết quả |
-| [CONTRIBUTING.md](CONTRIBUTING.md) | Quy ước làm việc nhóm: nhánh, commit, Pull Request |
+| [CONTRIBUTING.md](CONTRIBUTING.md)         | Quy ước làm việc nhóm: nhánh, commit, Pull Request  |
 
 ## Cài đặt
 
@@ -33,7 +33,7 @@ pytest
 
 Trên macOS hoặc Linux thay hai dòng giữa bằng `python3 -m venv .venv` và `source .venv/bin/activate`.
 
-Cài đặt thành công khi `pytest` báo toàn bộ passed. Hai ca kiểm thử solver sẽ ở trạng thái skipped cho đến khi solver được cài đặt.
+Cài đặt thành công khi `pytest` báo toàn bộ passed. Bộ kiểm thử hiện có 283 ca, gồm hai ca hồi quy bổ sung cho mã hóa tiến trình CLI. Các test solver không còn bị bỏ qua vì chưa cài đặt.
 
 Các lệnh bên dưới đều chạy trong môi trường `.venv` đã kích hoạt, từ thư mục gốc của repo.
 
@@ -46,7 +46,15 @@ python -m src.run --data data/toy
 # Dùng solver đối chứng PuLP + CBC thay cho CP-SAT
 python -m src.run --data data/toy --solver pulp
 
-# Mở giao diện xem lịch
+# Xếp lịch phòng học/phòng máy theo tuần (bài toán B)
+python -m src.run --problem B --data data/toy_b --config configs/problem_b.json
+
+# Sinh dữ liệu và chạy thực nghiệm bài B
+python -m src.generator --size medium_b --seed 1 --out data/medium_b
+python -m src.generator --size large_b --seed 1 --out data/large_b
+python -m experiments.perf_b --seeds 0 1 2 --time-limit 300 --workers 8
+
+# Mở giao diện xem lịch thi bài A
 streamlit run app/app.py
 
 # Xếp lại khi có sự cố: phòng G2-LAB1 hỏng ca 3 ngày 15/12 (kết quả ghi vào output/toy/reschedule.json)
@@ -58,7 +66,9 @@ pytest
 
 ### Giao diện
 
-Giao diện có năm tab:
+Giao diện hiện hỗ trợ bài A qua năm tab. Chưa hỗ trợ hiển thị `sessions` của `timetable.json`, điểm phạt B-S1–B-S4 hoặc các CSV thực nghiệm bài B. Bài B hiện chạy qua CLI và xuất JSON; không tải `timetable.json` vào giao diện lịch thi A để đánh giá kết quả.
+
+Năm tab hiện có:
 
 - Xem kết quả: mặc định mở kết quả tham chiếu `tests/reference/toy_schedule.json`. Có thể tải lên file JSON khác
   hoặc nhập đường dẫn file kết quả; file tải lên được ưu tiên. Sau khi chạy ở tab thứ hai, tab này hiện ngay kết quả vừa chạy.
@@ -110,6 +120,8 @@ thư mục tạm (biến môi trường `EXAM_APP_DATA_DIR`, `EXAM_APP_OUTPUT_DI
 │   ├── exam_solver.py     Solver bài toán A (CP-SAT)
 │   ├── exam_solver_pulp.py  Solver đối chứng bài toán A (PuLP + CBC)
 │   ├── room_solver.py     Solver bài toán B
+│   ├── generator_b.py     Sinh medium_b/large_b
+│   ├── timetable.py       Xuất timetable.json, KPI và validator B
 │   ├── schedule.py        Hậu xử lý, dựng schedule.json
 │   ├── validator.py       Kiểm tra lời giải độc lập với solver
 │   ├── kpi.py             Tính KPI và tính lại điểm phạt
@@ -125,25 +137,33 @@ thư mục tạm (biến môi trường `EXAM_APP_DATA_DIR`, `EXAM_APP_OUTPUT_DI
 
 ## Trạng thái các thành phần
 
-| Thành phần | Trạng thái |
-|---|---|
-| `data_loader.py`, `config.py`, `instance.py` | Hoàn chỉnh, có kiểm thử |
-| `validator.py`, `kpi.py`, `schedule.py`, `run.py` | Hoàn chỉnh, có kiểm thử. Khi vô nghiệm, `run.py` tự chẩn đoán nguyên nhân (tắt bằng `--no-diagnose`) |
-| `reschedule.py`, `diagnose.py` | Hoàn chỉnh, có kiểm thử: xếp lại khi có sự cố sao cho ít thay đổi nhất (model_spec A.14), chẩn đoán khi vô nghiệm (A.8) |
-| `generator.py` | Hoàn chỉnh, có kiểm thử; dữ liệu sinh sẵn (seed 1) trong `data/toy_gen`, `data/medium`, `data/large` |
-| `exam_solver.py` | Chiến lược `single` hoàn chỉnh, có kiểm thử: trên `toy` đạt `OPTIMAL` 2391 trong khoảng 20 giây. Chiến lược `two_phase` hoàn chỉnh (KHOE-3), trên `toy` đạt 2391 trong khoảng 7 giây |
-| `exam_solver_pulp.py` | Hoàn chỉnh, có kiểm thử. Trên `toy` tìm được lời giải tối ưu 2391 nhưng không chứng minh được tối ưu trong vài phút (model_spec A.13) |
-| `instance_b.py`, `data_loader_b.py` | Hoàn chỉnh, có kiểm thử: đọc dữ liệu bài toán B, kiểm tra PB1–PB7 (model_spec B.7). `data_loader.load_instance` tự chuyển sang bộ đọc B khi cấu hình có `"problem": "B"` |
-| `validator_b.py` | Hoàn chỉnh, có kiểm thử: soát B-H1 đến B-H7 trên mảng `sessions` của `timetable.json`, tính lại B-S1 đến B-S4. Lịch tối ưu mẫu của `toy_b` (Z = 355) nằm trong `tests/test_validator_b.py` |
-| `room_solver.py` | Spec bài toán B đã có (model_spec mục B, data_schema mục 9); chờ cài đặt (Khỏe). Đầu vào là `InstanceB`, đầu ra là `SolveResult` chứa `SolutionB` (xem đầu file `src/instance_b.py`) |
-| `app/app.py` | Xem và so sánh lịch, kiểm tra dữ liệu, chạy solver (CP-SAT/PuLP), khai báo sự cố và xếp lại; biểu đồ và bảng CSV thực nghiệm; có AppTest |
+| Thành phần                                        | Trạng thái                                                                                                                                                                                 |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `data_loader.py`, `config.py`, `instance.py`      | Hoàn chỉnh, có kiểm thử                                                                                                                                                                    |
+| `validator.py`, `kpi.py`, `schedule.py`, `run.py` | Có kiểm thử. `run.py` định tuyến A/B theo cấu hình hoặc `--problem B`; tự chẩn đoán khi vô nghiệm hiện chỉ áp dụng A                                                                       |
+| `reschedule.py`, `diagnose.py`                    | Hoàn chỉnh, có kiểm thử: xếp lại khi có sự cố sao cho ít thay đổi nhất (model_spec A.14), chẩn đoán khi vô nghiệm (A.8)                                                                    |
+| `generator.py`, `generator_b.py`                  | Có kiểm thử; sinh dữ liệu A và medium_b/large_b. Các bộ sinh sẵn dùng seed 1; B dùng nguyên file phòng và giảng viên của A                                                                 |
+| `exam_solver.py`                                  | Chiến lược `single` hoàn chỉnh, có kiểm thử: trên `toy` đạt `OPTIMAL` 2391 trong khoảng 20 giây. Chiến lược `two_phase` hoàn chỉnh (KHOE-3), trên `toy` đạt 2391 trong khoảng 7 giây       |
+| `exam_solver_pulp.py`                             | Hoàn chỉnh, có kiểm thử. Trên `toy` tìm được lời giải tối ưu 2391 nhưng không chứng minh được tối ưu trong vài phút (model_spec A.13)                                                      |
+| `instance_b.py`, `data_loader_b.py`               | Hoàn chỉnh, có kiểm thử: đọc dữ liệu bài toán B, kiểm tra PB1–PB7 (model_spec B.7). `data_loader.load_instance` tự chuyển sang bộ đọc B khi cấu hình có `"problem": "B"`                   |
+| `validator_b.py`                                  | Hoàn chỉnh, có kiểm thử: soát B-H1 đến B-H7 trên mảng `sessions` của `timetable.json`, tính lại B-S1 đến B-S4. Lịch tối ưu mẫu của `toy_b` (Z = 355) nằm trong `tests/test_validator_b.py` |
+| `room_solver.py`, `timetable.py`                  | Đã cài đặt KHOE-5, có kiểm thử; toy_b đạt OPTIMAL 355, hỗ trợ bỏ nhóm B-H5/B-H7/B-H6 cho chẩn đoán, xuất timetable.json và KPI. Xem experiments/README.md mục B                            |
+| `app/app.py`                                      | Hỗ trợ bài A: xem/so sánh lịch, chạy solver, sự cố/xếp lại và thực nghiệm A; có AppTest. Chưa tích hợp giao diện bài B                                                                     |
+
+## Phạm vi hoàn thành KHOE-5
+
+- Solver, sinh dữ liệu và thực nghiệm B đã có; các kết quả và kết luận nằm trong `experiments/README.md`.
+- `configs/problem_b.json` là cấu hình B. `configs/default.json` vẫn dành cho A; loader bổ sung mặc định khi thiếu khóa B.
+- Kết quả B nằm trong `output/<dataset>/timetable.json`; CSV và lịch từng lượt nằm trong `experiments/results/`.
+- Giao diện B, chẩn đoán B tự động và xếp lại đầy đủ B.9 chưa tích hợp. `report/` chưa có báo cáo hoàn chỉnh trong bản mã nguồn này.
+- Đạt kiểm thử và nghiệm thu kỹ thuật chưa đồng nghĩa task đã được merge: vẫn cần Minh review PR theo CONTRIBUTING.md.
 
 ## Phân công
 
-| Thành viên | Mảng việc | Mã task |
-|---|---|---|
-| Phạm Văn Minh | Điều phối, đặc tả mô hình, validator, duyệt code, ghép báo cáo | `MINH-n` |
-| Tôn Thiện Khỏe | Sinh dữ liệu, solver, thực nghiệm | `KHOE-n` |
-| Vũ Văn Mạnh | Phân tích dịch vụ, giao diện, slide | `MANH-n` |
+| Thành viên     | Mảng việc                                                      | Mã task  |
+| -------------- | -------------------------------------------------------------- | -------- |
+| Phạm Văn Minh  | Điều phối, đặc tả mô hình, validator, duyệt code, ghép báo cáo | `MINH-n` |
+| Tôn Thiện Khỏe | Sinh dữ liệu, solver, thực nghiệm                              | `KHOE-n` |
+| Vũ Văn Mạnh    | Phân tích dịch vụ, giao diện, slide                            | `MANH-n` |
 
 Task cụ thể được giao và theo dõi trên CoReach.

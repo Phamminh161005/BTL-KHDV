@@ -1,0 +1,111 @@
+﻿resource_type,resource_id,weekday,period,note
+room,E3-LAB2,7,1,Bảo trì định kỳ
+room,E3-LAB2,7,3,Bảo trì định kỳ
+room,E3-LAB4,3,3,Bảo trì định kỳ
+room,E3-LAB4,5,1,Bảo trì định kỳ
+room,G2-101,2,4,Bảo trì định kỳ
+room,G2-101,6,1,Bảo trì định kỳ
+room,G2-102,4,3,Bảo trì định kỳ
+room,G2-102,6,1,Bảo trì định kỳ
+room,G2-103,4,4,Bảo trì định kỳ
+room,G2-103,5,4,Bảo trì định kỳ
+room,G2-104,4,3,Bảo trì định kỳ
+room,G2-104,7,1,Bảo trì định kỳ
+room,G2-105,5,1,Bảo trì định kỳ
+room,G2-105,7,2,Bảo trì định kỳ
+room,G2-106,2,4,Bảo trì định kỳ
+room,G2-106,6,4,Bảo trì định kỳ
+room,G2-LAB1,2,1,Bảo trì định kỳ
+room,G2-LAB1,6,2,Bảo trì định kỳ
+room,G2-LAB3,2,2,Bảo trì định kỳ
+room,G2-LAB3,5,1,Bảo trì định kỳ
+room,G3-101,3,3,Bảo trì định kỳ
+room,G3-101,7,3,Bảo trì định kỳ
+room,G3-102,3,1,Bảo trì định kỳ
+room,G3-102,6,2,Bảo trì định kỳ
+room,G3-103,5,2,Bảo trì định kỳ
+room,G3-103,7,3,Bảo trì định kỳ
+room,G3-104,4,1,Bảo trì định kỳ
+room,G3-104,5,2,Bảo trì định kỳ
+room,G3-105,7,1,Bảo trì định kỳ
+room,G3-105,7,4,Bảo trì định kỳ
+lecturer,GV01,4,3,Lịch công tác
+lecturer,GV01,7,1,Lịch công tác
+lecturer,GV02,3,3,Lịch công tác
+lecturer,GV02,5,1,Lịch công tác
+lecturer,GV03,5,3,Lịch công tác
+lecturer,GV03,6,1,Lịch công tác
+lecturer,GV04,4,1,Lịch công tác
+lecturer,GV04,5,1,Lịch công tác
+lecturer,GV05,4,4,Lịch công tác
+lecturer,GV05,6,2,Lịch công tác
+lecturer,GV06,6,3,Lịch công tác
+lecturer,GV06,6,4,Lịch công tác
+lecturer,GV07,4,3,Lịch công tác
+lecturer,GV07,6,2,Lịch công tác
+lecturer,GV08,3,1,Lịch công tác
+lecturer,GV08,3,2,Lịch công tác
+lecturer,GV09,4,1,Lịch công tác
+lecturer,GV09,4,4,Lịch công tác
+lecturer,GV10,3,3,Lịch công tác
+lecturer,GV10,5,4,Lịch công tác
+lecturer,GV11,4,1,Lịch công tác
+lecturer,GV11,7,4,Lịch công tác
+lecturer,GV12,6,1,Lịch công tác
+lecturer,GV12,7,2,Lịch công tác
+lecturer,GV13,6,1,Lịch công tác
+lecturer,GV13,7,3,Lịch công tác
+lecturer,GV14,2,2,Lịch công tác
+lecturer,GV14,3,1,Lịch công tác
+lecturer,GV15,7,3,Lịch công tác
+lecturer,GV15,7,4,Lịch công tác
+lecturer,GV16,2,1,Lịch công tác
+lecturer,GV16,3,1,Lịch công tác
+lecturer,GV17,4,4,Lịch công tác
+lecturer,GV17,7,2,Lịch công tác
+lecturer,GV18,6,1,Lịch công tác
+lecturer,GV18,7,2,Lịch công tác
+lecturer,GV19,5,2,Lịch công tác
+lecturer,GV19,6,3,Lịch công tác
+lecturer,GV20,2,2,Lịch công tác
+lecturer,GV20,7,3,Lịch công tác
+lecturer,GV21,6,2,Lịch công tác
+lecturer,GV21,6,4,Lịch công tác
+lecturer,GV22,5,3,Lịch công tác
+lecturer,GV22,6,3,Lịch công tác
+lecturer,GV23,3,2,Lịch công tác
+lecturer,GV23,4,3,Lịch công tác
+lecturer,GV24,3,2,Lịch công tác
+lecturer,GV24,7,2,Lịch công tác
+lecturer,GV25,7,1,Lịch công tác
+lecturer,GV25,7,3,Lịch công tác
+lecturer,GV26,5,4,Lịch công tác
+lecturer,GV26,7,2,Lịch công tác
+lecturer,GV27,3,2,Lịch công tác
+lecturer,GV27,5,4,Lịch công tác
+lecturer,GV28,6,1,Lịch công tác
+lecturer,GV28,7,4,Lịch công tác
+lecturer,GV29,3,2,Lịch công tác
+lecturer,GV29,7,3,Lịch công tác
+lecturer,GV30,4,4,Lịch công tác
+lecturer,GV30,5,2,Lịch công tác
+lecturer,GV31,2,3,Lịch công tác
+lecturer,GV31,6,3,Lịch công tác
+lecturer,GV32,3,4,Lịch công tác
+lecturer,GV32,6,3,Lịch công tác
+lecturer,GV33,6,3,Lịch công tác
+lecturer,GV33,6,4,Lịch công tác
+lecturer,GV34,3,4,Lịch công tác
+lecturer,GV34,6,4,Lịch công tác
+lecturer,GV35,6,4,Lịch công tác
+lecturer,GV35,7,2,Lịch công tác
+lecturer,GV36,2,4,Lịch công tác
+lecturer,GV36,3,2,Lịch công tác
+lecturer,GV37,4,4,Lịch công tác
+lecturer,GV37,7,2,Lịch công tác
+lecturer,GV38,7,2,Lịch công tác
+lecturer,GV38,7,3,Lịch công tác
+lecturer,GV39,4,3,Lịch công tác
+lecturer,GV39,5,4,Lịch công tác
+lecturer,GV40,2,2,Lịch công tác
+lecturer,GV40,7,3,Lịch công tác
