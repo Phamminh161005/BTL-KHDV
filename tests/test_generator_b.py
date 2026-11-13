@@ -33,8 +33,10 @@ def test_generated_b_valid_and_reproducible(tmp_path, size, n, groups, seed):
     if seed == 1:
         for name in ("classes.csv", "class_groups.csv", "week_slots.csv", "week_unavailability.csv", "preferences.csv"):
             assert (a / name).read_bytes() == (ROOT / "data" / size / name).read_bytes()
-    # Lịch khả thi trong 10s trên cả seed sinh khác, không chỉ bộ đã commit.
-    loaded.config.update(time_limit_sec=10, num_workers=1)
+    # Có lịch khả thi trên cả seed sinh khác, không chỉ bộ đã commit. Test kiểm tra tính khả thi, không đo tốc độ
+    # (đã đo ở experiments/perf_b.py): với 1 luồng, large_b cần khoảng 11 giây nên giới hạn 10 giây làm test
+    # lúc qua lúc lỗi tùy máy. Dùng 8 luồng như cấu hình thật và để dư thời gian.
+    loaded.config.update(time_limit_sec=60, num_workers=8)
     result = solve(loaded.instance, loaded.config, optimize=False)
     assert result.solution is not None
     assert not build_timetable(loaded.instance, loaded.config, [], result, size)["violations"]
