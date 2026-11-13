@@ -1,5 +1,5 @@
-dataset,seed,reserve_enabled,lab_reserve_ratio,status,solve_time_sec,room_utilization_lab,lab_peak_utilization,slots_without_lab_reserve,solver,strategy
-synthetic_small,0,false,0.2,OPTIMAL,11.0,0.81,0.95,1,cp-sat,single
-synthetic_small,0,true,0.2,FEASIBLE,13.0,0.70,0.84,4,cp-sat,single
-synthetic_small,1,false,0.2,FEASIBLE,15.0,0.79,0.90,2,cp-sat,single
-synthetic_small,1,true,0.2,FEASIBLE,17.0,0.68,0.82,5,cp-sat,single
+dataset,seed,b_s4_weight,lab_sessions,room_change_only,must_move,slots_without_lab_reserve,objective
+synthetic_small,0,30,20,16,4,1,410
+synthetic_small,0,0,20,11,9,4,380
+synthetic_small,1,30,20,17,3,1,412
+synthetic_small,1,0,20,12,8,3,381
