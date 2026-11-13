@@ -45,7 +45,7 @@ Lịch tối ưu có thể khác nhau giữa các lần chạy, nhưng giá tr�
 
 ## Lịch tham chiếu và ý nghĩa KPI
 
-`tests/reference/toy_timetable.json` là lịch tham chiếu 24 buổi được ghi rõ từng ca từ lịch hợp lệ của `tests/test_validator_b.py`; không phải đầu ra của solver sản phẩm. Kiểm tra lại bằng `validate_b` và hai phép tính điểm phạt độc lập cho kết quả B-S1..B-S4 = 75, 1, 2, 1. Trường `solve_time_sec` bằng 0 vì lịch được ghi tay, không đo thời gian giải. Số 355 là giá trị tối ưu đã kiểm chứng ở trên, không phải chứng minh tối ưu từ riêng file tham chiếu.
+`tests/reference/toy_timetable.json` là lịch tham chiếu 24 buổi: lấy đúng lịch tối ưu cố định trong `tests/test_validator_b.py`, dựng thành file kết quả bằng `src/timetable.py` (cùng hàm hậu xử lý mà `run.py` dùng), nên có đủ các trường theo data_schema mục 9.11. Validator không báo vi phạm, điểm phạt tính lại là B-S1..B-S4 = 75, 1, 2, 1. Trường `solve_time_sec` bằng 0 vì lịch được cố định sẵn, không đo thời gian giải. Mỗi lần chạy solver có thể ra một lịch tối ưu khác, nhưng giá trị mục tiêu luôn là 355.
 
 | KPI | Ý nghĩa phục vụ |
 |---|---|

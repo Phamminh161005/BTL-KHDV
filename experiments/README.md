@@ -1,21 +1,6 @@
 # Thực nghiệm
 
-## Hợp đồng CSV tạm thời cho giao diện bài toán B
-
-`app.experiments_b.page_experiments_b(results_dir: Path)` là trang độc lập để ứng dụng chính gọi khi tích hợp. Theo mặc định chỉ đọc `perf_b.csv` và `lab_reserve_b.csv` trong đúng `results_dir` được truyền vào; không chạy solver, không ghi kết quả và không tự chuyển sang dữ liệu mẫu. Ô chọn **Dùng dữ liệu mẫu tổng hợp** mới đọc `experiments/samples/` và luôn gắn nhãn synthetic. Hai file mẫu chỉ minh họa giao diện, **không phải phép đo hoặc kết quả solver B**. Chưa có solver B hay header KHOE-5 chính thức; hợp đồng dưới đây là quy ước tạm thời được chấp thuận, cần đối chiếu trước khi nối pipeline xuất CSV thật.
-
-Mỗi file dùng UTF-8 (có thể có BOM), hàng đầu là tên cột phân biệt chữ thường/chữ hoa, các hàng sau là một lần chạy/seed. Cột bổ sung được giữ nếu có, nhưng dashboard chỉ dùng các cột được liệt kê. Lỗi header khiến cả file bị bỏ qua; lỗi giá trị chỉ bỏ qua dòng đó, cảnh báo kèm tên file và số dòng. File còn lại vẫn được hiển thị độc lập.
-
-| File | Cột bắt buộc | Cột tùy chọn |
-|---|---|---|
-| `perf_b.csv` | `dataset,seed,status,solve_time_sec,time_limit_sec` | `objective,best_bound,solver,strategy` |
-| `lab_reserve_b.csv` | `dataset,seed,reserve_enabled,lab_reserve_ratio,status,solve_time_sec,room_utilization_lab,lab_peak_utilization,slots_without_lab_reserve` | `solver,strategy` và các cột metadata khác |
-
-`dataset` là tên không rỗng; `seed` là số nguyên không âm. `status` nhận `OPTIMAL`, `FEASIBLE`, `INFEASIBLE`, `UNKNOWN`, `INPUT_ERROR` (không phân biệt hoa/thường); `FEASIBLE` là có lịch hợp lệ nhưng chưa chứng minh tối ưu. Thời gian đo bằng giây hữu hạn không âm; `time_limit_sec` phải dương. `objective` là số không âm hữu hạn bắt buộc khi có nghiệm, để trống khi không có nghiệm; `best_bound` là số không âm hữu hạn hoặc trống nếu chưa có cận. Không tổng hợp objective qua seed hay so giữa các chế độ dự trữ vì cấu hình/hàm mục tiêu có thể khác nhau.
-
-`reserve_enabled` nhận `true`/`false`; `lab_reserve_ratio`, `room_utilization_lab`, `lab_peak_utilization` là tỷ lệ trong `[0,1]`; `slots_without_lab_reserve` là số ca nguyên không âm. Các KPI lab có thể để trống nếu trạng thái không có nghiệm; với `OPTIMAL`/`FEASIBLE` phải có đủ KPI. Mỗi file không được lặp cùng `(dataset, seed, solver, strategy)` (lab thêm `lab_reserve_ratio, reserve_enabled`). So sánh bật/tắt chỉ ghép những cặp cùng dataset, seed, tỷ lệ dự trữ, solver, strategy và cả hai có nghiệm; KPI và thời gian tổng hợp là trung bình trên các cặp đó. Biểu đồ hiệu năng dùng đường tham chiếu **300 giây = 5 phút**, không khẳng định mọi lượt có cùng time limit.
-
-Tài liệu gồm hai phần: mục 1–6 là thực nghiệm hiệu năng các cách giải và thời gian xếp lại khi có sự cố (KHOE-4); mục 7 là độ nhạy trọng số và đường cong đánh đổi (MINH-4).
+Tài liệu gồm ba phần: mục 1–6 là thực nghiệm hiệu năng các cách giải và thời gian xếp lại khi có sự cố của bài toán A (KHOE-4); mục 7 là độ nhạy trọng số và đường cong đánh đổi (MINH-4); mục cuối là thực nghiệm bài toán B (KHOE-5).
 
 ## 1. Mục tiêu và phạm vi
 
@@ -541,3 +526,12 @@ hai bộ, nhất quán qua ba seed. Nếu cần bảo đảm phòng thay thế �
 mô hình dự phòng xét sức chứa hoặc bộ xếp lại theo B.9. Phép thử hiện tại chỉ đánh giá
 đổi một phòng trực tiếp, không thử hoán đổi nhiều buổi; kết luận không đại diện cho mọi
 bộ dữ liệu lịch học thực tế.
+
+### Xem kết quả trên giao diện
+
+Tab "Thực nghiệm B" (`app/experiments_b.py`) đọc đúng hai file `perf_b.csv` và `lab_reserve_b.csv` ở trên,
+không chạy solver. Thiếu cột bắt buộc thì bỏ qua cả file; dòng sai giá trị (số âm, không phải số,
+`room_change_only + must_move` khác `lab_sessions`) bị bỏ qua kèm cảnh báo số dòng. Bảng so sánh ghép lượt
+B-S4 = 0 với lượt B-S4 > 0 cùng bộ dữ liệu và seed, rồi lấy trung bình theo bộ dữ liệu. Không so sánh
+objective giữa hai lượt vì hai hàm mục tiêu khác trọng số. Ô "Dùng dữ liệu mẫu tổng hợp" đọc
+`experiments/samples/`, là số liệu bịa chỉ để xem giao diện, không phải kết quả đo.

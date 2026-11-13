@@ -3,7 +3,7 @@
 Bài tập lớn môn Khoa học Dịch vụ. Hệ thống dùng mô hình quy hoạch nguyên tuyến tính (ILP), giải bằng Google OR-Tools CP-SAT, để tự động xếp:
 
 - Lịch thi cuối kỳ: môn nào thi ca nào, ở phòng nào, giám thị nào coi (bài toán A);
-- Lịch phòng học / phòng máy thực hành theo tuần (bài toán B);
+- Lịch phòng học / phòng máy thực hành theo tuần: lớp nào học ca nào, ở phòng nào (bài toán B).
 
 ## Tài liệu
 
@@ -33,7 +33,7 @@ pytest
 
 Trên macOS hoặc Linux thay hai dòng giữa bằng `python3 -m venv .venv` và `source .venv/bin/activate`.
 
-Cài đặt thành công khi `pytest` báo toàn bộ passed. Bộ kiểm thử hiện có 283 ca, gồm hai ca hồi quy bổ sung cho mã hóa tiến trình CLI. Các test solver không còn bị bỏ qua vì chưa cài đặt.
+Cài đặt thành công khi `pytest` báo toàn bộ passed (mất khoảng 5 phút vì có các ca giải bằng CP-SAT và PuLP).
 
 Các lệnh bên dưới đều chạy trong môi trường `.venv` đã kích hoạt, từ thư mục gốc của repo.
 
@@ -46,7 +46,7 @@ python -m src.run --data data/toy
 # Dùng solver đối chứng PuLP + CBC thay cho CP-SAT
 python -m src.run --data data/toy --solver pulp
 
-# Xếp lịch phòng học/phòng máy theo tuần (bài toán B)
+# Xếp lịch phòng học/phòng máy theo tuần (bài toán B), ghi kết quả vào output/<tên bộ dữ liệu>/timetable.json
 python -m src.run --problem B --data data/toy_b --config configs/problem_b.json
 
 # Sinh dữ liệu và chạy thực nghiệm bài B
@@ -54,7 +54,7 @@ python -m src.generator --size medium_b --seed 1 --out data/medium_b
 python -m src.generator --size large_b --seed 1 --out data/large_b
 python -m experiments.perf_b --seeds 0 1 2 --time-limit 300 --workers 8
 
-# Mở giao diện xem lịch thi bài A
+# Mở giao diện (cả bài A và bài B)
 streamlit run app/app.py
 
 # Xếp lại khi có sự cố: phòng G2-LAB1 hỏng ca 3 ngày 15/12 (kết quả ghi vào output/toy/reschedule.json)
@@ -66,9 +66,9 @@ pytest
 
 ### Giao diện
 
-Giao diện hiện hỗ trợ bài A qua năm tab. Chưa hỗ trợ hiển thị `sessions` của `timetable.json`, điểm phạt B-S1–B-S4 hoặc các CSV thực nghiệm bài B. Bài B hiện chạy qua CLI và xuất JSON; không tải `timetable.json` vào giao diện lịch thi A để đánh giá kết quả.
+Giao diện có tám tab: năm tab của bài A (dưới đây) và ba tab của bài B (mục "Giao diện bài toán B").
 
-Năm tab hiện có:
+Năm tab của bài A:
 
 - Xem kết quả: mặc định mở kết quả tham chiếu `tests/reference/toy_schedule.json`. Có thể tải lên file JSON khác
   hoặc nhập đường dẫn file kết quả; file tải lên được ưu tiên. Sau khi chạy ở tab thứ hai, tab này hiện ngay kết quả vừa chạy.
@@ -95,31 +95,31 @@ Phần xem kết quả:
 - Lịch ngày × 4 ca hiển thị môn và phòng; lượt thi hai ca xuất hiện ở cả hai ô.
 - Các tab cho phép chọn phòng, nhập mã sinh viên hoặc chọn mã giảng viên để tra cứu.
   Giờ là khung giữ phòng; file kết quả không chứa tên giảng viên.
-- Nút **Xuất Excel** tạo hai sheet: **Lịch tổng** (mỗi phòng/lượt một dòng) và
-  **Sinh viên theo phòng** (mỗi sinh viên/phòng/lượt một dòng).
+- Nút "Xuất Excel" tạo hai sheet: "Lịch tổng" (mỗi phòng/lượt một dòng) và
+  "Sinh viên theo phòng" (mỗi sinh viên/phòng/lượt một dòng).
 - `INPUT_ERROR`, `INFEASIBLE`, `UNKNOWN` chỉ hiển thị tổng quan và thông báo,
   không vẽ lịch hoặc cho xuất lịch.
 
 Kiểm thử giao diện: `pytest tests/test_app.py`. Test chạy bằng AppTest trên bản sao dữ liệu toy trong
 thư mục tạm (biến môi trường `EXAM_APP_DATA_DIR`, `EXAM_APP_OUTPUT_DIR`), không ghi vào `data/` và `output/` của repo.
 
-## Giao diện bài toán B (MANH-5)
+## Giao diện bài toán B
 
-- Tab **Lịch học tuần B** chỉ liệt kê bộ dữ liệu có `week_slots.csv` và `classes.csv`; danh sách A không còn chứa `toy_b`.
-- Chọn `toy_b`, rồi **Mẫu toy_b tham chiếu** để mở 24 buổi trong `tests/reference/toy_timetable.json`. Đây là mẫu tham chiếu, không phải solver chạy từ giao diện. Mặc định giao diện đọc `output/<dataset>/timetable.json`.
-- Lưới Thứ × ca và danh sách buổi lọc đồng thời theo phòng, giảng viên, nhóm bắt buộc. Nhóm không chứa lớp tự chọn. Excel xuất các buổi đang lọc và KPI toàn lịch (có chú thích phạm vi); KPI được tính lại từ `InstanceB`, không tin số đính kèm JSON. Lịch có vi phạm cứng không được xuất.
-- Tab **Sự cố B** khai báo một phòng/giảng viên bận ở một ca hoặc thêm lớp, xuất `incidents_b.json` dạng nháp `B-incident-draft-v1`. Đây chưa phải hợp đồng đầu vào của backend. Nút xếp lại bị khóa đến khi có quy trình B của Minh. Có thể nhập đường dẫn `retimetable.json` để đối chiếu; bảng so sánh ghép lớp/ca trước, rồi mới ghép buổi chuyển ca. File lịch mới được kiểm tra lại với ca bận đang chọn; trường hợp thêm lớp chưa được xác thực với dữ liệu mở rộng. Không tuyên bố đã tự động sửa lịch.
-- Tab **Thực nghiệm B** đọc `perf_b.csv`, `lab_reserve_b.csv` từ `EXAM_APP_RESULTS_DIR`; dữ liệu mẫu chỉ dùng khi bật lựa chọn rõ ràng. Hợp đồng CSV tạm và giới hạn diễn giải được ghi ở `experiments/README.md`, cần đối chiếu KHOE-5 trước tích hợp thật.
-- Kiểm thử B: `pytest tests/test_kpi_b.py tests/test_app_b.py tests/test_app_experiments_b.py`; hồi quy A: `pytest tests/test_app.py`.
-
-Chưa nghiệm thu luồng solver/xếp lại B: `room_solver.py` hiện là stub. Ca phòng máy hỏng chỉ có thể kiểm tra khai báo và so sánh hai file, chưa thể chạy xếp lại tự động.
+- Lịch học tuần B: chọn bộ dữ liệu B (bộ có `week_slots.csv` và `classes.csv`, mặc định `toy_b`; danh sách của bài A không chứa các bộ này). Nguồn "Kết quả đã lưu" đọc `output/<tên bộ dữ liệu>/timetable.json`; nút "Chạy xếp lịch B" giải bằng CP-SAT với `configs/problem_b.json`, ghi file đó rồi hiển thị ngay. Nguồn "Mẫu toy_b tham chiếu" mở lịch tối ưu cố định `tests/reference/toy_timetable.json` (Z = 355), chỉ dùng cho `toy_b`.
+- Lưới Thứ × ca và danh sách buổi lọc đồng thời theo phòng, giảng viên, nhóm bắt buộc (nhóm không chứa lớp tự chọn). Bảng KPI tính trên toàn lịch, tính lại từ dữ liệu đầu vào chứ không đọc số trong JSON. Excel xuất các buổi đang lọc và KPI toàn lịch. Lịch có vi phạm ràng buộc cứng thì chỉ hiện danh sách vi phạm, không hiện lịch và không cho xuất.
+- Sự cố B: khai báo một phòng hoặc giảng viên bận ở một ca, hoặc thêm lớp; xem các buổi bị ảnh hưởng trực tiếp và xuất `incidents_b.json` (dạng nháp `B-incident-draft-v1`). Nút xếp lại đang khóa cho đến khi có bộ xếp lại B (model_spec B.9, task MINH-6). Có thể nhập đường dẫn một `retimetable.json` để so sánh với lịch đang mở.
+- Thực nghiệm B: đọc `perf_b.csv` và `lab_reserve_b.csv` do `experiments/perf_b.py` ghi trong `experiments/results/` (đổi được qua `EXAM_APP_RESULTS_DIR`). Biểu đồ thời gian giải theo bộ dữ liệu và seed, kèm mốc 5 phút; bảng so sánh tắt/bật B-S4 theo số buổi máy phải dời ca, số buổi chỉ cần đổi phòng và số ca vượt ngưỡng dự phòng khi một phòng máy hỏng. Ô "Dùng dữ liệu mẫu tổng hợp" đọc `experiments/samples/`, chỉ để xem giao diện.
+- Kiểm thử: `pytest tests/test_kpi_b.py tests/test_app_b.py tests/test_app_experiments_b.py`.
 
 ## Cấu trúc thư mục
 
 ```
 ├── docs/                  Tài liệu: phạm vi, mô hình, định dạng dữ liệu
 ├── configs/default.json   Cấu hình mặc định (data_schema mục 6)
+├── configs/problem_b.json Cấu hình bài toán B (data_schema mục 9.8)
 ├── data/toy/              Bộ dữ liệu nhỏ dùng để kiểm thử (xem data/toy/README.md)
+├── data/toy_b/            Bộ dữ liệu nhỏ của bài toán B, viết tay, đáp án 355 (xem data/toy_b/README.md)
+├── data/medium_b, large_b Bộ dữ liệu B sinh tự động (seed 1)
 ├── output/               Kết quả các lần chạy (không commit)
 ├── src/
 │   ├── instance.py        Cấu trúc dữ liệu dùng chung, giao diện SolveResult của solver
@@ -132,7 +132,8 @@ Chưa nghiệm thu luồng solver/xếp lại B: `room_solver.py` hiện là stu
 │   ├── exam_solver_pulp.py  Solver đối chứng bài toán A (PuLP + CBC)
 │   ├── room_solver.py     Solver bài toán B
 │   ├── generator_b.py     Sinh medium_b/large_b
-│   ├── timetable.py       Xuất timetable.json, KPI và validator B
+│   ├── timetable.py       Hậu xử lý bài B, dựng timetable.json
+│   ├── kpi_b.py           Tính KPI bài B
 │   ├── schedule.py        Hậu xử lý, dựng schedule.json
 │   ├── validator.py       Kiểm tra lời giải độc lập với solver
 │   ├── kpi.py             Tính KPI và tính lại điểm phạt
@@ -140,8 +141,8 @@ Chưa nghiệm thu luồng solver/xếp lại B: `room_solver.py` hiện là stu
 │   ├── run.py             Chạy toàn bộ quy trình
 │   ├── reschedule.py      Xếp lại khi có sự cố, so sánh hai lịch
 │   └── diagnose.py        Chẩn đoán nguyên nhân khi vô nghiệm
-├── app/app.py             Giao diện Streamlit
-├── tests/                 Kiểm thử (pytest); tests/reference/toy_schedule.json là kết quả tham chiếu của bộ toy
+├── app/app.py             Giao diện Streamlit; tab bài B nằm ở app/timetable_b.py, app/experiments_b.py
+├── tests/                 Kiểm thử (pytest); tests/reference/ chứa kết quả tham chiếu của toy và toy_b
 ├── experiments/           Script và kết quả thực nghiệm
 └── report/                Báo cáo
 ```
@@ -158,16 +159,13 @@ Chưa nghiệm thu luồng solver/xếp lại B: `room_solver.py` hiện là stu
 | `exam_solver_pulp.py`                             | Hoàn chỉnh, có kiểm thử. Trên `toy` tìm được lời giải tối ưu 2391 nhưng không chứng minh được tối ưu trong vài phút (model_spec A.13)                                                      |
 | `instance_b.py`, `data_loader_b.py`               | Hoàn chỉnh, có kiểm thử: đọc dữ liệu bài toán B, kiểm tra PB1–PB7 (model_spec B.7). `data_loader.load_instance` tự chuyển sang bộ đọc B khi cấu hình có `"problem": "B"`                   |
 | `validator_b.py`                                  | Hoàn chỉnh, có kiểm thử: soát B-H1 đến B-H7 trên mảng `sessions` của `timetable.json`, tính lại B-S1 đến B-S4. Lịch tối ưu mẫu của `toy_b` (Z = 355) nằm trong `tests/test_validator_b.py` |
-| `room_solver.py`, `timetable.py`                  | Đã cài đặt KHOE-5, có kiểm thử; toy_b đạt OPTIMAL 355, hỗ trợ bỏ nhóm B-H5/B-H7/B-H6 cho chẩn đoán, xuất timetable.json và KPI. Xem experiments/README.md mục B                            |
-| `app/app.py`                                      | Hỗ trợ bài A: xem/so sánh lịch, chạy solver, sự cố/xếp lại và thực nghiệm A; có AppTest. Chưa tích hợp giao diện bài B                                                                     |
+| `room_solver.py`, `timetable.py`, `kpi_b.py`      | Hoàn chỉnh, có kiểm thử: toy_b đạt OPTIMAL 355 dưới 1 giây, medium_b và large_b đạt OPTIMAL (large_b khoảng 9 giây). Solver hỗ trợ bỏ nhóm B-H5/B-H7/B-H6 để chẩn đoán. Xem experiments/README.md mục bài toán B |
+| `app/app.py`                                      | Bài A: xem/so sánh lịch, chạy solver, sự cố/xếp lại, thực nghiệm. Bài B: chạy solver và xem lịch tuần, KPI, xuất Excel, khai báo sự cố, thực nghiệm. Có AppTest                                       |
 
-## Phạm vi hoàn thành KHOE-5
+## Việc còn lại của bài toán B
 
-- Solver, sinh dữ liệu và thực nghiệm B đã có; các kết quả và kết luận nằm trong `experiments/README.md`.
-- `configs/problem_b.json` là cấu hình B. `configs/default.json` vẫn dành cho A; loader bổ sung mặc định khi thiếu khóa B.
-- Kết quả B nằm trong `output/<dataset>/timetable.json`; CSV và lịch từng lượt nằm trong `experiments/results/`.
-- Giao diện B, chẩn đoán B tự động và xếp lại đầy đủ B.9 chưa tích hợp. `report/` chưa có báo cáo hoàn chỉnh trong bản mã nguồn này.
-- Đạt kiểm thử và nghiệm thu kỹ thuật chưa đồng nghĩa task đã được merge: vẫn cần Minh review PR theo CONTRIBUTING.md.
+- Chẩn đoán tự động khi bài B vô nghiệm: `run.py --problem B` hiện báo `INFEASIBLE` nhưng chưa gọi chẩn đoán (model_spec B.7, task MINH-6).
+- Xếp lại khi có sự cố (model_spec B.9, task MINH-6): cần thêm vào `room_solver.solve` tùy chọn giữ cố định một phần lịch cũ, gợi ý lời giải và phạt thay đổi B-R1, B-R2; sau đó mở khóa nút "Xếp lại B" ở tab Sự cố B.
 
 ## Phân công
 
