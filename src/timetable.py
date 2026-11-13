@@ -1,8 +1,12 @@
-"""Xuất timetable.json và KPI bài B theo data_schema 9.11."""
-from collections import Counter
+"""Hậu xử lý bài toán B: dựng timetable.json theo data_schema mục 9.11 (model_spec B.8).
+
+Mỗi Session của solver thành một buổi học; sau đó chạy validator độc lập (src/validator_b.py) và tính KPI
+(src/kpi_b.py).
+"""
 import datetime as dt
 
 from src.instance import PERIOD_TIMES
+from src.kpi_b import compute_kpi
 from src.validator_b import validate_b
 
 
@@ -34,32 +38,5 @@ def build_timetable(instance, config, messages, result, dataset):
             "room_id": s.room_id, "room_capacity": room.capacity, "size": cls.size,
             "lecturer_id": cls.lecturer_id, "groups": sorted(cls.groups)})
     table["violations"] = validate_b(instance, table)
-    table["kpi"] = compute_kpi_b(instance, table, config["lab_reserve_ratio"])
+    table["kpi"] = compute_kpi(instance, table, len(table["violations"]))
     return table
-
-
-def compute_kpi_b(instance, table, rho):
-    sessions = table["sessions"]
-    labs = Counter((s["weekday"], s["period"]) for s in sessions if s["needs_lab"])
-    per_class_day = Counter((s["class_id"], s["weekday"]) for s in sessions)
-    per_group_day = Counter((g, s["weekday"]) for s in sessions for g in s["groups"])
-    def utilization(kind):
-        used = len({(s["room_id"], s["weekday"], s["period"]) for s in sessions
-                    if instance.rooms[s["room_id"]].room_type == kind})
-        supply = sum(t not in r.busy for r in instance.rooms.values()
-                     if r.room_type == kind for t in instance.slots)
-        return used / supply if supply else None
-    capacity = sum(s["room_capacity"] for s in sessions)
-    return {
-        "hard_violations": len(table["violations"]),
-        "room_utilization_normal": utilization("normal"),
-        "room_utilization_lab": utilization("lab"),
-        "lab_peak_utilization": max((labs[t] / instance.labs_available(t) for t in instance.slots
-                                     if instance.labs_available(t)), default=None),
-        "slots_without_lab_reserve": sum(labs[t] > instance.lab_limit(t, rho) for t in instance.slots),
-        "seat_fill_rate": sum(s["size"] for s in sessions) / capacity if capacity else None,
-        "preference_violations": table["penalties"]["B-S2"],
-        "classes_same_day": len({k for (k, _), n in per_class_day.items() if n > 1}),
-        "group_max_sessions_per_day": max(per_group_day.values(), default=None),
-        "solve_time_sec": table["solve_time_sec"],
-    }

@@ -1,7 +1,11 @@
-"""KPI and independently recomputed soft penalties for problem B (data_schema 9.11)."""
+"""KPI bài toán B (data_schema mục 9.11), tính lại từ lịch và dữ liệu đầu vào, không tin số đính kèm trong JSON.
+
+Điểm phạt B-S1..B-S4 tính lại bằng validator_b.compute_penalties_b; compute_penalties ở đây chỉ là tên gọi tắt.
+"""
 from __future__ import annotations
 
 from src.instance_b import InstanceB, WeekSlot
+from src.validator_b import compute_penalties_b
 
 
 def _slot(session: dict) -> WeekSlot:
@@ -9,25 +13,8 @@ def _slot(session: dict) -> WeekSlot:
 
 
 def compute_penalties(instance: InstanceB, timetable: dict, rho: float = 0.85) -> dict[str, int]:
-    """Recalculate the four unweighted B penalties from scheduled sessions."""
-    sessions = [s for s in timetable["sessions"]
-                if s["class_id"] in instance.classes and s["room_id"] in instance.rooms]
-    waste = sum(instance.rooms[s["room_id"]].capacity - instance.classes[s["class_id"]].size
-                for s in sessions)
-    avoid = sum(_slot(s) in instance.lecturers[instance.classes[s["class_id"]].lecturer_id].avoid
-                for s in sessions)
-    class_days: dict[tuple[str, int], int] = {}
-    lab_slots: dict[WeekSlot, int] = {}
-    for s in sessions:
-        key = (s["class_id"], s["weekday"])
-        class_days[key] = class_days.get(key, 0) + 1
-        if instance.classes[s["class_id"]].needs_lab:
-            slot = _slot(s)
-            lab_slots[slot] = lab_slots.get(slot, 0) + 1
-    extra = sum(max(0, count - 1) for count in class_days.values())
-    over = sum(max(0, count - instance.lab_limit(slot, rho)) for slot, count in lab_slots.items()
-               if slot in instance.slots)
-    return {"B-S1": waste, "B-S2": avoid, "B-S3": extra, "B-S4": over}
+    """P^B_1..P^B_4 chưa nhân trọng số, xem validator_b.compute_penalties_b."""
+    return compute_penalties_b(instance, timetable, rho)
 
 
 def compute_kpi(instance: InstanceB, timetable: dict, hard_violations: int) -> dict:
