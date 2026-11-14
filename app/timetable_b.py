@@ -1,6 +1,11 @@
-"""Weekly timetable views and incident hand-off for problem B."""
+"""Giao diện bài toán B: tab Lịch học tuần B (chạy solver, xem lịch, KPI, xuất Excel) và tab Sự cố B (khai báo
+sự cố, xếp lại theo model_spec B.9, so sánh hai lịch)."""
+import copy
+import hashlib
 import json
-from collections import defaultdict
+import os
+import shutil
+import tempfile
 from io import BytesIO
 from pathlib import Path
 
@@ -104,53 +109,107 @@ def export_excel_b(sessions, slots, kpi):
 
 
 def compare_timetables(old, new):
-    """Match retained class/slot pairs before pairing moved sessions; IDs encode time."""
-    before, after = defaultdict(list), defaultdict(list)
-    for s in old["sessions"]:
-        before[s["class_id"]].append(s)
-    for s in new["sessions"]:
-        after[s["class_id"]].append(s)
-    changes = []
-    for cid in sorted(before.keys() | after.keys()):
-        a = {(s["weekday"], s["period"]): s for s in before[cid]}
-        b = {(s["weekday"], s["period"]): s for s in after[cid]}
-        pairs = [(a.pop(t), b.pop(t)) for t in sorted(a.keys() & b.keys())]
-        rest_a, rest_b = [a[t] for t in sorted(a)], [b[t] for t in sorted(b)]
-        pairs += [(rest_a[i] if i < len(rest_a) else None, rest_b[i] if i < len(rest_b) else None)
-                  for i in range(max(len(rest_a), len(rest_b)))]
-        for x, y in pairs:
-            kinds = []
-            if x is None:
-                kinds = ["added"]
-            elif y is None:
-                kinds = ["removed"]
-            elif (x["weekday"], x["period"]) != (y["weekday"], y["period"]):
-                kinds = ["time"]
-            elif x["room_id"] != y["room_id"]:
-                kinds = ["rooms"]
-            if kinds:
-                describe = lambda s: f"Thứ {s['weekday']} ca {s['period']} / {s['room_id']}" if s else "—"
-                changes.append({"Lớp": cid, "Thay đổi": ", ".join(kinds), "Lịch cũ": describe(x), "Lịch mới": describe(y)})
-    return changes
+    """Bảng các buổi bị đổi giữa hai lịch, dùng đúng quy tắc ghép của src.reschedule_b.diff_timetables
+    (data_schema mục 9.11): buổi cùng ca ghép trước, phần còn lại ghép theo thứ tự thời gian."""
+    from src.reschedule_b import diff_timetables
+
+    describe = lambda view: f"Thứ {view['weekday']} ca {view['period']} / {view['room_id']}" if view else "—"
+    changes, _ = diff_timetables(old, new)
+    return [{"Lớp": ch["class_id"], "Thay đổi": ", ".join(ch["kinds"]), "Lịch cũ": describe(ch["old"]),
+             "Lịch mới": describe(ch["new"])} for ch in changes]
 
 
-def run_solver_b(data_dir, dataset, out_path):
+SOURCES = ["Kết quả đã lưu", "Tải CSV lên", "Mẫu toy_b tham chiếu"]
+UPLOAD_NAME = "upload_b"
+FILES_B = "week_slots.csv, rooms.csv, lecturers.csv, classes.csv (bắt buộc); class_groups.csv, " \
+          "week_unavailability.csv, preferences.csv (tùy chọn)"
+
+
+def run_solver_b(folder, out_path):
     """Chạy toàn bộ quy trình bài B (đọc, kiểm tra, giải CP-SAT, hậu xử lý, validator) và ghi timetable.json."""
     from src.run import run
 
     config = ROOT / "configs" / "problem_b.json"
-    return run(str(data_dir / dataset), str(config) if config.is_file() else None, str(out_path), problem="B")
+    return run(str(folder), str(config) if config.is_file() else None, str(out_path), problem="B")
+
+
+def _save_uploads_b(files):
+    """Lưu các CSV tải lên vào <thư mục tạm>/upload_b, trả về (thư mục, khóa của bộ file).
+
+    Streamlit chạy lại cả trang sau mỗi thao tác, nên dùng lại thư mục khi bộ file không đổi và xóa thư mục cũ khi
+    người dùng tải bộ khác (như _save_uploaded_files của bài A). Tên thư mục con là upload_b để meta.dataset của
+    kết quả khớp với tên đang hiển thị."""
+    digest = hashlib.sha256()
+    for f in sorted(files, key=lambda f: f.name):
+        digest.update(f.name.encode("utf-8"))
+        digest.update(f.getvalue())
+    key = digest.hexdigest()
+    previous = st.session_state.get("b_upload_dir")
+    if st.session_state.get("b_upload_key") == key and previous and os.path.isdir(previous):
+        return Path(previous), key
+    if previous:
+        shutil.rmtree(Path(previous).parent, ignore_errors=True)
+    folder = Path(tempfile.mkdtemp(prefix="timetable_upload_")) / UPLOAD_NAME
+    folder.mkdir()
+    for f in files:
+        (folder / f.name).write_bytes(f.getvalue())
+    st.session_state["b_upload_key"] = key
+    st.session_state["b_upload_dir"] = str(folder)
+    return folder, key
+
+
+def _show_load_messages(messages):
+    for level, show in (("error", st.error), ("warning", st.warning)):
+        for m in messages:
+            if m.level == level:
+                where = f" ({m.file}" + (f", dòng {m.line}" if m.line else "") + ")" if m.file else ""
+                show(f"{m.code}{where}: {m.message}")
+
+
+def _run_button(folder, dataset, saved):
+    """Nút chạy solver; trả về True nếu vừa chạy xong."""
+    if not st.button(f"Chạy xếp lịch B cho {dataset} (CP-SAT)", key="b_run_solver"):
+        return False
+    with st.spinner("Đang giải..."):
+        try:
+            result = run_solver_b(folder, saved)
+        except (OSError, ValueError) as exc:
+            st.error(f"Không chạy được: {exc}")
+            return False
+    st.success(f"Đã giải: {result['status']}, mục tiêu {result['objective']}, {len(result['sessions'])} buổi, "
+               f"{result['solve_time_sec']:.2f} giây. Kết quả lưu ở {saved}.")
+    for m in result["messages"]:
+        if m["level"] in ("error", "warning") or m["code"].startswith("N"):
+            st.warning(f"{m['code']}: {m['message']}")
+    return True
 
 
 def page_timetable_b(data_dir, output_dir):
-    names = datasets_b(data_dir)
-    if not names:
-        st.info("Chưa có bộ dữ liệu B.")
-        return
-    dataset = st.selectbox("Bộ dữ liệu B", names, index=names.index("toy_b") if "toy_b" in names else 0,
-                           key="b_dataset")
-    source = st.radio("Nguồn lịch B", ["Kết quả đã lưu", "Mẫu toy_b tham chiếu"], key="b_source")
+    source = st.radio("Nguồn lịch B", SOURCES, key="b_source", horizontal=True)
     st.session_state.pop("b_active", None)
+    if source == "Tải CSV lên":
+        files = st.file_uploader("Tải các file CSV của bài B", type=["csv"], accept_multiple_files=True,
+                                 key="b_upload", help=f"Định dạng theo data_schema mục 9: {FILES_B}.")
+        if not files:
+            st.info(f"Chọn các file CSV của một bộ dữ liệu B: {FILES_B}.")
+            return
+        folder, upload_key = _save_uploads_b(files)
+        dataset = UPLOAD_NAME
+        checked = load_instance_b(str(folder))
+        _show_load_messages(checked.messages)
+        if not checked.ok:
+            st.error("Dữ liệu tải lên có lỗi, sửa file rồi tải lại.")
+            return
+        st.caption(f"Đọc được {len(checked.instance.classes)} lớp, {len(checked.instance.rooms)} phòng, "
+                   f"{len(checked.instance.slots)} ca.")
+    else:
+        names = datasets_b(data_dir)
+        if not names:
+            st.info("Chưa có bộ dữ liệu B.")
+            return
+        dataset = st.selectbox("Bộ dữ liệu B", names, index=names.index("toy_b") if "toy_b" in names else 0,
+                               key="b_dataset")
+        folder = data_dir / dataset
     saved = output_dir / dataset / "timetable.json"
     if source == "Mẫu toy_b tham chiếu":
         if dataset != "toy_b":
@@ -158,20 +217,11 @@ def page_timetable_b(data_dir, output_dir):
             return
         st.caption("Lịch tối ưu tham chiếu của toy_b (Z = 355, model_spec B.12), không phải kết quả vừa chạy.")
     else:
-        if st.button(f"Chạy xếp lịch B cho {dataset} (CP-SAT)", key="b_run_solver"):
-            with st.spinner("Đang giải..."):
-                try:
-                    result = run_solver_b(data_dir, dataset, saved)
-                except (OSError, ValueError) as exc:
-                    st.error(f"Không chạy được: {exc}")
-                else:
-                    st.success(f"Đã giải: {result['status']}, mục tiêu {result['objective']}, "
-                               f"{len(result['sessions'])} buổi, {result['solve_time_sec']:.2f} giây. "
-                               f"Kết quả lưu ở {saved}.")
-                    for m in result["messages"]:
-                        if m["level"] in ("error", "warning"):
-                            st.warning(f"{m['code']}: {m['message']}")
-        elif not saved.is_file():
+        if _run_button(folder, dataset, saved) and source == "Tải CSV lên":
+            st.session_state["b_upload_ran"] = upload_key
+        # Với dữ liệu tải lên, chỉ hiện kết quả đã chạy cho đúng bộ file đang tải, không lấy kết quả của bộ trước
+        fresh = source != "Tải CSV lên" or st.session_state.get("b_upload_ran") == upload_key
+        if not saved.is_file() or not fresh:
             st.info(f"Chưa có kết quả cho {dataset}. Bấm nút trên để chạy solver.")
             return
     default = REFERENCE if source == "Mẫu toy_b tham chiếu" else saved
@@ -184,7 +234,7 @@ def page_timetable_b(data_dir, output_dir):
         if timetable.get("status") not in ("OPTIMAL", "FEASIBLE"):
             st.warning("Chưa có lời giải B hợp lệ để hiển thị.")
             return
-        loaded = load_instance_b(str(data_dir / dataset))
+        loaded = load_instance_b(str(folder))
         if not loaded.ok:
             raise ValueError("Dữ liệu B không hợp lệ: " + "; ".join(m.message for m in loaded.messages if m.level == "error"))
         violations = validate_b(loaded.instance, timetable)
@@ -197,7 +247,8 @@ def page_timetable_b(data_dir, output_dir):
     except (OSError, UnicodeError, ValueError, KeyError, TypeError) as exc:
         st.warning(f"Không đọc được lịch B: {exc}")
         return
-    st.session_state["b_active"] = {"timetable": {**timetable, "sessions": sessions}, "dataset": dataset}
+    st.session_state["b_active"] = {"timetable": {**timetable, "sessions": sessions}, "dataset": dataset,
+                                    "data_dir": str(folder)}
     columns = st.columns(3)
     options = [sorted({s["room_id"] for s in sessions}), sorted({s["lecturer_id"] for s in sessions}), sorted(loaded.instance.groups)]
     filters = [columns[i].selectbox(label, ["Tất cả"] + values, key=key)
@@ -223,34 +274,54 @@ def page_incident_b(data_dir, output_dir=None):
     if not active:
         st.caption("Mở một lịch B hợp lệ ở tab Lịch học tuần trước.")
         return
-    loaded = load_instance_b(str(data_dir / active["dataset"]))
-    instance = loaded.instance
-    kind = st.selectbox("Loại sự cố B", ["Phòng bận", "Giảng viên bận", "Thêm lớp"], key="b_incident_kind")
-    event = {}
-    if kind != "Thêm lớp":
-        resource_type = "room" if kind == "Phòng bận" else "lecturer"
-        ids = sorted(instance.rooms if resource_type == "room" else instance.lecturers)
-        resource = st.selectbox("Tài nguyên B", ids, key=f"b_resource_{resource_type}")
-        slot = st.selectbox("Ca sự cố B", instance.slots, format_func=lambda t: f"Thứ {t[0]} ca {t[1]}", key="b_incident_slot")
-        event = {"type": "unavailability", "resource_type": resource_type, "resource_id": resource, "weekday": slot[0], "period": slot[1]}
-        affected = [s for s in active["timetable"]["sessions"] if s[f"{resource_type}_id"] == resource and (s["weekday"], s["period"]) == slot]
-        st.write(f"Buổi bị tác động trực tiếp: {len(affected)}")
-        if affected:
-            st.dataframe(affected, hide_index=True)
-    else:
-        cid = st.text_input("Mã lớp mới B", key="b_new_class")
-        name = st.text_input("Tên lớp mới B", key="b_new_name")
-        lecturer = st.selectbox("Giảng viên lớp mới B", sorted(instance.lecturers), key="b_new_lecturer")
-        size = st.number_input("Sĩ số B", min_value=1, value=15, step=1, key="b_new_size")
-        count = st.number_input("Buổi/tuần B", min_value=1, max_value=len(instance.slots), value=1, step=1, key="b_new_count")
-        lab = st.checkbox("Cần phòng máy B", key="b_new_lab")
-        groups = st.multiselect("Nhóm bắt buộc B", sorted(instance.groups), key="b_new_groups")
-        event = {"type": "add_class", "class": {"class_id": cid.strip(), "class_name": name, "lecturer_id": lecturer,
-                 "size": size, "sessions_per_week": count, "needs_lab": lab, "groups": groups}}
-    valid = kind != "Thêm lớp" or bool(event["class"]["class_id"] and event["class"]["class_id"] not in instance.classes)
-    if not valid:
-        st.warning("Mã lớp mới phải khác rỗng và chưa tồn tại.")
-    st.download_button("Xuất khai báo sự cố B", json.dumps({"schema": "B-incident-draft-v1", "dataset": active["dataset"], "incidents": [event]}, ensure_ascii=False, indent=2),
+    data_path = Path(active.get("data_dir") or data_dir / active["dataset"])
+    instance = load_instance_b(str(data_path)).instance
+    sessions = active["timetable"]["sessions"]
+    # Ca cụ thể, hoặc (thứ, None) là cả ngày
+    slot_options = list(instance.slots) + [(d, None) for d in instance.days]
+    when = lambda t: f"Thứ {t[0]} ca {t[1]}" if t[1] is not None else f"Thứ {t[0]} cả ngày"
+    # Sự cố đầu tiên giữ khóa không hậu tố để các lần mở lại trang không mất lựa chọn cũ
+    key = lambda name, i: name if i == 0 else f"{name}_{i}"
+
+    count = st.number_input("Số sự cố B", min_value=1, max_value=10, value=1, step=1, key="b_incident_count")
+    events, problems, new_ids = [], [], set()
+    for i in range(int(count)):
+        st.markdown(f"Sự cố {i + 1}")
+        kind = st.selectbox("Loại sự cố B", ["Phòng bận", "Giảng viên bận", "Thêm lớp"], key=key("b_incident_kind", i))
+        if kind != "Thêm lớp":
+            resource_type = "room" if kind == "Phòng bận" else "lecturer"
+            ids = sorted(instance.rooms if resource_type == "room" else instance.lecturers)
+            resource = st.selectbox("Tài nguyên B", ids, key=key(f"b_resource_{resource_type}", i))
+            slot = st.selectbox("Ca sự cố B", slot_options, format_func=when, key=key("b_incident_slot", i))
+            events.append({"type": "unavailability", "resource_type": resource_type, "resource_id": resource,
+                           "weekday": slot[0], "period": slot[1]})
+            affected = [s for s in sessions if s[f"{resource_type}_id"] == resource and s["weekday"] == slot[0]
+                        and (slot[1] is None or s["period"] == slot[1])]
+            st.write(f"Buổi bị tác động trực tiếp: {len(affected)}")
+            if affected:
+                st.dataframe(affected, hide_index=True)
+        else:
+            cid = st.text_input("Mã lớp mới B", key=key("b_new_class", i)).strip()
+            name = st.text_input("Tên lớp mới B", key=key("b_new_name", i))
+            lecturer = st.selectbox("Giảng viên lớp mới B", sorted(instance.lecturers), key=key("b_new_lecturer", i))
+            size = st.number_input("Sĩ số B", min_value=1, value=15, step=1, key=key("b_new_size", i))
+            per_week = st.number_input("Buổi/tuần B", min_value=1, max_value=len(instance.slots), value=1, step=1,
+                                       key=key("b_new_count", i))
+            lab = st.checkbox("Cần phòng máy B", key=key("b_new_lab", i))
+            groups = st.multiselect("Nhóm bắt buộc B", sorted(instance.groups), key=key("b_new_groups", i))
+            if not cid or cid in instance.classes:
+                problems.append(f"Sự cố {i + 1}: Mã lớp mới phải khác rỗng và chưa tồn tại.")
+            elif cid in new_ids:
+                problems.append(f"Sự cố {i + 1}: Mã lớp mới {cid} trùng với một lớp mới khác.")
+            new_ids.add(cid)
+            events.append({"type": "add_class", "class": {"class_id": cid, "class_name": name, "lecturer_id": lecturer,
+                                                          "size": int(size), "sessions_per_week": int(per_week),
+                                                          "needs_lab": lab, "groups": groups}})
+    for text in problems:
+        st.warning(text)
+    valid = not problems
+    st.download_button("Xuất khai báo sự cố B",
+                       json.dumps({"dataset": active["dataset"], "incidents": events}, ensure_ascii=False, indent=2),
                        file_name="incidents_b.json", key="b_export_incident", disabled=not valid)
     out_path = output_dir / active["dataset"] / "retimetable.json"
     if st.button("Xếp lại B", disabled=not valid, key="b_run_incident"):
@@ -259,7 +330,7 @@ def page_incident_b(data_dir, output_dir=None):
         config = ROOT / "configs" / "problem_b.json"
         with st.spinner("Đang xếp lại..."):
             try:
-                result = reschedule_b(str(data_dir / active["dataset"]), active["timetable"], [event],
+                result = reschedule_b(str(data_path), active["timetable"], events,
                                       str(config) if config.is_file() else None, str(out_path))
             except (OSError, ValueError) as exc:
                 st.error(f"Không xếp lại được: {exc}")
@@ -286,11 +357,13 @@ def page_incident_b(data_dir, output_dir=None):
         if new.get("status") not in ("OPTIMAL", "FEASIBLE"):
             st.warning("Xếp lại chưa có lời giải hợp lệ.")
             return
-        if kind != "Thêm lớp":
-            from copy import deepcopy
-            updated = deepcopy(instance)
-            resources = updated.rooms if event["resource_type"] == "room" else updated.lecturers
-            resources[event["resource_id"]].busy.add((event["weekday"], event["period"]))
+        if all(e["type"] == "unavailability" for e in events):
+            # Soát lại lịch mới với dữ liệu cộng mọi ca bận đang khai báo
+            updated = copy.deepcopy(instance)
+            for e in events:
+                resources = updated.rooms if e["resource_type"] == "room" else updated.lecturers
+                resources[e["resource_id"]].busy |= {t for t in updated.slots if t[0] == e["weekday"]
+                                                     and (e["period"] is None or t[1] == e["period"])}
             violations = validate_b(updated, new)
             if violations:
                 st.warning("Lịch mới chưa hợp lệ với sự cố đang khai báo; bảng dưới chỉ là đối chiếu file.")

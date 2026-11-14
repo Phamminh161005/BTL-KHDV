@@ -158,6 +158,96 @@ def test_reschedule_button_adds_class(tmp_path, monkeypatch):
     assert list(changes["Thay đổi"]) == ["added"]
 
 
+UPLOAD_SCRIPT = """
+import json
+from pathlib import Path
+import streamlit as st
+
+class Upload:
+    def __init__(self, path):
+        self.name, self._data = path.name, path.read_bytes()
+    def getvalue(self):
+        return self._data
+
+# AppTest chưa hỗ trợ chọn file: thay file_uploader bằng danh sách file ghi trong control.json
+control = json.loads(Path({control!r}).read_text(encoding="utf-8"))
+original = st.file_uploader
+st.file_uploader = lambda *args, **kwargs: [Upload(Path(p)) for p in control]
+try:
+    from app.timetable_b import page_timetable_b
+    page_timetable_b(Path({data!r}), Path({out!r}))
+finally:
+    st.file_uploader = original     # trả lại hàm thật để không ảnh hưởng các test khác cùng tiến trình
+"""
+
+
+def upload_app(tmp_path, files):
+    control = tmp_path / "control.json"
+    control.write_text(json.dumps([str(f) for f in files]), encoding="utf-8")
+    script = UPLOAD_SCRIPT.format(control=str(control), data=str(ROOT / "data"), out=str(tmp_path / "out"))
+    app = AppTest.from_string(script, default_timeout=120).run()
+    app.radio(key="b_source").set_value("Tải CSV lên").run()
+    assert not app.exception
+    return app, control
+
+
+def test_upload_csv_then_run_solver(tmp_path):
+    files = sorted((ROOT / "data" / "toy_b").glob("*.csv"))
+    app, control = upload_app(tmp_path, files)
+    assert any("Đọc được 10 lớp" in c.value for c in app.caption)
+    assert any("Chưa có kết quả cho upload_b" in m.value for m in app.info)
+    app.button(key="b_run_solver").click().run()
+    assert not app.exception
+    assert any("OPTIMAL, mục tiêu 355" in s.value for s in app.success)
+    assert next(m for m in app.metric if m.label == "Buổi học đang hiển thị").value == "24"
+    assert json.loads((tmp_path / "out" / "upload_b" / "timetable.json").read_text(encoding="utf-8"))["objective"] == 355
+    # Tải bộ file khác (bỏ preferences.csv): không hiện kết quả của bộ trước, phải chạy lại
+    control.write_text(json.dumps([str(f) for f in files if f.name != "preferences.csv"]), encoding="utf-8")
+    app.run()
+    assert any("Chưa có kết quả cho upload_b" in m.value for m in app.info)
+    assert not any(m.label == "Buổi học đang hiển thị" for m in app.metric)
+
+
+def test_upload_with_missing_file_shows_error(tmp_path):
+    files = [f for f in sorted((ROOT / "data" / "toy_b").glob("*.csv")) if f.name != "classes.csv"]
+    app, _ = upload_app(tmp_path, files)
+    assert any("D01" in e.value and "classes.csv" in e.value for e in app.error)
+    assert not any(b.key == "b_run_solver" for b in app.button)
+
+
+def test_several_incidents_at_once(tmp_path, monkeypatch):
+    """Hai sự cố cùng lúc: G2-LAB1 hỏng Thứ 6 ca 4 và GV02 bận cả Thứ 4. Hai buổi phải dời ca."""
+    monkeypatch.setenv("EXAM_APP_OUTPUT_DIR", str(tmp_path))
+    app = AppTest.from_file(str(APP), default_timeout=120).run()
+    app.radio(key="b_source").set_value("Mẫu toy_b tham chiếu").run()
+    app.number_input(key="b_incident_count").set_value(2).run()
+    app.selectbox(key="b_resource_room").select("G2-LAB1").run()
+    app.selectbox(key="b_incident_slot").select((6, 4)).run()
+    app.selectbox(key="b_incident_kind_1").select("Giảng viên bận").run()
+    app.selectbox(key="b_resource_lecturer_1").select("GV02").run()
+    app.selectbox(key="b_incident_slot_1").select((4, None)).run()
+    assert not app.exception
+    assert any("Buổi bị tác động trực tiếp: 1" in m.value for m in app.markdown)
+    app.button(key="b_run_incident").click().run()
+    assert not app.exception
+    saved = json.loads((tmp_path / "toy_b" / "retimetable.json").read_text(encoding="utf-8"))
+    assert len(saved["reschedule"]["incidents"]) == 2
+    assert saved["reschedule"]["change_penalties"]["B-R1"] == 2 and saved["violations"] == []
+    changes = next(d.value for d in app.dataframe if "Thay đổi" in d.value.columns)
+    assert sorted(changes["Lớp"]) == ["INT2211-LT", "INT3505-TH"]
+    assert any("Lịch mới hợp lệ với ca bận" in s.value for s in app.success)
+
+
+def test_duplicate_new_class_ids_block_reschedule():
+    app = open_b()
+    app.number_input(key="b_incident_count").set_value(2).run()
+    for i, suffix in enumerate(["", "_1"]):
+        app.selectbox(key=f"b_incident_kind{suffix}").select("Thêm lớp").run()
+        app.text_input(key=f"b_new_class{suffix}").set_value("NEW-LT").run()
+    assert any("trùng" in w.value for w in app.warning)
+    assert app.button(key="b_run_incident").disabled
+
+
 def test_compare_matches_class_slot_before_moved_session():
     old = {"sessions": [dict(class_id="K", weekday=2, period=1, room_id="R"),
                         dict(class_id="K", weekday=3, period=1, room_id="R")]}
