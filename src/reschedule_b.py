@@ -286,7 +286,8 @@ def _solve_in_scopes(instance: InstanceB, config: dict, base: SolutionB, inciden
 # ---------------------------------------------------------------- so sánh hai lịch
 
 def _view(s: dict) -> dict:
-    return {"session_id": s["session_id"], "weekday": s["weekday"], "period": s["period"], "room_id": s["room_id"]}
+    session_id = s.get("session_id") or f"{s['class_id']}@T{s['weekday']}_{s['period']}"
+    return {"session_id": session_id, "weekday": s["weekday"], "period": s["period"], "room_id": s["room_id"]}
 
 
 def diff_timetables(old: dict, new: dict) -> tuple[list[dict], dict]:
