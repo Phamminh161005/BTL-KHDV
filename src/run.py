@@ -27,7 +27,8 @@ DEFAULT_CONFIG_PATH = "configs/default.json"
 
 def run(data_dir: str, config_path: str | None, out_path: str | None, solver: str = "cp-sat",
         diagnose: bool = True, problem: str | None = None) -> dict:
-    """diagnose áp dụng A (src.diagnose). B cung cấp room_solver.relax để Minh tích hợp chẩn đoán."""
+    """diagnose: khi solver trả về INFEASIBLE, chạy chẩn đoán nguyên nhân (bài A: src/diagnose.py, bài B:
+    src/diagnose_b.py; mã N01–N05)."""
     if problem not in (None, "A", "B"):
         raise ValueError("problem phải là A hoặc B")
     if solver not in SOLVERS:
@@ -46,6 +47,9 @@ def run(data_dir: str, config_path: str | None, out_path: str | None, solver: st
         from src.room_solver import solve as solve_b
         from src.timetable import build_timetable
         result = solve_b(loaded.instance, loaded.config) if loaded.ok else None
+        if diagnose and result is not None and result.status == "INFEASIBLE":
+            from src.diagnose_b import diagnose_b
+            result.messages += diagnose_b(loaded.instance, loaded.config)
         timetable = build_timetable(loaded.instance, loaded.config, loaded.messages, result, dataset)
         out_path = out_path or os.path.join("output", dataset, "timetable.json")
         os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)

@@ -215,9 +215,11 @@ def page_timetable_b(data_dir, output_dir):
                        file_name="timetable.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", key="b_excel")
 
 
-def page_incident_b(data_dir):
+def page_incident_b(data_dir, output_dir=None):
+    output_dir = Path(output_dir) if output_dir is not None else ROOT / "output"
     active = st.session_state.get("b_active")
-    st.info("Chờ quy trình xếp lại B của Minh. Có thể khai báo/xuất sự cố và đối chiếu file kết quả; chưa chạy xếp lại.")
+    st.caption("Khai báo sự cố rồi bấm \"Xếp lại B\" để xếp lại sao cho ít thay đổi nhất (model_spec B.9). "
+               "Cũng có thể nhập đường dẫn một retimetable.json có sẵn để so sánh.")
     if not active:
         st.caption("Mở một lịch B hợp lệ ở tab Lịch học tuần trước.")
         return
@@ -250,7 +252,30 @@ def page_incident_b(data_dir):
         st.warning("Mã lớp mới phải khác rỗng và chưa tồn tại.")
     st.download_button("Xuất khai báo sự cố B", json.dumps({"schema": "B-incident-draft-v1", "dataset": active["dataset"], "incidents": [event]}, ensure_ascii=False, indent=2),
                        file_name="incidents_b.json", key="b_export_incident", disabled=not valid)
-    st.button("Xếp lại B (chờ backend)", disabled=True, key="b_run_incident")
+    out_path = output_dir / active["dataset"] / "retimetable.json"
+    if st.button("Xếp lại B", disabled=not valid, key="b_run_incident"):
+        from src.reschedule_b import reschedule_b
+
+        config = ROOT / "configs" / "problem_b.json"
+        with st.spinner("Đang xếp lại..."):
+            try:
+                result = reschedule_b(str(data_dir / active["dataset"]), active["timetable"], [event],
+                                      str(config) if config.is_file() else None, str(out_path))
+            except (OSError, ValueError) as exc:
+                st.error(f"Không xếp lại được: {exc}")
+                return
+        st.session_state["b_retimetable"] = str(out_path)
+        info = result["reschedule"]
+        if result["status"] in ("OPTIMAL", "FEASIBLE"):
+            st.success(f"Đã xếp lại: {result['status']}, mục tiêu {result['objective']}, chi phí thay đổi "
+                       f"{info['change_cost']}, {result['solve_time_sec']:.2f} giây. Kết quả lưu ở {out_path}.")
+        else:
+            st.error(f"Không xếp lại được: trạng thái {result['status']}.")
+        for m in result["messages"]:
+            if m["level"] in ("error", "warning") or m["code"].startswith(("N", "I04")):
+                st.write(f"{m['code']}: {m['message']}")
+        if result["status"] not in ("OPTIMAL", "FEASIBLE"):
+            return
     path = st.text_input("Đường dẫn retimetable.json", key="b_retimetable")
     if not path:
         return
@@ -272,6 +297,8 @@ def page_incident_b(data_dir):
                 st.dataframe(violations, hide_index=True)
             else:
                 st.success("Lịch mới hợp lệ với ca bận đang khai báo.")
+        elif "reschedule" in new and not new.get("violations"):
+            st.success("Lịch mới hợp lệ: validator đã kiểm tra khi xếp lại, gồm cả lớp bổ sung.")
         else:
             st.caption("Đối chiếu file được cung cấp; chưa xác thực lịch mới với lớp bổ sung.")
         changes = compare_timetables(active["timetable"], new)

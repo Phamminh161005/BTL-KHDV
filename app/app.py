@@ -1121,7 +1121,7 @@ def main():
     with tab_week_b:
         page_timetable_b(DATA_DIR, OUTPUT_DIR)
     with tab_incident_b:
-        page_incident_b(DATA_DIR)
+        page_incident_b(DATA_DIR, OUTPUT_DIR)
     with tab_experiment_b:
         page_experiments_b(Path(os.environ.get("EXAM_APP_RESULTS_DIR", ROOT / "experiments" / "results")))
     with tab_experiments:

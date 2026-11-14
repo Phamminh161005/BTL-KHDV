@@ -840,7 +840,37 @@ Mỗi phần tử của `sessions` là một buổi học. Mảng sắp theo `we
 
 `violations` có cùng dạng mục 7.5, `code` là mã B-H1 đến B-H7, `refs` chứa `class_id`, `room_id`, `lecturer_id`, `group_id` hoặc `session_ids` tùy vi phạm.
 
-Kết quả xếp lại khi có sự cố (spec B.9) ghi vào `output/<tên bộ dữ liệu>/retimetable.json`, theo cùng quy tắc mục 7.6, với các khác biệt: sự cố dùng `weekday` thay cho `date`; `change_penalties` có khóa `B-R1`, `B-R2`; `summary` gồm `sessions_moved`, `sessions_room_changed`, `sessions_added`, `classes_affected`, `lecturers_affected`; mỗi phần tử của `changes` là một buổi bị đổi, `kinds` là `time`, `rooms` hoặc `added`.
+Kết quả xếp lại khi có sự cố (spec B.9) do `src/reschedule_b.py` ghi vào `output/<tên bộ dữ liệu>/retimetable.json`, theo cùng quy tắc mục 7.6, với các khác biệt sau.
+
+Sự cố có hai loại:
+
+```json
+{"resource_type": "room", "resource_id": "G2-LAB1", "weekday": 6, "period": 4}
+{"type": "add_class", "class": {"class_id": "INT9999-TH", "class_name": "...", "course_id": "INT9999",
+  "lecturer_id": "GV04", "size": 12, "sessions_per_week": 2, "needs_lab": true, "groups": ["K67-KHMT"]}}
+```
+
+Loại thứ nhất là một dòng của `week_unavailability.csv` (`period` là `null` nghĩa là cả ngày), có thể kèm `"type": "unavailability"`. Loại thứ hai thêm một lớp mới, các trường như một dòng của `classes.csv` cộng các nhóm bắt buộc. Cũng có thể thêm lớp thẳng vào `classes.csv`: lớp có trong dữ liệu mà không có trong lịch cũ được coi là lớp mới (thông tin I04). Sự cố sai báo I01, sự cố không ảnh hưởng báo I02, lịch cũ sai báo I03, lớp mới không có phòng phù hợp báo PB1.
+
+Trường `reschedule`:
+
+| Khóa | Mô tả |
+|---|---|
+| `base_timetable` | Tên file lịch cũ |
+| `incidents` | Các sự cố đã áp dụng, đã chuẩn hóa |
+| `change_penalties` | `B-R1` (buổi cũ bị dời ca), `B-R2` (buổi cũ giữ ca nhưng đổi phòng), chưa nhân trọng số |
+| `change_cost` | $\gamma_1 R^{B}_1 + \gamma_2 R^{B}_2$ |
+| `summary` | `sessions_moved`, `sessions_room_changed`, `sessions_added`, `sessions_removed`, `classes_affected`, `lecturers_affected` |
+
+Mỗi phần tử của `changes` là một buổi bị đổi, có đúng một loại trong `kinds`: `time` (dời ca), `rooms` (giữ ca, đổi phòng), `added` (buổi mới, `old` là `null`) hoặc `removed` (bỏ buổi, `new` là `null`; chỉ xảy ra khi số buổi của lớp trong dữ liệu ít hơn lịch cũ):
+
+```json
+{"class_id": "INT3505-TH", "kinds": ["time"],
+ "old": {"session_id": "INT3505-TH@T6_4", "weekday": 6, "period": 4, "room_id": "G2-LAB1"},
+ "new": {"session_id": "INT3505-TH@T6_3", "weekday": 6, "period": 3, "room_id": "G2-LAB1"}}
+```
+
+Các buổi được ghép theo từng lớp: trước hết ghép buổi cùng ca, phần còn lại ghép theo thứ tự thời gian. Hàm `diff_timetables(old, new)` trong `src/reschedule_b.py` so sánh hai file `timetable.json` bất kỳ theo quy tắc này.
 
 ### 9.12. Bộ dữ liệu
 

@@ -942,4 +942,12 @@ Dữ liệu thử là bộ `data/toy_b` (mô tả trong `data/toy_b/README.md`):
 
 Mô hình trên `toy_b` có 303 biến $y$, ít hơn nhiều so với giới hạn trên 10 × 4 × 22 = 880, vì mỗi lớp chỉ có biến với phòng đúng loại, đủ chỗ và ca không bận.
 
-Phần xếp lại khi có sự cố (B.9) chưa được kiểm chứng bằng bản cài đặt thử; sẽ kiểm chứng khi cài đặt, dựa trên code xếp lại của bài toán A.
+Phần xếp lại khi có sự cố (B.9) được kiểm chứng trên bản cài đặt `src/reschedule_b.py` (kiểm thử ở `tests/test_reschedule_b.py`), lịch cũ là lịch tối ưu của mỗi bộ:
+
+| Kịch bản | Kết quả |
+|---|---|
+| `toy_b`: G2-LAB1 hỏng Thứ 6 ca 4 (Thứ 6 không còn phòng máy nào khác) | Chỉ INT3505-TH dời sang ca khác cùng Thứ 6; $R^{B}_1$ = 1, $R^{B}_2$ = 0; 9 lớp còn lại giữ nguyên |
+| `toy_b`: G2-LAB1 hỏng Thứ 3 ca 4 | INT2211-TH giữ ca, chuyển sang G2-LAB2; $R^{B}_2$ = 1. Đổi phòng tốn 20 + 5 (thêm chỗ trống) + 30 (ca đó hết dự phòng), rẻ hơn dời ca (100) |
+| `toy_b`: GV06 bận cả Thứ 6 (ngày rảnh duy nhất) | `INFEASIBLE`; chẩn đoán báo N01 cho nhóm giảng viên |
+| `toy_b`: thêm lớp mới 2 buổi | Hai buổi mới được thêm, các buổi cũ giữ nguyên |
+| `medium_b`, `large_b`: một phòng máy hỏng một ca, hỏng cả Thứ 3, thêm một lớp thực hành | Cả 6 lần `OPTIMAL`, không vi phạm, không buổi nào phải dời ca (mọi buổi bị ảnh hưởng chỉ đổi phòng, nhờ phòng máy dự phòng của B-S4), dưới 2 giây với `medium_b` và dưới 8 giây với `large_b`, đạt KPI xếp lại dưới 1 phút |
