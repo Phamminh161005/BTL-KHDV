@@ -119,13 +119,43 @@ def test_incident_room_change_file_comparison(tmp_path):
     assert len(changes) == 1
     assert changes.iloc[0]["Thay đổi"] == "rooms"
     assert any("Lịch mới hợp lệ với ca bận" in s.value for s in app.success)
-    assert app.button(key="b_run_incident").disabled
+    assert not app.button(key="b_run_incident").disabled
     app.selectbox(key="b_incident_kind").select("Giảng viên bận").run()
     assert not app.exception
     app.selectbox(key="b_incident_kind").select("Thêm lớp").run()
     assert any("Mã lớp mới" in w.value for w in app.warning)
     app.text_input(key="b_new_class").set_value("NEW-CLASS").run()
     assert not app.exception
+
+
+def test_reschedule_button_runs_b9(tmp_path, monkeypatch):
+    """G2-LAB1 hỏng Thứ 6 ca 4: bấm "Xếp lại B" thì chỉ INT3505-TH bị dời ca, kết quả ghi vào thư mục kết quả."""
+    monkeypatch.setenv("EXAM_APP_OUTPUT_DIR", str(tmp_path))
+    app = AppTest.from_file(str(APP), default_timeout=120).run()
+    app.radio(key="b_source").set_value("Mẫu toy_b tham chiếu").run()
+    app.selectbox(key="b_resource_room").select("G2-LAB1").run()
+    app.selectbox(key="b_incident_slot").select((6, 4)).run()
+    app.button(key="b_run_incident").click().run()
+    assert not app.exception
+    assert any("Đã xếp lại" in s.value for s in app.success)
+    saved = json.loads((tmp_path / "toy_b" / "retimetable.json").read_text(encoding="utf-8"))
+    assert saved["reschedule"]["change_penalties"] == {"B-R1": 1, "B-R2": 0}
+    changes = next(d.value for d in app.dataframe if "Thay đổi" in d.value.columns)
+    assert list(changes["Lớp"]) == ["INT3505-TH"] and list(changes["Thay đổi"]) == ["time"]
+
+
+def test_reschedule_button_adds_class(tmp_path, monkeypatch):
+    monkeypatch.setenv("EXAM_APP_OUTPUT_DIR", str(tmp_path))
+    app = AppTest.from_file(str(APP), default_timeout=120).run()
+    app.radio(key="b_source").set_value("Mẫu toy_b tham chiếu").run()
+    app.selectbox(key="b_incident_kind").select("Thêm lớp").run()
+    app.text_input(key="b_new_class").set_value("NEW-LT").run()
+    app.button(key="b_run_incident").click().run()
+    assert not app.exception
+    assert any("Đã xếp lại" in s.value for s in app.success)
+    assert any("validator đã kiểm tra" in s.value for s in app.success)
+    changes = next(d.value for d in app.dataframe if "Thay đổi" in d.value.columns)
+    assert list(changes["Thay đổi"]) == ["added"]
 
 
 def test_compare_matches_class_slot_before_moved_session():
