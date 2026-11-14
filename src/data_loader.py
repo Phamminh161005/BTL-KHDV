@@ -64,8 +64,15 @@ class _Reader:
 
     def read_csv(self, path: str, fname: str, schema: Optional[dict] = None) -> Optional[list[Row]]:
         """Đọc file theo quy ước mục 2. Trả None nếu thiếu cột bắt buộc. schema mặc định là SCHEMA của bài A."""
-        with open(path, "rb") as f:
-            text = f.read().decode("utf-8-sig")
+        try:
+            with open(path, "rb") as f:
+                text = f.read().decode("utf-8-sig")
+        except OSError as e:
+            self.add("D01", "error", f"Không đọc được file: {e}", fname)
+            return None
+        except UnicodeError:
+            self.add("D03", "error", "File CSV phải được mã hóa UTF-8", fname)
+            return None
         first = next((ln for ln in text.splitlines() if ln.strip()), "")
         delimiter = ","
         if ";" in first and "," not in first:
@@ -80,6 +87,10 @@ class _Reader:
             record = [cell.strip() for cell in record]
             if header is None:
                 header = [h.lower() for h in record]
+                duplicates = sorted({h for h in header if header.count(h) > 1})
+                if duplicates:
+                    self.add("D02", "error", f"Tên cột bị trùng: {duplicates}", fname, lineno)
+                    return None
                 continue
             rows.append((lineno, {header[k]: (record[k] if k < len(record) else "") for k in range(len(header))}))
 

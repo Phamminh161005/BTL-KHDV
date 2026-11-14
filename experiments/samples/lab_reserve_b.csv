@@ -1,0 +1,5 @@
+dataset,seed,b_s4_weight,lab_sessions,room_change_only,must_move,slots_without_lab_reserve,objective
+synthetic_small,0,30,20,16,4,1,410
+synthetic_small,0,0,20,11,9,4,380
+synthetic_small,1,30,20,17,3,1,412
+synthetic_small,1,0,20,12,8,3,381

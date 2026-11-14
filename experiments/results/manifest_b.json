@@ -1,0 +1,204 @@
+{
+  "python": "3.13.7",
+  "platform": "Windows-11-10.0.26300-SP0",
+  "ortools": "9.15.6755",
+  "num_workers": 8,
+  "dataset_generation": {
+    "toy_b": {
+      "kind": "handwritten"
+    },
+    "medium_b": {
+      "size": "medium_b",
+      "seed": 1,
+      "classes": 60,
+      "groups": 8,
+      "rooms": 10,
+      "lab_rooms": 3,
+      "lecturers": 24,
+      "num_sessions": 89,
+      "lab_sessions": 48,
+      "room_utilization_lab": 0.7272727272727273,
+      "resource_sha256": {
+        "rooms.csv": "8f935e67b5c829007ca4fb54e03c8b3a358b2e361916625310887ca0f9ea29ef",
+        "lecturers.csv": "5d4f20b56b035bf1a4c2d07463ba22087de5f7ac72393c553d1f85a693868420"
+      },
+      "pb_messages": []
+    },
+    "large_b": {
+      "size": "large_b",
+      "seed": 1,
+      "classes": 120,
+      "groups": 16,
+      "rooms": 15,
+      "lab_rooms": 4,
+      "lecturers": 40,
+      "num_sessions": 146,
+      "lab_sessions": 63,
+      "room_utilization_lab": 0.7159090909090909,
+      "resource_sha256": {
+        "rooms.csv": "13ef4396fba14e7871cbfc29ec9811c6dfe7648161477cfe13b698cc9b62c330",
+        "lecturers.csv": "a2c2f7fd51cb53740b38c0e665d729421617a38ba7fa54245bc62c311d3ca30e"
+      },
+      "pb_messages": []
+    }
+  },
+  "solver_seeds": [
+    0,
+    1,
+    2
+  ],
+  "time_limit_sec": 300.0,
+  "started_at_utc": "2026-11-11T17:33:51Z",
+  "input_sha256": {
+    "toy_b": {
+      "class_groups.csv": "02b2852e71bb2e41061fc1c6d79c470b7c639c0bdd09adf078e83c190fe5b6f1",
+      "classes.csv": "0296fae864a5894cee9cc5a9373b02bc9c12578b96a063965bfd15dcf175a786",
+      "lecturers.csv": "c2b666ffe082609ac8444f1b5a0a5276ff73d20ede41a0943ea014627a719fff",
+      "preferences.csv": "8574b8c0e1275120bc800957c166ea4d7a859aa19b544a6d4eabf0cbbeef693a",
+      "rooms.csv": "ef8c266f38cbe770b216969f780cfe686b9787977c6c2bd886c2fe5673c4b217",
+      "week_slots.csv": "0bb924b343632c1ea488560209b8a7d91f840ad95e4c7d1c4951d9d4b15c6468",
+      "week_unavailability.csv": "272b34f3fae39d252d9feb06b40db4302d114a0850e8a0f4d7282a6ab1e1f1a8"
+    },
+    "medium_b": {
+      "class_groups.csv": "b215e4c9e4cb877c98b9e0c8eed98bd2ddd60bc116b0ad426cdddc7b9a1935a4",
+      "classes.csv": "c4081631e41e4456062408f41b0fc58d7af360db21a22c8242f57ff8484e158d",
+      "lecturers.csv": "5d4f20b56b035bf1a4c2d07463ba22087de5f7ac72393c553d1f85a693868420",
+      "preferences.csv": "02a9ac0b6258a098f37cb09c63c482315a38e0eed8f1e02e9b8485e8b6ac6257",
+      "rooms.csv": "8f935e67b5c829007ca4fb54e03c8b3a358b2e361916625310887ca0f9ea29ef",
+      "week_slots.csv": "e744052a100086ab483a26d02ac1b0943d3f35bb41c0953ee61f1e480a42d66d",
+      "week_unavailability.csv": "2795e0ec2c61dc1b9d88f7b18e81d06476835c0b5c60c721d2b84e2c44180820"
+    },
+    "large_b": {
+      "class_groups.csv": "171f88feba0f1a60c24e667b8e47765874e1ffcbd743bc3010c7567ce0317351",
+      "classes.csv": "f09f4debe0efee3b7c1e5529c653669020a9c9e249a639d44d024837e738b8ab",
+      "lecturers.csv": "a2c2f7fd51cb53740b38c0e665d729421617a38ba7fa54245bc62c311d3ca30e",
+      "preferences.csv": "8cf0470f8d6c57d097e360534d4696675de1c94c7c126894e5456225a90ea00e",
+      "rooms.csv": "13ef4396fba14e7871cbfc29ec9811c6dfe7648161477cfe13b698cc9b62c330",
+      "week_slots.csv": "e744052a100086ab483a26d02ac1b0943d3f35bb41c0953ee61f1e480a42d66d",
+      "week_unavailability.csv": "75109126d57cd8d11f3a152c7636149e6e3ec050983d71e947a9da8cacb7f1d1"
+    }
+  },
+  "runs": [
+    {
+      "dataset": "toy_b",
+      "seed": 0,
+      "b_s4_weight": 30,
+      "result": "runs_b\\toy_b_seed0_s4_30.json",
+      "status": "OPTIMAL",
+      "solve_time_sec": 0.053444600001967046
+    },
+    {
+      "dataset": "toy_b",
+      "seed": 1,
+      "b_s4_weight": 30,
+      "result": "runs_b\\toy_b_seed1_s4_30.json",
+      "status": "OPTIMAL",
+      "solve_time_sec": 0.05739480000192998
+    },
+    {
+      "dataset": "toy_b",
+      "seed": 2,
+      "b_s4_weight": 30,
+      "result": "runs_b\\toy_b_seed2_s4_30.json",
+      "status": "OPTIMAL",
+      "solve_time_sec": 0.05926499999623047
+    },
+    {
+      "dataset": "medium_b",
+      "seed": 0,
+      "b_s4_weight": 30,
+      "result": "runs_b\\medium_b_seed0_s4_30.json",
+      "status": "OPTIMAL",
+      "solve_time_sec": 2.339619699996547
+    },
+    {
+      "dataset": "medium_b",
+      "seed": 1,
+      "b_s4_weight": 30,
+      "result": "runs_b\\medium_b_seed1_s4_30.json",
+      "status": "OPTIMAL",
+      "solve_time_sec": 2.1174479000037536
+    },
+    {
+      "dataset": "medium_b",
+      "seed": 2,
+      "b_s4_weight": 30,
+      "result": "runs_b\\medium_b_seed2_s4_30.json",
+      "status": "OPTIMAL",
+      "solve_time_sec": 2.379584199996316
+    },
+    {
+      "dataset": "large_b",
+      "seed": 0,
+      "b_s4_weight": 30,
+      "result": "runs_b\\large_b_seed0_s4_30.json",
+      "status": "OPTIMAL",
+      "solve_time_sec": 8.222121299993887
+    },
+    {
+      "dataset": "large_b",
+      "seed": 1,
+      "b_s4_weight": 30,
+      "result": "runs_b\\large_b_seed1_s4_30.json",
+      "status": "OPTIMAL",
+      "solve_time_sec": 9.169167500003823
+    },
+    {
+      "dataset": "large_b",
+      "seed": 2,
+      "b_s4_weight": 30,
+      "result": "runs_b\\large_b_seed2_s4_30.json",
+      "status": "OPTIMAL",
+      "solve_time_sec": 8.78999610000028
+    },
+    {
+      "dataset": "medium_b",
+      "seed": 0,
+      "b_s4_weight": 0,
+      "result": "runs_b\\medium_b_seed0_s4_0.json",
+      "status": "OPTIMAL",
+      "solve_time_sec": 1.8554881999953068
+    },
+    {
+      "dataset": "medium_b",
+      "seed": 1,
+      "b_s4_weight": 0,
+      "result": "runs_b\\medium_b_seed1_s4_0.json",
+      "status": "OPTIMAL",
+      "solve_time_sec": 2.4221610999957193
+    },
+    {
+      "dataset": "medium_b",
+      "seed": 2,
+      "b_s4_weight": 0,
+      "result": "runs_b\\medium_b_seed2_s4_0.json",
+      "status": "OPTIMAL",
+      "solve_time_sec": 1.5923146000059205
+    },
+    {
+      "dataset": "large_b",
+      "seed": 0,
+      "b_s4_weight": 0,
+      "result": "runs_b\\large_b_seed0_s4_0.json",
+      "status": "OPTIMAL",
+      "solve_time_sec": 10.60294349999458
+    },
+    {
+      "dataset": "large_b",
+      "seed": 1,
+      "b_s4_weight": 0,
+      "result": "runs_b\\large_b_seed1_s4_0.json",
+      "status": "OPTIMAL",
+      "solve_time_sec": 9.06417440000223
+    },
+    {
+      "dataset": "large_b",
+      "seed": 2,
+      "b_s4_weight": 0,
+      "result": "runs_b\\large_b_seed2_s4_0.json",
+      "status": "OPTIMAL",
+      "solve_time_sec": 8.458526800000982
+    }
+  ],
+  "elapsed_sec": 67.46297597885132
+}

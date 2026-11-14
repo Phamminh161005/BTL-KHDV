@@ -88,7 +88,7 @@ def parse_incident(text: str) -> dict:
 def base_solution(instance: Instance, base: dict, messages: list[Message]) -> Optional[Solution]:
     """Dựng lại lời giải thô (x, u, q, w) từ nội dung schedule.json của lịch cũ. Lỗi báo I03."""
     sittings_json = base.get("sittings") if isinstance(base, dict) else None
-    if not sittings_json:
+    if not isinstance(sittings_json, list) or not sittings_json:
         messages.append(Message("I03", "error", "Lịch cũ không có lượt thi nào (trạng thái "
                                 f"{base.get('status') if isinstance(base, dict) else None})"))
         return None
@@ -100,6 +100,19 @@ def base_solution(instance: Instance, base: dict, messages: list[Message]) -> Op
             c = item["course_id"]
             start = (dt.date.fromisoformat(item["date"]), int(item["start_period"]))
             room_entries = item["rooms"]
+            if not isinstance(room_entries, list):
+                raise ValueError("rooms phải là danh sách")
+            for entry in room_entries:
+                if not isinstance(entry, dict):
+                    raise ValueError("Mỗi phòng phải là đối tượng")
+                for field in ("students", "proctors"):
+                    values = entry.get(field, [])
+                    if not isinstance(values, list) or not all(isinstance(x, str) for x in values):
+                        raise ValueError(f"{field} phải là danh sách mã")
+                if entry.get("room_id") is not None and not isinstance(entry["room_id"], str):
+                    raise ValueError("room_id phải là chuỗi")
+            if not isinstance(c, str):
+                raise ValueError("course_id phải là chuỗi")
         except (KeyError, TypeError, ValueError):
             messages.append(Message("I03", "error", "Lịch cũ sai định dạng (data_schema mục 7.3)"))
             return None
@@ -342,6 +355,8 @@ def reschedule(data_dir: str, base_schedule_path: str, incidents: list[dict], co
 
     dataset = os.path.basename(os.path.normpath(data_dir))
     loaded = load_instance(data_dir, config_path)
+    if loaded.config["problem"] != "A":
+        raise ValueError("src.reschedule chỉ hỗ trợ bài A; bài B cần bộ xếp lại riêng theo B.9")
     messages = list(loaded.messages)
     config = dict(loaded.config, strategy="single")
     instance = loaded.instance
@@ -350,9 +365,9 @@ def reschedule(data_dir: str, base_schedule_path: str, incidents: list[dict], co
         try:
             with open(base_schedule_path, encoding="utf-8-sig") as f:
                 base_json = json.load(f)
-        except (OSError, json.JSONDecodeError) as e:
+        except (OSError, UnicodeError, json.JSONDecodeError) as e:
             messages.append(Message("I03", "error", f"Không đọc được lịch cũ: {e}"))
-        if base_json is not None:
+        else:
             base = base_solution(instance, base_json, messages)
         applied = apply_incidents(instance, incidents, messages)
     has_error = any(m.level == "error" for m in messages)

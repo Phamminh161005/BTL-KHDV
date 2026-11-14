@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import copy
 import json
+import math
 from typing import Optional
 
 from src.instance import Message
@@ -34,7 +35,8 @@ def _is_int(x) -> bool:
 
 
 def _is_number(x) -> bool:
-    return isinstance(x, (int, float)) and not isinstance(x, bool)
+    return (isinstance(x, (int, float)) and not isinstance(x, bool)
+            and (not isinstance(x, float) or math.isfinite(x)))
 
 
 _VALIDATORS = {
@@ -60,7 +62,7 @@ def load_config(path: Optional[str], messages: list[Message]) -> dict:
     try:
         with open(path, encoding="utf-8-sig") as f:
             user = json.load(f)
-    except (OSError, json.JSONDecodeError) as e:
+    except (OSError, UnicodeError, json.JSONDecodeError) as e:
         messages.append(Message("D12", "error", f"Không đọc được cấu hình: {e}", fname))
         return cfg
     if not isinstance(user, dict):

@@ -19,8 +19,10 @@ from io import BytesIO, StringIO
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
+# Streamlit prepends app/; resolve the app package before the app.py entrypoint.
+if str(ROOT) in sys.path:
+    sys.path.remove(str(ROOT))
+sys.path.insert(0, str(ROOT))
 
 import streamlit as st
 from openpyxl import Workbook
@@ -157,11 +159,11 @@ def export_excel(sittings):
 # ---------------------------------------------------------------------------
 
 def _available_datasets():
-    """Liệt kê thư mục con trong data/ có chứa ít nhất một file CSV bắt buộc."""
+    """Liệt kê dữ liệu A, không nhận bộ lịch tuần B chỉ vì dùng chung rooms.csv."""
     datasets = []
     if DATA_DIR.is_dir():
         for d in sorted(DATA_DIR.iterdir()):
-            if d.is_dir() and any((d / f).exists() for f in REQUIRED_CSV):
+            if d.is_dir() and (d / "slots.csv").is_file() and not (d / "week_slots.csv").is_file():
                 datasets.append(d.name)
     return datasets
 
@@ -1095,11 +1097,14 @@ def main():
     st.set_page_config(page_title="Lịch thi", layout="wide")
     st.title("Lịch thi cuối kỳ")
 
-    tab_view, tab_input, tab_compare, tab_incident, tab_experiments = st.tabs([
+    tab_view, tab_input, tab_compare, tab_incident, tab_week_b, tab_incident_b, tab_experiment_b, tab_experiments = st.tabs([
         "Xem kết quả",
         "Nhập dữ liệu và xếp lịch",
         "So sánh hai lịch",
         "Sự cố và xếp lại",
+        "Lịch học tuần B",
+        "Sự cố B",
+        "Thực nghiệm B",
         "Kết quả thực nghiệm",
     ])
     with tab_view:
@@ -1110,6 +1115,15 @@ def main():
         page_compare()
     with tab_incident:
         page_incident()
+    from app.timetable_b import page_timetable_b, page_incident_b
+    from app.experiments_b import page_experiments_b
+
+    with tab_week_b:
+        page_timetable_b(DATA_DIR, OUTPUT_DIR)
+    with tab_incident_b:
+        page_incident_b(DATA_DIR)
+    with tab_experiment_b:
+        page_experiments_b(Path(os.environ.get("EXAM_APP_RESULTS_DIR", ROOT / "experiments" / "results")))
     with tab_experiments:
         page_experiments()
 

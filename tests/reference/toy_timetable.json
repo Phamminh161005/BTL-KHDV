@@ -1,0 +1,504 @@
+{
+  "meta": {
+    "problem": "B",
+    "dataset": "toy_b",
+    "created_at": "2026-11-14T00:00:00+07:00",
+    "solver": "OR-Tools CP-SAT (lịch tham chiếu cố định, model_spec B.12)",
+    "strategy": "single",
+    "config": {
+      "problem": "B",
+      "strategy": "single",
+      "time_limit_sec": 300,
+      "num_workers": 8,
+      "random_seed": 0,
+      "proctors_per_room": 2,
+      "forbid_own_course": false,
+      "written_capacity_ratio": 0.5,
+      "default_max_sittings_computer": 3,
+      "weights": {
+        "A-S1": 100,
+        "A-S2": 30,
+        "A-S3": 50,
+        "A-S4": 1,
+        "A-S5": 20,
+        "A-S6": 200,
+        "B-S1": 1,
+        "B-S2": 50,
+        "B-S3": 100,
+        "B-S4": 30
+      },
+      "lab_reserve_ratio": 0.85,
+      "reschedule": {
+        "time_limit_sec": 45,
+        "weights": {
+          "A-R1": 1000,
+          "A-R2": 100,
+          "A-R3": 50,
+          "A-R4": 20,
+          "B-R1": 100,
+          "B-R2": 20
+        }
+      }
+    }
+  },
+  "status": "OPTIMAL",
+  "objective": 355,
+  "best_bound": 355,
+  "solve_time_sec": 0.0,
+  "penalties": {
+    "B-S1": 75,
+    "B-S2": 1,
+    "B-S3": 2,
+    "B-S4": 1
+  },
+  "sessions": [
+    {
+      "session_id": "INT2204-LT@T2_3",
+      "class_id": "INT2204-LT",
+      "class_name": "Lập trình hướng đối tượng (lý thuyết)",
+      "course_id": "INT2204",
+      "needs_lab": false,
+      "weekday": 2,
+      "period": 3,
+      "start_time": "13:00",
+      "end_time": "15:30",
+      "room_id": "G2-101",
+      "room_capacity": 60,
+      "size": 55,
+      "lecturer_id": "GV01",
+      "groups": [
+        "K67-CN1",
+        "K67-CN2"
+      ]
+    },
+    {
+      "session_id": "ELT2035@T2_3",
+      "class_id": "ELT2035",
+      "class_name": "Tín hiệu và hệ thống (lớp học bù)",
+      "course_id": "ELT2035",
+      "needs_lab": false,
+      "weekday": 2,
+      "period": 3,
+      "start_time": "13:00",
+      "end_time": "15:30",
+      "room_id": "G2-102",
+      "room_capacity": 40,
+      "size": 40,
+      "lecturer_id": "GV07",
+      "groups": []
+    },
+    {
+      "session_id": "INT3306-TH@T2_4",
+      "class_id": "INT3306-TH",
+      "class_name": "Phát triển ứng dụng Web (thực hành)",
+      "course_id": "INT3306",
+      "needs_lab": true,
+      "weekday": 2,
+      "period": 4,
+      "start_time": "15:40",
+      "end_time": "18:10",
+      "room_id": "G2-LAB1",
+      "room_capacity": 15,
+      "size": 12,
+      "lecturer_id": "GV05",
+      "groups": [
+        "K67-KHMT"
+      ]
+    },
+    {
+      "session_id": "ELT2035@T3_2",
+      "class_id": "ELT2035",
+      "class_name": "Tín hiệu và hệ thống (lớp học bù)",
+      "course_id": "ELT2035",
+      "needs_lab": false,
+      "weekday": 3,
+      "period": 2,
+      "start_time": "09:40",
+      "end_time": "12:10",
+      "room_id": "G2-102",
+      "room_capacity": 40,
+      "size": 40,
+      "lecturer_id": "GV07",
+      "groups": []
+    },
+    {
+      "session_id": "INT3306-TH@T3_2",
+      "class_id": "INT3306-TH",
+      "class_name": "Phát triển ứng dụng Web (thực hành)",
+      "course_id": "INT3306",
+      "needs_lab": true,
+      "weekday": 3,
+      "period": 2,
+      "start_time": "09:40",
+      "end_time": "12:10",
+      "room_id": "G2-LAB1",
+      "room_capacity": 15,
+      "size": 12,
+      "lecturer_id": "GV05",
+      "groups": [
+        "K67-KHMT"
+      ]
+    },
+    {
+      "session_id": "INT2211-TH@T3_4",
+      "class_id": "INT2211-TH",
+      "class_name": "Cơ sở dữ liệu (thực hành)",
+      "course_id": "INT2211",
+      "needs_lab": true,
+      "weekday": 3,
+      "period": 4,
+      "start_time": "15:40",
+      "end_time": "18:10",
+      "room_id": "G2-LAB1",
+      "room_capacity": 15,
+      "size": 15,
+      "lecturer_id": "GV02",
+      "groups": [
+        "K67-KHMT"
+      ]
+    },
+    {
+      "session_id": "MAT1099@T4_1",
+      "class_id": "MAT1099",
+      "class_name": "Toán rời rạc",
+      "course_id": "MAT1099",
+      "needs_lab": false,
+      "weekday": 4,
+      "period": 1,
+      "start_time": "07:00",
+      "end_time": "09:30",
+      "room_id": "G2-101",
+      "room_capacity": 60,
+      "size": 50,
+      "lecturer_id": "GV03",
+      "groups": [
+        "K67-CN1",
+        "K67-CN2",
+        "K67-KHMT"
+      ]
+    },
+    {
+      "session_id": "ELT2035@T4_1",
+      "class_id": "ELT2035",
+      "class_name": "Tín hiệu và hệ thống (lớp học bù)",
+      "course_id": "ELT2035",
+      "needs_lab": false,
+      "weekday": 4,
+      "period": 1,
+      "start_time": "07:00",
+      "end_time": "09:30",
+      "room_id": "G2-102",
+      "room_capacity": 40,
+      "size": 40,
+      "lecturer_id": "GV07",
+      "groups": []
+    },
+    {
+      "session_id": "INT3306-TH@T4_2",
+      "class_id": "INT3306-TH",
+      "class_name": "Phát triển ứng dụng Web (thực hành)",
+      "course_id": "INT3306",
+      "needs_lab": true,
+      "weekday": 4,
+      "period": 2,
+      "start_time": "09:40",
+      "end_time": "12:10",
+      "room_id": "G2-LAB1",
+      "room_capacity": 15,
+      "size": 12,
+      "lecturer_id": "GV05",
+      "groups": [
+        "K67-KHMT"
+      ]
+    },
+    {
+      "session_id": "INT2211-LT@T4_3",
+      "class_id": "INT2211-LT",
+      "class_name": "Cơ sở dữ liệu (lý thuyết)",
+      "course_id": "INT2211",
+      "needs_lab": false,
+      "weekday": 4,
+      "period": 3,
+      "start_time": "13:00",
+      "end_time": "15:30",
+      "room_id": "G2-102",
+      "room_capacity": 40,
+      "size": 35,
+      "lecturer_id": "GV02",
+      "groups": [
+        "K67-CN1",
+        "K67-CN2",
+        "K67-KHMT"
+      ]
+    },
+    {
+      "session_id": "INT3306-TH@T4_4",
+      "class_id": "INT3306-TH",
+      "class_name": "Phát triển ứng dụng Web (thực hành)",
+      "course_id": "INT3306",
+      "needs_lab": true,
+      "weekday": 4,
+      "period": 4,
+      "start_time": "15:40",
+      "end_time": "18:10",
+      "room_id": "G2-LAB1",
+      "room_capacity": 15,
+      "size": 12,
+      "lecturer_id": "GV05",
+      "groups": [
+        "K67-KHMT"
+      ]
+    },
+    {
+      "session_id": "ELT2035@T5_1",
+      "class_id": "ELT2035",
+      "class_name": "Tín hiệu và hệ thống (lớp học bù)",
+      "course_id": "ELT2035",
+      "needs_lab": false,
+      "weekday": 5,
+      "period": 1,
+      "start_time": "07:00",
+      "end_time": "09:30",
+      "room_id": "G2-102",
+      "room_capacity": 40,
+      "size": 40,
+      "lecturer_id": "GV07",
+      "groups": []
+    },
+    {
+      "session_id": "INT2204-TH2@T5_1",
+      "class_id": "INT2204-TH2",
+      "class_name": "Lập trình hướng đối tượng (thực hành 2)",
+      "course_id": "INT2204",
+      "needs_lab": true,
+      "weekday": 5,
+      "period": 1,
+      "start_time": "07:00",
+      "end_time": "09:30",
+      "room_id": "G2-LAB1",
+      "room_capacity": 15,
+      "size": 14,
+      "lecturer_id": "GV04",
+      "groups": [
+        "K67-CN2"
+      ]
+    },
+    {
+      "session_id": "MAT1099@T5_2",
+      "class_id": "MAT1099",
+      "class_name": "Toán rời rạc",
+      "course_id": "MAT1099",
+      "needs_lab": false,
+      "weekday": 5,
+      "period": 2,
+      "start_time": "09:40",
+      "end_time": "12:10",
+      "room_id": "G2-101",
+      "room_capacity": 60,
+      "size": 50,
+      "lecturer_id": "GV03",
+      "groups": [
+        "K67-CN1",
+        "K67-CN2",
+        "K67-KHMT"
+      ]
+    },
+    {
+      "session_id": "INT2211-TH@T5_4",
+      "class_id": "INT2211-TH",
+      "class_name": "Cơ sở dữ liệu (thực hành)",
+      "course_id": "INT2211",
+      "needs_lab": true,
+      "weekday": 5,
+      "period": 4,
+      "start_time": "15:40",
+      "end_time": "18:10",
+      "room_id": "G2-LAB1",
+      "room_capacity": 15,
+      "size": 15,
+      "lecturer_id": "GV02",
+      "groups": [
+        "K67-KHMT"
+      ]
+    },
+    {
+      "session_id": "INT2211-LT@T6_1",
+      "class_id": "INT2211-LT",
+      "class_name": "Cơ sở dữ liệu (lý thuyết)",
+      "course_id": "INT2211",
+      "needs_lab": false,
+      "weekday": 6,
+      "period": 1,
+      "start_time": "07:00",
+      "end_time": "09:30",
+      "room_id": "G2-102",
+      "room_capacity": 40,
+      "size": 35,
+      "lecturer_id": "GV02",
+      "groups": [
+        "K67-CN1",
+        "K67-CN2",
+        "K67-KHMT"
+      ]
+    },
+    {
+      "session_id": "INT2204-LT@T6_2",
+      "class_id": "INT2204-LT",
+      "class_name": "Lập trình hướng đối tượng (lý thuyết)",
+      "course_id": "INT2204",
+      "needs_lab": false,
+      "weekday": 6,
+      "period": 2,
+      "start_time": "09:40",
+      "end_time": "12:10",
+      "room_id": "G2-101",
+      "room_capacity": 60,
+      "size": 55,
+      "lecturer_id": "GV01",
+      "groups": [
+        "K67-CN1",
+        "K67-CN2"
+      ]
+    },
+    {
+      "session_id": "INT3505@T6_2",
+      "class_id": "INT3505",
+      "class_name": "Khoa học dịch vụ",
+      "course_id": "INT3505",
+      "needs_lab": false,
+      "weekday": 6,
+      "period": 2,
+      "start_time": "09:40",
+      "end_time": "12:10",
+      "room_id": "G2-102",
+      "room_capacity": 40,
+      "size": 30,
+      "lecturer_id": "GV06",
+      "groups": []
+    },
+    {
+      "session_id": "MAT1099@T6_4",
+      "class_id": "MAT1099",
+      "class_name": "Toán rời rạc",
+      "course_id": "MAT1099",
+      "needs_lab": false,
+      "weekday": 6,
+      "period": 4,
+      "start_time": "15:40",
+      "end_time": "18:10",
+      "room_id": "G2-101",
+      "room_capacity": 60,
+      "size": 50,
+      "lecturer_id": "GV03",
+      "groups": [
+        "K67-CN1",
+        "K67-CN2",
+        "K67-KHMT"
+      ]
+    },
+    {
+      "session_id": "ELT2035@T6_4",
+      "class_id": "ELT2035",
+      "class_name": "Tín hiệu và hệ thống (lớp học bù)",
+      "course_id": "ELT2035",
+      "needs_lab": false,
+      "weekday": 6,
+      "period": 4,
+      "start_time": "15:40",
+      "end_time": "18:10",
+      "room_id": "G2-102",
+      "room_capacity": 40,
+      "size": 40,
+      "lecturer_id": "GV07",
+      "groups": []
+    },
+    {
+      "session_id": "INT3505-TH@T6_4",
+      "class_id": "INT3505-TH",
+      "class_name": "Khoa học dịch vụ (thực hành)",
+      "course_id": "INT3505",
+      "needs_lab": true,
+      "weekday": 6,
+      "period": 4,
+      "start_time": "15:40",
+      "end_time": "18:10",
+      "room_id": "G2-LAB1",
+      "room_capacity": 15,
+      "size": 15,
+      "lecturer_id": "GV06",
+      "groups": []
+    },
+    {
+      "session_id": "ELT2035@T7_1",
+      "class_id": "ELT2035",
+      "class_name": "Tín hiệu và hệ thống (lớp học bù)",
+      "course_id": "ELT2035",
+      "needs_lab": false,
+      "weekday": 7,
+      "period": 1,
+      "start_time": "07:00",
+      "end_time": "09:30",
+      "room_id": "G2-102",
+      "room_capacity": 40,
+      "size": 40,
+      "lecturer_id": "GV07",
+      "groups": []
+    },
+    {
+      "session_id": "INT2204-TH1@T7_1",
+      "class_id": "INT2204-TH1",
+      "class_name": "Lập trình hướng đối tượng (thực hành 1)",
+      "course_id": "INT2204",
+      "needs_lab": true,
+      "weekday": 7,
+      "period": 1,
+      "start_time": "07:00",
+      "end_time": "09:30",
+      "room_id": "G2-LAB2",
+      "room_capacity": 20,
+      "size": 18,
+      "lecturer_id": "GV04",
+      "groups": [
+        "K67-CN1"
+      ]
+    },
+    {
+      "session_id": "ELT2035@T7_2",
+      "class_id": "ELT2035",
+      "class_name": "Tín hiệu và hệ thống (lớp học bù)",
+      "course_id": "ELT2035",
+      "needs_lab": false,
+      "weekday": 7,
+      "period": 2,
+      "start_time": "09:40",
+      "end_time": "12:10",
+      "room_id": "G2-102",
+      "room_capacity": 40,
+      "size": 40,
+      "lecturer_id": "GV07",
+      "groups": []
+    }
+  ],
+  "kpi": {
+    "hard_violations": 0,
+    "room_utilization_normal": 0.3488,
+    "room_utilization_lab": 0.225,
+    "lab_peak_utilization": 1.0,
+    "slots_without_lab_reserve": 1,
+    "seat_fill_rate": 0.9107,
+    "preference_violations": 1,
+    "classes_same_day": 2,
+    "group_max_sessions_per_day": 4,
+    "solve_time_sec": 0.0
+  },
+  "violations": [],
+  "messages": [
+    {
+      "code": "PB6",
+      "level": "info",
+      "file": "classes.csv",
+      "line": 10,
+      "message": "Lớp ELT2035 có 7 buổi/tuần, nhiều hơn 6 ngày học: B-S3 không thể bằng 0 với lớp này"
+    }
+  ]
+}

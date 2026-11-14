@@ -1,0 +1,17 @@
+{
+  "size": "large_b",
+  "seed": 1,
+  "classes": 120,
+  "groups": 16,
+  "rooms": 15,
+  "lab_rooms": 4,
+  "lecturers": 40,
+  "num_sessions": 146,
+  "lab_sessions": 63,
+  "room_utilization_lab": 0.7159090909090909,
+  "resource_sha256": {
+    "rooms.csv": "13ef4396fba14e7871cbfc29ec9811c6dfe7648161477cfe13b698cc9b62c330",
+    "lecturers.csv": "a2c2f7fd51cb53740b38c0e665d729421617a38ba7fa54245bc62c311d3ca30e"
+  },
+  "pb_messages": []
+}

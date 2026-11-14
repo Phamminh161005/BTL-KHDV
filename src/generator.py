@@ -1,10 +1,9 @@
-"""Sinh dữ liệu giả lập cho bài toán A theo docs/data_schema.md.
-
-Người phụ trách: Khỏe (task KHOE-1).
+"""Sinh dữ liệu giả lập cho bài toán A/B theo docs/data_schema.md.
 
 Cách chạy:
     py -m src.generator --size medium --seed 1 --out data/medium
     py -m src.generator --size toy --seed 1 --out data/toy_gen
+    py -m src.generator --size medium_b --seed 1 --out data/medium_b
 
 Quy mô theo docs/scope.md mục 3:
     toy    5 môn,  3 phòng (1 phòng máy),  ~50 sinh viên
@@ -714,11 +713,15 @@ def generate(size: str, seed: int, out_dir: str, force: bool = False) -> dict:
 
     Trả về một dict thống kê ngắn (số môn, phòng, sinh viên...) để in ra hoặc kiểm thử.
     """
+    if size in ("medium_b", "large_b"):
+        from src.generator_b import generate_b
+
+        return generate_b(size, seed, out_dir, force=force)
     if size not in SIZES:
         raise ValueError(f"size phải là một trong {sorted(SIZES)}, gặp {size!r}")
-    if os.path.basename(os.path.normpath(out_dir)) == "toy" and not force:
+    if os.path.basename(os.path.normpath(out_dir)) in ("toy", "toy_b") and not force:
         raise SystemExit(
-            "Từ chối ghi vào thư mục 'toy': đó là bộ tham chiếu viết tay. "
+            "Từ chối ghi vào thư mục toy/toy_b: đó là bộ tham chiếu viết tay. "
             "Hãy ghi bộ toy sinh tự động vào data/toy_gen (hoặc thêm --force nếu thật sự muốn)."
         )
 
@@ -831,6 +834,13 @@ def generate(size: str, seed: int, out_dir: str, force: bool = False) -> dict:
 
 def check(out_dir: str) -> bool:
     """Đọc lại bằng data_loader.load_instance và in thông báo. True nếu không có thông báo mức error."""
+    if os.path.exists(os.path.join(out_dir, "week_slots.csv")):
+        from src.data_loader_b import load_instance_b
+
+        loaded = load_instance_b(out_dir)
+        for message in loaded.messages:
+            print(f"  [{message.level}] {message.code}: {message.message}")
+        return loaded.ok
     from src.data_loader import (
         load_instance,
     )  # nhập muộn để generator vẫn dùng được khi loader đang sửa
@@ -878,10 +888,12 @@ def students_outside_range(instance) -> list[tuple[str, int]]:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Sinh dữ liệu giả lập cho bài toán lịch thi"
+    parser = argparse.ArgumentParser(description="Sinh dữ liệu giả lập bài toán A/B")
+    parser.add_argument(
+        "--size",
+        choices=["toy", "medium", "large", "medium_b", "large_b"],
+        required=True,
     )
-    parser.add_argument("--size", choices=["toy", "medium", "large"], required=True)
     parser.add_argument("--seed", type=int, default=1)
     parser.add_argument("--out", required=True)
     parser.add_argument(
@@ -896,6 +908,14 @@ def main() -> None:
 
     stats = generate(args.size, args.seed, args.out, force=args.force)
     print(f"Đã sinh bộ '{args.size}' (seed {args.seed}) vào {args.out}")
+    if args.size.endswith("_b"):
+        print(
+            f"  {stats['classes']} lớp, {stats['groups']} nhóm, {stats['num_sessions']} buổi; "
+            f"sử dụng phòng máy {stats['room_utilization_lab']:.1%}"
+        )
+        if not args.no_check and not check(args.out):
+            sys.exit(1)
+        return
     print(
         f"  {stats['courses']} môn ({stats['computer_courses']} thi máy, {stats['long_courses']} môn > 120 phút), "
         f"{stats['rooms']} phòng ({stats['lab_rooms']} phòng máy), {stats['students']} sinh viên, "

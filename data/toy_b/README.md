@@ -42,3 +42,22 @@ Với trọng số mặc định (`B-S1` 1, `B-S2` 50, `B-S3` 100, `B-S4` 30, $\
 - B-S1 = 75: tổng chỗ trống của 24 buổi học.
 
 Lịch tối ưu có thể khác nhau giữa các lần chạy, nhưng giá trị mục tiêu tối ưu là duy nhất. Kết quả kiểm chứng: `docs/model_spec.md` mục B.12.
+
+## Lịch tham chiếu và ý nghĩa KPI
+
+`tests/reference/toy_timetable.json` là lịch tham chiếu 24 buổi: lấy đúng lịch tối ưu cố định trong `tests/test_validator_b.py`, dựng thành file kết quả bằng `src/timetable.py` (cùng hàm hậu xử lý mà `run.py` dùng), nên có đủ các trường theo data_schema mục 9.11. Validator không báo vi phạm, điểm phạt tính lại là B-S1..B-S4 = 75, 1, 2, 1. Trường `solve_time_sec` bằng 0 vì lịch được cố định sẵn, không đo thời gian giải. Mỗi lần chạy solver có thể ra một lịch tối ưu khác, nhưng giá trị mục tiêu luôn là 355.
+
+| KPI | Ý nghĩa phục vụ |
+|---|---|
+| `hard_violations` | Số lỗi cứng; lịch chỉ có thể dùng khi bằng 0. |
+| `room_utilization_normal` | Tỷ lệ cặp phòng thường-ca được dùng trên số cặp không bận, đo mức khai thác phòng thường. |
+| `room_utilization_lab` | Tỷ lệ tương tự cho phòng máy, đối chiếu mục tiêu khai thác 60–85%. |
+| `lab_peak_utilization` | Tỷ lệ phòng máy dùng cao nhất trong một ca có phòng khả dụng, nhận diện nút thắt. |
+| `slots_without_lab_reserve` | Số ca dùng quá ngưỡng `floor(rho × số phòng máy không bận)`, cảnh báo thiếu dự phòng. |
+| `seat_fill_rate` | Tổng sĩ số / tổng sức chứa của các buổi học, đo hiệu quả dùng chỗ. |
+| `preference_violations` | Số buổi rơi vào ca giảng viên không muốn dạy (B-S2). |
+| `classes_same_day` | Số lớp có ít nhất một ngày học hai buổi trở lên, đo độ dồn lịch. |
+| `group_max_sessions_per_day` | Số buổi bắt buộc nhiều nhất của một nhóm trong một ngày, đo tải học cao nhất. |
+| `solve_time_sec` | Thời gian giải do kết quả cung cấp; không bao gồm thời gian tính KPI. |
+
+Tỷ lệ phòng trả `null` nếu không có cặp phòng-ca khả dụng; tỷ lệ đầy chỗ trả `null` khi không có buổi; đỉnh phòng máy trả `null` khi không có ca nào có phòng máy khả dụng; tải nhóm trả `null` nếu không có nhóm.

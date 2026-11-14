@@ -296,8 +296,8 @@ Mã D là lỗi định dạng dữ liệu (tài liệu này). Mã P là kiểm 
 
 | Mã | Mức | Nội dung |
 |---|---|---|
-| D01 | error | Thiếu file bắt buộc |
-| D02 | error | Thiếu cột bắt buộc |
+| D01 | error | Thiếu file bắt buộc hoặc không đọc được file |
+| D02 | error | Thiếu cột bắt buộc hoặc tên cột bị trùng |
 | D03 | error | Giá trị sai kiểu hoặc ngoài miền cho phép (ví dụ `period = 5`, `exam_type = oral`, số âm, cột bắt buộc để trống) |
 | D04 | error | Trùng khóa (trùng `room_id`, `course_id`, `lecturer_id`, hoặc trùng cặp `date`, `period` trong `slots.csv`) |
 | D05 | error | Tham chiếu tới mã không tồn tại |
@@ -316,7 +316,7 @@ Mã D là lỗi định dạng dữ liệu (tài liệu này). Mã P là kiểm 
 | R01 | info | Hậu xử lý: một phòng của lượt thi không có sinh viên nào (mục 7.3) |
 | S01 | warning | Solver không tự dừng ở giới hạn thời gian nên bị dừng cưỡng bức; trạng thái `UNKNOWN` |
 | S02 | error | Bộ giải bên ngoài (CBC) thoát bất thường; trạng thái `UNKNOWN` |
-| S03 | warning | `two_phase` hết thời gian khi đang dựng mô hình pha 1 hoặc trước khi bắt đầu pha 2 (phân giám thị) |
+| S03 | warning | Hết ngân sách khi dựng mô hình hoặc trước khi bắt đầu search; với A `two_phase` gồm dựng pha 1 và chuẩn bị pha 2 (phân giám thị), với B gồm dựng mô hình lịch tuần; PuLP hết ngân sách dựng mô hình cũng dùng mã này |
 | S04 | warning | Pha 2 của `two_phase` không tìm được cách phân giám thị; giải lại bằng `single` trong phần thời gian còn lại (spec A.7) |
 | S05 | info | `two_phase`: trạng thái của từng pha và tổng thời gian |
 | N01 | warning | Chẩn đoán: bỏ một nhóm ràng buộc (giám thị, A-H2 hoặc A-H6) thì xếp được lịch; kèm gợi ý sửa dữ liệu. Có thể có nhiều N01 |
