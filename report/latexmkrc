@@ -1,0 +1,2 @@
+# Dùng XeLaTeX (Overleaf cũng đọc file này)
+$pdf_mode = 5;

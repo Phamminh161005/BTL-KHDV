@@ -1,0 +1,75 @@
+% Báo cáo bài tập lớn môn Khoa học Dịch vụ
+% Biên dịch bằng XeLaTeX (xem report/README.md).
+
+\documentclass[13pt,a4paper,oneside]{extreport}
+
+% ---------- Phông chữ và ngôn ngữ ----------
+\usepackage{fontspec}
+\setmainfont{TeX Gyre Termes}   % tương đương Times New Roman, có sẵn trong TeX Live
+\usepackage[vietnamese]{babel}
+
+% ---------- Trang và khoảng cách ----------
+\usepackage[left=3cm,right=2cm,top=2.5cm,bottom=2.5cm]{geometry}
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{indentfirst}
+
+% ---------- Toán ----------
+\usepackage{amsmath,amssymb,amsthm}
+
+% ---------- Hình, bảng ----------
+\usepackage{graphicx}
+\graphicspath{{figures/}}
+\usepackage{booktabs,longtable,tabularx,multirow}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{xcolor}
+
+% ---------- Mã nguồn, danh sách ----------
+\usepackage{listings}
+\lstset{basicstyle=\ttfamily\small,breaklines=true,frame=single}
+\usepackage{enumitem}
+
+% ---------- Tài liệu tham khảo ----------
+\usepackage[backend=biber,style=numeric,sorting=none]{biblatex}
+\addbibresource{references.bib}
+
+% ---------- Liên kết (để cuối) ----------
+\usepackage[hidelinks]{hyperref}
+
+% ---------- Lệnh dùng chung ----------
+\input{macros}
+
+\begin{document}
+
+% ===== Phần đầu =====
+\input{frontmatter/titlepage}
+\pagenumbering{roman}
+\input{frontmatter/phan-cong}
+\input{frontmatter/tom-tat}
+\tableofcontents
+\listoffigures
+\listoftables
+\input{frontmatter/ky-hieu}
+
+% ===== Nội dung chính =====
+\clearpage
+\pagenumbering{arabic}
+\include{chapters/01-gioi-thieu}
+\include{chapters/02-phan-tich-dich-vu}
+\include{chapters/03-mo-hinh}
+\include{chapters/04-he-thong}
+\include{chapters/05-thuc-nghiem}
+\include{chapters/06-cong-cu-mon-hoc}
+\include{chapters/07-danh-gia}
+\include{chapters/08-ket-luan}
+
+% ===== Phần cuối =====
+\printbibliography[heading=bibintoc,title={Tài liệu tham khảo}]
+
+\appendix
+\include{appendices/a-huong-dan-chay}
+\include{appendices/b-ket-qua-day-du}
+\include{appendices/c-dinh-dang-du-lieu}
+
+\end{document}
