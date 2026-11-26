@@ -1,23 +1,254 @@
 % Chương 2. Phụ trách: Mạnh (MANH-6)
-% Nguồn: docs/scope.md mục 2 (bên liên quan) và mục 7 (KPI).
+% Nguồn: docs/scope.md, docs/model_spec.md, README.md,
+% src/kpi.py, src/kpi_b.py, src/reschedule.py và src/reschedule_b.py.
 
 \chapter{Phân tích dịch vụ}
 \label{ch:phan-tich-dich-vu}
 
+Chương này phân tích hệ thống xếp lịch dưới góc nhìn một dịch vụ hỗ trợ hoạt động đào tạo. Trọng tâm là xác định đối tượng được phục vụ, giá trị cung cấp, quá trình tương tác và cách đo lường chất lượng. Các ràng buộc và thuật toán là phương tiện thực hiện dịch vụ; kết quả cần hướng tới là một lịch hợp lệ, có thể sử dụng và điều chỉnh với mức ảnh hưởng được kiểm soát.
+
 \section{Các bên liên quan và nhu cầu}
 \label{sec:ben-lien-quan}
+
+Dịch vụ xếp lịch liên quan đến nhiều nhóm có nhu cầu không hoàn toàn đồng nhất. Phòng đào tạo hoặc giáo vụ khoa trực tiếp vận hành hệ thống, trong khi sinh viên và giảng viên chủ yếu thụ hưởng hoặc chịu tác động từ lịch được tạo ra. Kỹ thuật viên phòng máy cung cấp thông tin về tình trạng nguồn lực, giúp lịch phản ánh khả năng khai thác thực tế. Bảng 2.1 tổng hợp vai trò và nhu cầu của các nhóm này.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Các bên liên quan và nhu cầu đối với dịch vụ xếp lịch}
+    \label{tab:ben-lien-quan}
+    \small
+    \begin{tabularx}{\textwidth}{@{}p{0.21\textwidth}XX@{}}
+        \toprule
+        Bên liên quan & Vai trò trong dịch vụ & Nhu cầu chính \\
+        \midrule
+        Phòng đào tạo, giáo vụ khoa & Chuẩn bị dữ liệu, cấu hình và xem xét lịch trước khi sử dụng & Tạo lịch nhanh, phát hiện lỗi rõ ràng, tra cứu và xuất kết quả, điều chỉnh lịch khi có sự cố \\
+        \addlinespace
+        Sinh viên & Đối tượng thụ hưởng chính, cung cấp nhu cầu thông qua đăng ký học phần ở bài toán A & Không trùng lịch thi, hạn chế nhiều môn trong ngày, có khoảng cách ôn tập và ít bị thay đổi lịch \\
+        \addlinespace
+        Giảng viên, giám thị & Nguồn lực giảng dạy, coi thi và đối tượng sử dụng lịch & Không trùng ca, tôn trọng lịch bận, cân bằng khối lượng coi thi và hạn chế giờ dạy không mong muốn \\
+        \addlinespace
+        Kỹ thuật viên phòng máy & Theo dõi khả năng sử dụng phòng, số máy hoạt động và lịch bảo trì & Không bố trí vào ca bảo trì, có nguồn lực dự phòng và giảm xáo trộn khi phòng máy hỏng \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+Những nhu cầu trên có thể tạo ra sự đánh đổi. Chẳng hạn, giãn cách các môn thi giúp sinh viên có thêm thời gian chuẩn bị nhưng có thể làm tăng số ngày sử dụng nguồn lực. Giảm số lượt thi giúp giảm số đề cần chuẩn bị nhưng đòi hỏi nhiều phòng và giám thị đồng thời hơn. Tăng mức sử dụng phòng máy giúp khai thác tài nguyên hiệu quả, song làm giảm khả năng dự phòng khi phát sinh sự cố.
+
+Vì vậy, hệ thống phân biệt yêu cầu bắt buộc và mong muốn chất lượng. Các điều kiện như không trùng lịch, đủ sức chứa và đúng loại phòng được biểu diễn bằng ràng buộc cứng. Các mong muốn như giãn cách môn thi, cân bằng coi thi và tôn trọng nguyện vọng giờ dạy được biểu diễn bằng ràng buộc mềm. Người vận hành lựa chọn trọng số để thể hiện mức ưu tiên, nhưng không được đánh đổi tính hợp lệ của lịch để cải thiện điểm chất lượng.
+
+Trong phạm vi giao diện demo, người vận hành là đầu mối tương tác trực tiếp với hệ thống. Việc phân phối lịch chính thức đến sinh viên, giảng viên hoặc phối hợp sửa chữa với kỹ thuật viên vẫn thuộc quy trình tổ chức bên ngoài; hệ thống không triển khai tài khoản riêng hay gửi thông báo tự động cho từng nhóm.
 
 \section{Khái niệm dịch vụ và gói dịch vụ xếp lịch}
 \label{sec:goi-dich-vu}
 
+\subsection{Giá trị cung cấp và sự tham gia của người sử dụng}
+
+Dịch vụ xếp lịch là quá trình chuyển dữ liệu về nhu cầu đào tạo và khả năng cung ứng nguồn lực thành phương án phân bổ thời gian, phòng và nhân sự. Đầu ra không chỉ là một bảng lịch mà còn bao gồm trạng thái giải, thông tin kiểm tra, chỉ số chất lượng và các thay đổi so với lịch cũ khi xếp lại. Những thông tin này giúp người vận hành có căn cứ xem xét tính khả thi và lựa chọn phương án phù hợp.
+
+Giá trị dịch vụ được hình thành từ sự phối hợp giữa người vận hành và hệ thống. Người vận hành chịu trách nhiệm cung cấp dữ liệu đúng, khai báo đầy đủ lịch bận và xác định ưu tiên; hệ thống thực hiện kiểm tra, tối ưu hóa và trình bày kết quả. Một mô hình giải đúng vẫn có thể tạo ra lịch không phù hợp với thực tế nếu thiếu thông tin về phòng bảo trì hoặc sĩ số. Do đó, chất lượng dữ liệu là điều kiện đầu vào quan trọng, không thể được thay thế hoàn toàn bằng năng lực tính toán.
+
+\subsection{Các thành phần của gói dịch vụ}
+
+Gói dịch vụ được tổ chức thành ba nhóm chức năng liên kết với nhau:
+\begin{enumerate}
+    \item Dịch vụ cốt lõi: tạo lịch thi cuối kỳ và lịch phòng học, phòng máy theo tuần, bảo đảm các điều kiện bắt buộc trong phạm vi mô hình và cải thiện chất lượng theo hàm mục tiêu.
+    \item Dịch vụ hỗ trợ: tiếp nhận dữ liệu CSV, kiểm tra dữ liệu, cấu hình bộ giải, kiểm tra lời giải độc lập, tính KPI, tra cứu lịch, so sánh phương án và xuất kết quả. Các chức năng này giúp lịch được giải thích, kiểm chứng và sử dụng tiếp trong công việc quản lý.
+    \item Dịch vụ phục hồi: tiếp nhận sự cố, cập nhật khả năng sử dụng nguồn lực, xếp lại và thống kê mức thay đổi. Mục đích là khôi phục lịch hợp lệ đồng thời hạn chế xáo trộn đối với các bên liên quan.
+\end{enumerate}
+
+Các phương tiện hỗ trợ gồm phòng học, phòng máy và đội ngũ giảng viên; các nguồn lực thông tin gồm dữ liệu CSV, cấu hình JSON và lịch đã lưu. Lợi ích trực tiếp là có phương án phân bổ nguồn lực và thông tin đánh giá đi kèm. Lợi ích gián tiếp kỳ vọng là giảm công sức điều chỉnh thủ công, tăng tính minh bạch và hỗ trợ người vận hành giải thích quyết định xếp lịch. Những lợi ích kỳ vọng này cần được kiểm chứng bằng thực nghiệm hoặc khảo sát khi triển khai, không được xem là kết quả đã đo lường của dự án.
+
+\subsection{Điểm tiếp xúc và ranh giới dịch vụ}
+
+Điểm tiếp xúc chính là giao diện web Streamlit, nơi người vận hành chọn hoặc tải dữ liệu, cấu hình và chạy bộ giải, xem thông báo, tra cứu và xuất lịch. Các lệnh dòng lệnh phục vụ chạy lặp lại và thực nghiệm; chúng sử dụng các thành phần xử lý của hệ thống nhưng không thay thế hoạt động rà soát nghiệp vụ trước khi công bố lịch.
+
+Dịch vụ kết thúc ở việc cung cấp kết quả có trạng thái rõ ràng và bằng chứng kiểm tra đi kèm. Việc phê duyệt, công bố lịch chính thức, chuẩn bị đề thi, tổ chức coi thi và sửa chữa thiết bị không được tự động hóa trong đề tài. Tương tự, chức năng xuất lịch hỗ trợ chuyển giao thông tin chứ không đồng nghĩa với việc hệ thống đã kết nối với phần mềm quản lý đào tạo của trường.
+
 \section{Service blueprint}
 \label{sec:blueprint}
+
+Service blueprint được sử dụng để mô tả quan hệ giữa thao tác của người vận hành, phần tương tác nhìn thấy trên giao diện và các hoạt động xử lý phía sau. Trong đề tài, đường tương tác phân cách người vận hành với giao diện; đường hiển thị phân cách các kết quả nhìn thấy với quá trình kiểm tra, lập mô hình và giải bên trong. Các tệp dữ liệu, cấu hình, bộ giải và bộ kiểm tra đóng vai trò hỗ trợ xử lý.
+
+Hai quy trình chính là tạo lịch ban đầu và phục hồi lịch khi xảy ra sự cố. Các bảng blueprint dưới đây mô tả luồng dịch vụ, không hàm ý hệ thống đã triển khai kiến trúc dịch vụ phân tán hoặc tích hợp các đơn vị bên ngoài.
 
 \subsection{Quy trình tạo lịch}
 \label{subsec:blueprint-tao-lich}
 
+Quy trình bắt đầu khi người vận hành đã có dữ liệu của đợt thi hoặc tuần học cần lập lịch. Bảng~\ref{tab:blueprint-tao-lich} mô tả các bước từ tiếp nhận nhu cầu đến chuyển giao kết quả.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Service blueprint cho quy trình tạo lịch}
+    \label{tab:blueprint-tao-lich}
+    \scriptsize
+    \begin{tabularx}{\textwidth}{@{}p{0.12\textwidth}XXX@{}}
+        \toprule
+        Giai đoạn & Hành động của người vận hành & Tương tác nhìn thấy & Xử lý phía sau và bằng chứng \\
+        \midrule
+        Chuẩn bị & Chọn bài toán, bộ dữ liệu hoặc tải CSV & Các lựa chọn dữ liệu và thông báo tiếp nhận & Đọc dữ liệu, tạo cấu trúc bài toán; lưu thông tin nguồn dữ liệu \\
+        \addlinespace
+        Kiểm tra & Xem và sửa dữ liệu khi có lỗi & Danh sách lỗi, cảnh báo và thông tin & Kiểm tra định dạng, liên kết và một số điều kiện cần về nguồn lực \\
+        \addlinespace
+        Cấu hình & Chọn tham số và yêu cầu chạy & Các tùy chọn được giao diện cung cấp, trạng thái xử lý & Lập mô hình, thiết lập trọng số và giới hạn thời gian; gọi bộ giải \\
+        \addlinespace
+        Kiểm chứng & Xem trạng thái và chất lượng lịch & Trạng thái giải, thông báo, KPI và lịch khi hợp lệ & Kiểm tra ràng buộc cứng, tính lại điểm phạt và KPI từ kết quả \\
+        \addlinespace
+        Chuyển giao & Tra cứu, so sánh và xuất lịch & Lịch theo đối tượng, bảng kết quả và tệp xuất & Lưu kết quả JSON; tạo dữ liệu xuất phục vụ rà soát và sử dụng tiếp \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+Điểm kiểm soát đầu tiên là chất lượng dữ liệu. Các lỗi như thiếu trường bắt buộc, tham chiếu mã không tồn tại hoặc thiếu sức chứa rõ ràng cần được phát hiện trước khi lập mô hình. Tuy nhiên, vượt qua bước kiểm tra đầu vào chỉ cho biết chưa phát hiện trở ngại ở các phép kiểm tra đã thực hiện, không chứng minh rằng toàn bộ bài toán có lời giải.
+
+Điểm kiểm soát thứ hai là trạng thái giải và kết quả kiểm tra độc lập. Các trạng thái cần được diễn giải nhất quán:
+\begin{itemize}
+    \item \code{OPTIMAL}: đã tìm được lịch và chứng minh tối ưu theo mô hình, trọng số đang sử dụng; không có nghĩa là tối ưu theo mọi mong muốn ngoài mô hình.
+    \item \code{FEASIBLE}: đã tìm được lịch khả thi nhưng chưa chứng minh tối ưu.
+    \item \code{INFEASIBLE}: đã chứng minh không tồn tại lời giải trong mô hình đang xét.
+    \item \code{UNKNOWN}: quá trình giải chưa xác định được tính khả thi hoặc tối ưu; không được diễn giải thành chắc chắn vô nghiệm.
+    \item \code{INPUT\_ERROR}: dữ liệu hoặc cấu hình không đáp ứng yêu cầu để tiếp tục xử lý.
+\end{itemize}
+
+Chỉ lịch vượt qua kiểm tra ràng buộc cứng mới đủ điều kiện chuyển sang bước sử dụng. Nếu không có lịch, dịch vụ vẫn cần cung cấp trạng thái và thông báo có ích cho việc sửa dữ liệu hoặc điều chỉnh nguồn lực. Thông tin chẩn đoán chỉ hỗ trợ nhận diện nhóm nguyên nhân, không nhất thiết là một giải thích đầy đủ hay duy nhất cho mọi trường hợp không khả thi.
+
 \subsection{Quy trình xử lý sự cố và xếp lại lịch}
 \label{subsec:blueprint-su-co}
 
+Quy trình phục hồi bắt đầu từ một lịch gốc cùng dữ liệu tương ứng. Sự cố có thể là phòng hoặc giảng viên không khả dụng tại một ca hay cả ngày; bài toán B còn hỗ trợ bổ sung lớp học. Bảng~\ref{tab:blueprint-su-co} trình bày các điểm tiếp xúc và xử lý chính.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Service blueprint cho quy trình xử lý sự cố và xếp lại lịch}
+    \label{tab:blueprint-su-co}
+    \scriptsize
+    \begin{tabularx}{\textwidth}{@{}p{0.12\textwidth}XXX@{}}
+        \toprule
+        Giai đoạn & Hành động của người vận hành & Tương tác nhìn thấy & Xử lý phía sau và bằng chứng \\
+        \midrule
+        Tiếp nhận & Chọn lịch gốc và khai báo sự cố & Nội dung sự cố, thông báo lỗi nếu có & Kiểm tra lịch gốc, mã nguồn lực, thời điểm và dữ liệu lớp mới \\
+        \addlinespace
+        Cập nhật & Xác nhận yêu cầu xếp lại & Thông tin phạm vi ảnh hưởng theo chức năng giao diện & Cập nhật lịch bận hoặc thêm lớp; xác định môn, lớp liên quan \\
+        \addlinespace
+        Phục hồi & Yêu cầu chạy xếp lại & Trạng thái xử lý và thông báo kết quả & Thử phạm vi cục bộ từ hẹp đến rộng; dùng thời gian còn lại để tìm phương án toàn lịch tốt hơn \\
+        \addlinespace
+        Đối chiếu & Xem và đánh giá lịch mới & KPI, bảng dời ca, đổi phòng và các thay đổi liên quan & Kiểm tra lịch mới; so sánh với lịch gốc, tính chi phí thay đổi và lưu kết quả \\
+        \addlinespace
+        Chuyển giao & Chọn phương án để sử dụng tiếp & Lịch mới và dữ liệu xuất khi hợp lệ & Cung cấp kết quả để đơn vị vận hành rà soát, công bố bên ngoài hệ thống \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+Khác với tạo lịch từ đầu, phục hồi dịch vụ phải xem xét cả chất lượng lịch và chi phí thay đổi. Một phương án có điểm phạt thấp hơn nhưng làm nhiều sinh viên đổi ca hoặc nhiều giảng viên đổi nhiệm vụ có thể không phù hợp trong giai đoạn lịch đã được công bố. Do đó, mô hình xếp lại bổ sung chi phí thay đổi bên cạnh mục tiêu chất lượng ban đầu.
+
+Hệ thống ưu tiên thử xếp lại cục bộ, giữ nguyên phần lịch ngoài phạm vi đang mở. Nếu chưa tìm được lời giải, phạm vi được mở rộng. Khi còn thời gian, hệ thống tìm kiếm trên toàn lịch và so sánh tổng chi phí chất lượng cộng chi phí thay đổi để chọn phương án. Cách tổ chức này không bảo đảm luôn giữ nguyên mọi phần lịch không bị ảnh hưởng trực tiếp, nhưng tạo cơ chế hạn chế xáo trộn thay vì mặc định giải lại hoàn toàn từ đầu.
+
+Việc không xếp được trong một phạm vi cục bộ không đủ để kết luận toàn bài toán vô nghiệm. Nếu hết thời gian mà chưa tìm thấy lịch mới, hệ thống phải thông báo rõ và không coi lịch gốc là đã được khắc phục; lịch đó có thể vẫn xung đột với sự cố vừa khai báo. Việc bổ sung nguồn lực hoặc thay đổi yêu cầu thuộc quyết định của người vận hành, không phải hành động tự động nới lỏng ràng buộc cứng để công bố lịch sai.
+
 \section{Hệ thống chỉ số chất lượng dịch vụ (KPI)}
 \label{sec:kpi}
+
+\subsection{Nguyên tắc đánh giá}
+
+Chất lượng dịch vụ được đánh giá theo ba lớp: tính hợp lệ, chất lượng phân bổ và khả năng đáp ứng, phục hồi. Tính hợp lệ là điều kiện tiên quyết; một lịch có thời gian giải nhanh hoặc tỷ lệ sử dụng phòng cao nhưng vi phạm ràng buộc cứng không được xem là lịch đạt yêu cầu.
+
+Cần phân biệt KPI với điểm phạt trong hàm mục tiêu. Điểm phạt là đại lượng phục vụ tối ưu hóa, còn KPI diễn giải kết quả theo góc nhìn người sử dụng và quản lý. Hai đại lượng có thể liên quan nhưng không nhất thiết bằng nhau. Ví dụ, KPI số sinh viên thi nhiều môn trong ngày đếm mỗi sinh viên một lần, trong khi điểm phạt \rb{A-S1} cộng số lượt thi vượt quá một môn theo từng cặp sinh viên--ngày. Vì vậy, không được thay trực tiếp một đại lượng bằng đại lượng còn lại khi so sánh kết quả.
+
+\subsection{Các chỉ số cho lịch thi}
+
+Bảng~\ref{tab:kpi-lich-thi} trình bày các chỉ số chính của bài toán A. Mức sử dụng nguồn lực và thời gian xử lý là mục tiêu đánh giá của đề tài, không phải cam kết đã được chứng minh cho mọi bộ dữ liệu.
+
+\begin{longtable}{@{}p{0.25\textwidth}p{0.45\textwidth}p{0.22\textwidth}@{}}
+    \caption{Các chỉ số chất lượng dịch vụ cho lịch thi}\label{tab:kpi-lich-thi} \\
+    \toprule
+    Chỉ số & Cách hiểu và ý nghĩa & Hướng đánh giá \\
+    \midrule
+    \endfirsthead
+    \toprule
+    Chỉ số & Cách hiểu và ý nghĩa & Hướng đánh giá \\
+    \midrule
+    \endhead
+    \bottomrule
+    \endfoot
+    Số vi phạm ràng buộc cứng & Số vi phạm do bộ kiểm tra độc lập phát hiện trên lịch & Bằng 0 \\
+    \addlinespace
+    Số sinh viên thi nhiều môn trong ngày & Số sinh viên có ít nhất một ngày thi từ hai môn trở lên trong toàn đợt & Càng nhỏ càng tốt \\
+    \addlinespace
+    Khoảng cách giữa các môn thi & Khoảng cách trung bình và nhỏ nhất, tính theo ngày giữa hai môn liên tiếp của sinh viên & Ưu tiên giãn cách trong khung thi cho phép \\
+    \addlinespace
+    Chênh lệch tải giám thị & Hiệu giữa tổng số ca coi thi lớn nhất và nhỏ nhất trong đội ngũ giám thị & Càng nhỏ càng tốt \\
+    \addlinespace
+    Tổng số lượt thi & Số lần tổ chức thi của tất cả các môn, gắn với số đề cần chuẩn bị theo giả định & Càng nhỏ càng tốt khi vẫn đủ chỗ \\
+    \addlinespace
+    Hệ số sử dụng phòng & Tỷ lệ phòng--ca được sử dụng trên phòng--ca khả dụng, tính riêng phòng thường và phòng máy & Tham chiếu mục tiêu 60--85\% \\
+    \addlinespace
+    Tỷ lệ lấp đầy & Tỷ lệ sinh viên--ca trên sức chứa thi--ca của những phòng được sử dụng & Càng cao càng tốt khi vẫn hợp lệ \\
+    \addlinespace
+    Thời gian giải & Thời gian xử lý được hệ thống ghi nhận cho quá trình giải & Mục tiêu dưới 300 giây với bộ lớn \\
+\end{longtable}
+
+Để diễn giải chính xác, gọi $\mathcal{I}_2$ là tập sinh viên có ít nhất hai môn thi và $n_i$ là số môn thi của sinh viên $i$. Các ngày thi $d_{i,1},\ldots,d_{i,n_i}$ được sắp theo thứ tự thời gian. Khoảng cách trung bình được tính trước cho từng sinh viên, sau đó lấy trung bình giữa các sinh viên đủ điều kiện:
+\begin{equation}
+    \overline{g}
+    = \frac{1}{|\mathcal{I}_2|}
+      \sum_{i\in\mathcal{I}_2}
+      \frac{1}{n_i-1}\sum_{j=1}^{n_i-1}
+      \left(d_{i,j+1}-d_{i,j}\right).
+    \label{eq:kpi-khoang-cach}
+\end{equation}
+Hai môn trong cùng ngày có khoảng cách bằng 0 ngày dù thuộc hai ca khác nhau. Nếu không có sinh viên đủ hai môn, chỉ số không xác định và được biểu diễn bằng \code{null}, không thay bằng 0. Đây là trung bình theo sinh viên, không phải trung bình gộp mọi khoảng cách của toàn bộ sinh viên.
+
+Gọi $L_g$ là tổng số ca coi thi của giám thị $g$, mức chênh lệch tải là $\Delta L=\max_g L_g-\min_g L_g$. Một lượt kéo dài hai ca đóng góp hai ca vào tải của mỗi giám thị tham gia. Phép tính xét cả giám thị có tải bằng 0, do đó phản ánh mức phân bổ trên toàn đội ngũ chứ không chỉ những người đã được phân công.
+
+Với loại phòng $q$, gọi $U_q$ là số phòng--ca sử dụng và $A_q$ là số phòng--ca khả dụng sau khi loại các ca phòng bận. Hệ số sử dụng được tính bằng:
+\begin{equation}
+    \rho_q = \frac{U_q}{A_q}, \qquad A_q>0.
+    \label{eq:kpi-su-dung-phong}
+\end{equation}
+Lượt thi hai ca được tính là hai phòng--ca cho mỗi phòng tham gia. Hệ số này đo mức chiếm dụng theo thời gian, không đo số ghế đã lấp đầy. Tỷ lệ lấp đầy lịch thi được tính riêng theo công thức:
+\begin{equation}
+    \eta_A =
+    \frac{\sum_{s\in\mathcal{S}} \ell_s N_s}
+         {\sum_{s\in\mathcal{S}} \ell_s\sum_{r\in R_s} C_r^{\mathrm{thi}}},
+    \label{eq:kpi-lap-day-thi}
+\end{equation}
+trong đó $\mathcal{S}$ là tập lượt thi, $\ell_s$ là số ca của lượt $s$, $N_s$ là số sinh viên, $R_s$ là tập phòng được dùng và $C_r^{\mathrm{thi}}$ là sức chứa thi của phòng $r$. Công thức cho thấy một lịch có thể sử dụng nhiều phòng--ca nhưng vẫn lãng phí chỗ ngồi.
+
+\subsection{Các chỉ số cho lịch học và phòng máy theo tuần}
+
+Bài toán B dùng chung các chỉ số về vi phạm cứng, sử dụng phòng, lấp đầy và thời gian giải. Do mỗi buổi học chiếm một ca, tỷ lệ lấp đầy được tính bằng tổng sĩ số của các buổi chia cho tổng sức chứa phòng tương ứng; một lớp có nhiều buổi được tính theo từng lần sử dụng phòng. Những chỉ số bổ sung được trình bày trong Bảng~\ref{tab:kpi-lich-tuan}.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Các chỉ số bổ sung cho lịch phòng học, phòng máy theo tuần}
+    \label{tab:kpi-lich-tuan}
+    \small
+    \begin{tabularx}{\textwidth}{@{}p{0.27\textwidth}XX@{}}
+        \toprule
+        Chỉ số & Ý nghĩa & Hướng đánh giá \\
+        \midrule
+        Mức sử dụng phòng máy cao nhất & Giá trị lớn nhất của tỷ lệ phòng máy đang dùng trên phòng máy khả dụng tại từng ca & Theo dõi mức tập trung tải, không thay bằng tỷ lệ trung bình tuần \\
+        \addlinespace
+        Số ca thiếu dự phòng phòng máy & Số ca có số phòng máy sử dụng vượt giới hạn dự phòng đã cấu hình & Càng nhỏ càng tốt \\
+        \addlinespace
+        Số buổi vi phạm nguyện vọng & Số buổi nằm trong ca giảng viên muốn tránh, khác với ca bận bắt buộc & Càng nhỏ càng tốt \\
+        \addlinespace
+        Số lớp có nhiều buổi cùng ngày & Số lớp có ít nhất một ngày được xếp từ hai buổi trở lên & Càng nhỏ càng tốt \\
+        \addlinespace
+        Tải ngày cao nhất của nhóm bắt buộc & Số buổi lớn nhất trong một ngày của một nhóm lớp bắt buộc cùng khóa, cùng ngành & Theo dõi mức dồn lịch; không phải giới hạn cứng hiện có \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+Gọi $M_t$ là số phòng máy khả dụng ở ca $t$ và $u_t$ là số phòng máy đang sử dụng. Với ngưỡng dự phòng $\alpha=0{,}85$, số phòng sử dụng không vượt ngưỡng được xác định bởi $\lfloor\alpha M_t\rfloor$. KPI số ca thiếu dự phòng đếm các ca thỏa $u_t>\lfloor\alpha M_t\rfloor$, trong khi mức sử dụng cao nhất là $\max_{t:M_t>0}(u_t/M_t)$.
+
+Do số phòng là số nguyên, giới hạn sau làm tròn có thể chặt hơn cách hiểu giữ đúng 15\% công suất liên tục. Ví dụ, nếu chỉ có ba phòng máy khả dụng thì giới hạn là hai phòng; sử dụng cả ba phòng làm ca đó vượt ngưỡng dự phòng. Đây vẫn là tiêu chí mềm: hệ thống có thể sử dụng vượt ngưỡng để đáp ứng các ràng buộc bắt buộc và ghi nhận phần đánh đổi qua điểm phạt, KPI. Phòng dự phòng ở đây là nguồn lực theo ca, không phải cam kết dành cố định một phòng cụ thể trong cả tuần.
+
+\subsection{Đánh giá khả năng phục hồi và cách sử dụng KPI}
+
+Đối với xếp lại lịch, mục tiêu thời gian của đề tài là dưới 60 giây. Ngoài thời gian, cần xem xét số lượt thi hoặc buổi học bị đổi, loại thay đổi và số đối tượng bị ảnh hưởng theo thông tin so sánh mà hệ thống cung cấp. Đổi ca thường tác động trực tiếp đến kế hoạch cá nhân, trong khi đổi phòng hoặc đổi giám thị có phạm vi tác động khác; do đó không nên chỉ dùng một tổng số thay đổi để kết luận phương án tốt hơn.
+
+Thời gian giải được ghi nhận trong kết quả không đồng nhất với toàn bộ thời gian phục vụ từ khi chuẩn bị dữ liệu đến khi công bố lịch. Đọc tệp, chẩn đoán bổ sung, thao tác giao diện và rà soát nghiệp vụ có thể tạo thêm thời gian ngoài đại lượng đo của bộ giải. Vì vậy, các phép so sánh cần dùng cùng định nghĩa thời gian và công bố điều kiện thực nghiệm.
+
+Khi đánh giá, trước hết kiểm tra số vi phạm cứng bằng 0, sau đó mới so sánh chất lượng và chi phí vận hành. Cần đọc đồng thời trạng thái giải, thời gian, bộ trọng số và KPI; không so sánh trực tiếp giá trị mục tiêu giữa hai lần chạy dùng trọng số khác nhau mà bỏ qua các thành phần điểm phạt. Những chỉ số không có mẫu số hoặc không đủ đối tượng để tính phải được ghi là không xác định thay vì mặc định bằng 0.
+
+Khoảng sử dụng 60--85\%, ngưỡng tạo lịch 5 phút và ngưỡng xếp lại 1 phút là các mốc tham chiếu của đề tài, không phải điều kiện cứng hay kết quả đạt được sẵn. Mức sử dụng thấp có thể do nhu cầu nhỏ so với nguồn lực, còn mức sử dụng cao cần được xem cùng khả năng dự phòng. Kết quả thực nghiệm ở các chương sau là cơ sở xác định mức đáp ứng các mục tiêu và đánh đổi chất lượng trong từng kịch bản.
