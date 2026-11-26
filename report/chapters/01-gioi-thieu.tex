@@ -1,5 +1,5 @@
 % Chương 1. Phụ trách: Mạnh (MANH-6)
-% Nguồn: docs/scope.md mục 1-5.
+% Nguồn: docs/scope.md mục 1-5 và docs/model_spec.md.
 
 \chapter{Giới thiệu}
 \label{ch:gioi-thieu}
@@ -7,11 +7,107 @@
 \section{Bối cảnh}
 \label{sec:boi-canh}
 
+Trong hoạt động đào tạo đại học, xếp lịch thi và bố trí phòng học, phòng máy là những công việc có ảnh hưởng trực tiếp đến chất lượng phục vụ người học và hiệu quả sử dụng nguồn lực. Một lịch tổ chức hợp lý không chỉ cần bảo đảm đủ phòng và đúng thời gian, mà còn phải phối hợp đồng thời nhiều yếu tố như sĩ số, hình thức thi, số lượng máy tính, lịch bận của giảng viên và quan hệ đăng ký học phần của sinh viên. Khi số lượng học phần và lớp học tăng lên, việc xử lý các yếu tố này bằng phương pháp thủ công dễ phát sinh xung đột, mất nhiều thời gian điều chỉnh và khó đánh giá chất lượng lịch một cách nhất quán.
+
+Đối với lịch thi cuối kỳ, khó khăn nằm ở việc phân bổ các môn thi vào những ca hữu hạn, lựa chọn phòng phù hợp và bố trí đủ giám thị. Một sinh viên có thể đăng ký nhiều học phần nên lịch thi phải tránh trùng ca, đồng thời cần hạn chế tình trạng thi nhiều môn trong cùng một ngày. Các môn thi trên máy còn chịu giới hạn về số máy đang hoạt động, có thể dẫn đến nhu cầu chia thành nhiều lượt thi. Mỗi lượt bổ sung lại làm tăng chi phí tổ chức và số đề thi cần chuẩn bị. Vì vậy, lịch thi cần cân bằng giữa tính khả thi, trải nghiệm của sinh viên, khối lượng công việc của giám thị và chi phí khai thác cơ sở vật chất.
+
+Đối với lịch phòng học và phòng máy theo tuần, yêu cầu đặt ra là bố trí đủ số buổi cho từng lớp học phần, bảo đảm sức chứa và loại phòng, tránh trùng lịch giảng viên và hạn chế xung đột giữa các lớp bắt buộc của cùng khóa, cùng ngành. Bên cạnh việc đáp ứng nhu cầu giảng dạy, hệ thống cũng cần quan tâm đến nguyện vọng giờ dạy và duy trì khả năng dự phòng cho phòng máy, thay vì khai thác toàn bộ công suất trong mọi thời điểm.
+
+Đây không chỉ là bài toán phân bổ tài nguyên mà còn là bài toán thiết kế và vận hành dịch vụ đào tạo. Phòng đào tạo hoặc giáo vụ khoa là đơn vị vận hành; sinh viên là đối tượng thụ hưởng chính; giảng viên, giám thị và kỹ thuật viên vừa tham gia cung ứng dịch vụ, vừa chịu tác động từ kết quả xếp lịch. Chất lượng dịch vụ vì thế cần được xem xét trên nhiều phương diện: độ chính xác của lịch, thời gian xử lý, tính công bằng, hiệu quả sử dụng nguồn lực và khả năng ứng phó khi có sự cố.
+
+Từ bối cảnh đó, đề tài xây dựng hệ thống hỗ trợ xếp lịch dựa trên mô hình quy hoạch nguyên tuyến tính, sử dụng bộ giải Google OR-Tools CP-SAT. Hệ thống kết hợp tạo lịch tự động, kiểm tra tính hợp lệ, tính toán chỉ số đánh giá và hỗ trợ xếp lại khi nguồn lực thay đổi. Cách tiếp cận này hướng đến việc chuyển quá trình xếp lịch từ xử lý thủ công sang một quy trình có mô hình rõ ràng, có thể kiểm chứng và đánh giá bằng dữ liệu.
+
 \section{Mục tiêu đề tài}
 \label{sec:muc-tieu}
+
+\subsection{Mục tiêu tổng quát}
+
+Xây dựng một hệ thống dịch vụ hỗ trợ xếp lịch phòng thi và phòng học, phòng máy trong phạm vi một khoa, một học kỳ. Hệ thống có khả năng tạo lịch thỏa mãn các ràng buộc bắt buộc, đồng thời tìm kiếm phương án có chất lượng tốt theo các tiêu chí phục vụ sinh viên, giảng viên và đơn vị quản lý.
+
+\subsection{Mục tiêu cụ thể}
+
+\begin{enumerate}
+    \item \textbf{Mô hình hóa hai bài toán xếp lịch có liên quan.} Với bài toán A, hệ thống xác định ca thi, các phòng sử dụng, phân chia sinh viên vào lượt thi và phân công giám thị. Với bài toán B, hệ thống xác định ca học và phòng học cho các buổi của từng lớp học phần trong một tuần. Các yêu cầu nghiệp vụ được phân thành ràng buộc cứng để bảo đảm lịch sử dụng được và ràng buộc mềm để đánh giá, cải thiện chất lượng lịch.
+
+    \item \textbf{Tự động hóa quá trình tạo lịch và kiểm tra kết quả.} Hệ thống tiếp nhận dữ liệu có cấu trúc, kiểm tra các lỗi đầu vào và một số điều kiện cần về nguồn lực trước khi giải. Lịch được tạo ra tiếp tục được kiểm tra bằng bộ kiểm tra độc lập nhằm phát hiện vi phạm ràng buộc cứng. Khi không tìm được lời giải, hệ thống cần thông báo rõ trạng thái và cung cấp thông tin chẩn đoán, thay vì trả về một lịch không hợp lệ.
+
+    \item \textbf{Cải thiện chất lượng dịch vụ thông qua tối ưu hóa đa tiêu chí.} Đối với lịch thi, các tiêu chí bao gồm hạn chế sinh viên thi nhiều môn trong ngày, tăng khoảng cách giữa các môn thi, giảm số phòng và số lượt thi không cần thiết, hạn chế lãng phí chỗ và cân bằng khối lượng coi thi. Đối với lịch học theo tuần, hệ thống hướng đến sử dụng phòng phù hợp với sĩ số, tôn trọng nguyện vọng giờ dạy, phân bố các buổi học của một lớp sang những ngày khác nhau và hạn chế khai thác phòng máy vượt ngưỡng dự phòng. Các tiêu chí được kết hợp bằng hàm mục tiêu có trọng số, cho phép khảo sát sự đánh đổi giữa những ưu tiên khác nhau.
+
+    \item \textbf{Hỗ trợ điều chỉnh lịch khi xảy ra sự cố.} Hệ thống cho phép cập nhật những thay đổi như phòng không sử dụng được, giảng viên bận hoặc bổ sung lớp học trong bài toán B. Việc xếp lại không chỉ nhằm khôi phục tính khả thi mà còn hướng đến hạn chế mức độ thay đổi so với lịch ban đầu, qua đó giảm ảnh hưởng đến người sử dụng.
+
+    \item \textbf{Xây dựng công cụ minh họa và đánh giá hệ thống.} Giao diện web hỗ trợ nhập dữ liệu, cấu hình, chạy bộ giải, tra cứu lịch, so sánh kết quả và xuất dữ liệu phục vụ sử dụng tiếp theo. Hệ thống được đánh giá trên dữ liệu giả lập ở nhiều quy mô thông qua các chỉ số như số vi phạm ràng buộc cứng, thời gian giải, mức sử dụng phòng, tỷ lệ lấp đầy và các chỉ số chất lượng lịch. Mục tiêu thời gian tạo lịch ban đầu là dưới 5 phút đối với bộ dữ liệu lớn; mức độ đạt mục tiêu cần được xác định bằng kết quả thực nghiệm.
+\end{enumerate}
 
 \section{Phạm vi và giả định chính}
 \label{sec:pham-vi}
 
+\subsection{Phạm vi nghiên cứu}
+
+Đề tài được giới hạn trong hoạt động xếp lịch của \textbf{một khoa trong một học kỳ}, tập trung vào hai bài toán:
+\begin{itemize}
+    \item \textbf{Bài toán A -- Xếp lịch thi cuối kỳ:} bố trí môn thi vào ca, phân bổ phòng, chia lượt thi khi được phép, phân chia sinh viên và phân công giám thị. Đây là bài toán được ưu tiên triển khai trước.
+    \item \textbf{Bài toán B -- Xếp lịch phòng học, phòng máy theo tuần:} bố trí đủ số buổi học cho từng lớp học phần, lựa chọn phòng và ca phù hợp, tránh xung đột giảng viên và nhóm lớp bắt buộc cùng khóa, cùng ngành.
+\end{itemize}
+
+Phạm vi triển khai bao gồm mô hình tối ưu hóa, bộ giải, kiểm tra dữ liệu, kiểm tra lời giải, tính toán KPI, sinh dữ liệu giả lập, giao diện web minh họa và chức năng xếp lại khi có sự cố. OR-Tools CP-SAT là bộ giải chính; dự án đồng thời có bộ giải PuLP/CBC phục vụ đối chứng đối với bài toán lịch thi.
+
+Dữ liệu nghiên cứu là dữ liệu giả lập, được tổ chức thành các bộ quy mô nhỏ, trung bình và lớn để phục vụ kiểm thử, minh họa và khảo sát khả năng mở rộng. Đối với bài toán A, quy mô dự kiến lần lượt khoảng 5, 30 và 60 học phần, tương ứng với khoảng 50, 500 và 1.000 sinh viên. Các kết quả trên dữ liệu này phản ánh khả năng xử lý trong những kịch bản được xây dựng, chưa đủ để khẳng định hiệu quả triển khai tại một khoa cụ thể.
+
+Đề tài không xây dựng hệ thống quản lý đào tạo hoàn chỉnh. Những nội dung như đăng nhập và phân quyền, cơ sở dữ liệu vận hành thực tế, tích hợp hệ thống của trường, ứng dụng di động và gửi thông báo tự động nằm ngoài phạm vi. Hệ thống cũng không xử lý xếp lịch toàn trường hoặc tối ưu hóa thời gian thực cho cả năm học.
+
+\subsection{Giả định chung về dữ liệu và nguồn lực}
+
+Các thông tin cần thiết cho việc xếp lịch được giả định là đã biết tại thời điểm chạy mô hình, bao gồm danh sách phòng, sức chứa, số máy hoạt động, học phần hoặc lớp học phần, giảng viên, khung ca và lịch không khả dụng. Với bài toán A, danh sách sinh viên đăng ký học phần cũng là dữ liệu đầu vào.
+
+Dữ liệu được cung cấp qua các tệp CSV; cấu hình và kết quả được lưu dưới dạng JSON. Phòng học thuộc phạm vi quản lý của khoa, không xét việc chia sẻ và cạnh tranh nguồn lực với các khoa khác. Những khoảng thời gian không thể sử dụng phòng hoặc không thể bố trí giảng viên phải được khai báo trong dữ liệu đầu vào hoặc cập nhật dưới dạng sự cố.
+
+Thời gian được chia thành bốn ca mỗi ngày, mỗi ca dài 150 phút: 07:00--09:30, 09:40--12:10, 13:00--15:30 và 15:40--18:10. Giữa hai ca trong cùng buổi có 10 phút nghỉ; giữa ca sáng và ca chiều có thời gian nghỉ trưa. Mô hình sử dụng các ca rời rạc này làm đơn vị phân bổ, không xếp lịch theo từng phút và không tính riêng thời gian di chuyển giữa các tòa nhà.
+
+\subsection{Giả định đối với bài toán lịch thi}
+
+Đợt thi kéo dài hai tuần, mỗi tuần sáu ngày từ thứ Hai đến thứ Bảy, mỗi ngày bốn ca, tương ứng 48 ca thi. Các lớp học phần của cùng một học phần được gộp thành một môn thi; hình thức thi viết hoặc thi trên máy được xác định trước.
+
+Một lượt thi chiếm một ca nếu thời gian làm bài không quá 120 phút. Với thời gian làm bài từ 121 đến 280 phút, lượt thi chiếm hai ca liên tiếp trong cùng buổi, chỉ được ghép ca 1--2 hoặc ca 3--4. Lượt thi hai ca phải giữ nguyên phòng và giám thị trong suốt thời gian tổ chức, không kéo qua giờ nghỉ trưa hoặc sang ngày khác. Môn có thời gian làm bài trên 280 phút không được xét.
+
+Môn thi viết chỉ sử dụng phòng thường; môn thi trên máy chỉ sử dụng phòng máy. Sức chứa thi viết mặc định bằng một nửa số ghế, còn sức chứa phòng máy căn cứ vào số máy đang hoạt động; dữ liệu có thể khai báo sức chứa thi riêng cho từng phòng. Một lượt thi có thể sử dụng nhiều phòng, nhưng một phòng trong cùng ca chỉ phục vụ tối đa một lượt thi.
+
+Môn thi trên máy được phép chia thành nhiều lượt theo giới hạn đầu vào. Môn thi viết mặc định chỉ tổ chức một lượt, trừ khi được cho phép chia lượt riêng. Mỗi sinh viên phải được xếp đúng một lượt của mỗi môn đã đăng ký. Các lượt khác nhau được giả định sử dụng đề thi riêng; công việc biên soạn và bảo mật đề không thuộc chức năng của hệ thống.
+
+Mỗi phòng thi mặc định cần hai giám thị. Giám thị không được coi thi ở hai phòng trong cùng ca hoặc bị xếp vào ca đã báo bận. Giảng viên mặc định được phép coi thi môn mình giảng dạy; có thể bật tùy chọn cấm trường hợp này.
+
+Việc sinh viên thi nhiều môn trong ngày hoặc ở các ca liền nhau không bị cấm tuyệt đối, mà được hạn chế thông qua các tiêu chí mềm. Tương tự, mô hình cân bằng tổng số ca coi thi giữa các giám thị nhưng không đặt giới hạn cứng về số ca coi thi trong một ngày. Hệ thống không tối ưu vị trí ghế cụ thể của từng sinh viên trong phòng thi.
+
+\subsection{Giả định đối với bài toán lịch phòng học, phòng máy}
+
+Lịch học được xây dựng theo một tuần mẫu gồm sáu ngày, mỗi ngày bốn ca, tương ứng 24 ca mỗi tuần và được giả định lặp lại trong học kỳ. Mỗi buổi học chiếm một ca. Các thông tin về số buổi mỗi tuần, sĩ số, nhu cầu phòng máy và giảng viên phụ trách từng lớp đã được xác định trước. Phần lý thuyết và thực hành của một học phần được khai báo thành các lớp riêng.
+
+Lịch được xếp trước khi sinh viên đăng ký nên hệ thống không kiểm tra xung đột theo từng cá nhân. Thay vào đó, các lớp bắt buộc của cùng khóa và cùng ngành không được xếp trùng ca. Cơ chế này không bảo đảm tránh toàn bộ xung đột liên quan đến lớp tự chọn hoặc sinh viên học khác tiến độ.
+
+Mỗi lớp phải được bố trí đủ số buổi, phòng phải đủ sức chứa và lớp cần phòng máy phải được xếp vào phòng máy. Giảng viên không được dạy hai lớp cùng ca hoặc dạy vào ca đã khai báo bận. Các buổi của cùng một lớp không bắt buộc sử dụng cùng một phòng.
+
+Ngưỡng sử dụng phòng máy 85\% được xem là tiêu chí mềm nhằm duy trì năng lực dự phòng, không phải giới hạn cứng khiến mọi phương án vượt ngưỡng đều bị loại bỏ. Lịch tuần mẫu không mô tả riêng các tuần nghỉ lễ, tuần thi giữa kỳ hoặc các biến động theo từng tuần. Mô hình cũng không bảo đảm hai buổi được khai báo riêng sẽ được xếp thành hai ca liên tiếp.
+
+\subsection{Giả định về tối ưu hóa và đánh giá kết quả}
+
+Các ràng buộc cứng là điều kiện bắt buộc để lịch được chấp nhận; các ràng buộc mềm thể hiện mức độ ưu tiên và được chuyển thành điểm phạt trong hàm mục tiêu. Do các tiêu chí có thể mâu thuẫn, hệ thống tìm phương án cân bằng theo bộ trọng số được lựa chọn, thay vì bảo đảm đồng thời tốt nhất ở mọi tiêu chí.
+
+Bộ giải hoạt động trong giới hạn thời gian cấu hình. Khi tìm được lịch khả thi nhưng chưa chứng minh được tính tối ưu, hệ thống vẫn có thể trả về lịch kèm trạng thái tương ứng. Cần phân biệt trường hợp đã chứng minh bài toán không khả thi với trường hợp hết thời gian mà chưa tìm được lời giải; việc chưa có lời giải không đồng nghĩa chắc chắn không tồn tại lịch hợp lệ.
+
+Việc đánh giá được thực hiện trong điều kiện dữ liệu, cấu hình và môi trường thực nghiệm xác định. Các chỉ tiêu về thời gian xử lý, chất lượng lịch và hiệu quả sử dụng nguồn lực là cơ sở để kiểm chứng mục tiêu đề tài, không được mặc nhiên xem là kết quả đã đạt được.
+
 \section{Cấu trúc báo cáo}
 \label{sec:cau-truc}
+
+Báo cáo được tổ chức thành tám chương:
+\begin{itemize}
+    \item \textbf{Chương 1 -- Giới thiệu:} trình bày bối cảnh, mục tiêu, phạm vi và các giả định chính của đề tài.
+    \item \textbf{Chương 2 -- Phân tích dịch vụ:} xác định các bên liên quan, nhu cầu, gói dịch vụ, quy trình cung ứng và hệ thống chỉ số chất lượng dịch vụ.
+    \item \textbf{Chương 3 -- Mô hình:} trình bày mô hình toán học cho hai bài toán xếp lịch, các ràng buộc, hàm mục tiêu và chiến lược giải.
+    \item \textbf{Chương 4 -- Hệ thống:} mô tả kiến trúc, các thành phần xử lý, giao diện và quy trình vận hành hệ thống.
+    \item \textbf{Chương 5 -- Thực nghiệm:} trình bày thiết lập thực nghiệm, dữ liệu, kết quả giải và các khảo sát liên quan đến hiệu năng, độ nhạy và xếp lại lịch.
+    \item \textbf{Chương 6 -- Công cụ môn học:} vận dụng các công cụ của môn Khoa học Dịch vụ để phân tích bài toán và hoạt động của hệ thống.
+    \item \textbf{Chương 7 -- Đánh giá:} tổng hợp mức độ đáp ứng mục tiêu, chất lượng dịch vụ và những hạn chế của giải pháp.
+    \item \textbf{Chương 8 -- Kết luận:} khái quát kết quả và đề xuất hướng phát triển tiếp theo.
+\end{itemize}
+
+Phần phụ lục cung cấp hướng dẫn chạy hệ thống, kết quả thực nghiệm đầy đủ và định dạng dữ liệu để hỗ trợ tra cứu và tái lập thực nghiệm.
